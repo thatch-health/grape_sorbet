@@ -1,0 +1,23 @@
+# Opinionated cops - see https://ruby-style-guide.shopify.dev/ for explanations
+inherit_gem:
+  rubocop-shopify: rubocop.yml
+
+require:
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-sorbet
+
+AllCops:
+  NewCops: enable
+  SuggestExtensions: false
+  TargetRubyVersion: 3.0
+
+Naming/ConstantName:
+  Enabled: false
+
+Sorbet/StrictSigil:
+  Enabled: true
+
+Style/MutableConstant:
+  Enabled: true

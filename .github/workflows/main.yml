@@ -1,0 +1,53 @@
+name: CI
+
+on: [push]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Run Rubocop
+        run: |
+          bundle exec rubocop --parallel
+
+      - name: Run bundler-audit
+        run: |
+          bundle exec bundle-audit check
+
+  test:
+    runs-on: ubuntu-latest
+
+    name: Ruby ${{ matrix.ruby }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - "3.1"
+          - "3.2"
+          - "3.3"
+          - head
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - name: Ensure RBI files are up-to-date
+        run: |
+          bundle exec tapioca gems --verify
+
+      - name: Run Sorbet
+        run: bundle exec srb
+
+      - name: Run tests
+        run: bundle exec rake test

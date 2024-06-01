@@ -1,0 +1,8 @@
+# See https://git-scm.com/docs/gitattributes for more about git attribute files.
+
+*.rbi linguist-language=Ruby
+
+# Mark Tapioca RBI shims as generated.
+sorbet/rbi/annotations/** linguist-generated
+sorbet/rbi/dsl/** linguist-generated
+sorbet/rbi/gems/** linguist-generated
