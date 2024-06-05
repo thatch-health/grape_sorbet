@@ -80,13 +80,13 @@ module Tapioca
           end
         end
 
-        HTTP_VERB_METHODS = T.let(
-          [:get, :post, :put, :patch, :delete, :head, :options].freeze,
+        CALLBACKS_METHODS = T.let(
+          [:before, :before_validation, :after_validation, :after, :finally].freeze,
           T::Array[Symbol],
         )
 
-        CALLBACKS_METHODS = T.let(
-          [:before, :before_validation, :after_validation, :after, :finally].freeze,
+        HTTP_VERB_METHODS = T.let(
+          [:get, :post, :put, :patch, :delete, :head, :options].freeze,
           T::Array[Symbol],
         )
 
@@ -101,6 +101,14 @@ module Tapioca
         end
 
         sig { returns(RBI::Scope) }
+        def callbacks_methods_module
+          @callbacks_methods_module ||= T.let(
+            api.create_module(CallbacksMethodsModuleName),
+            T.nilable(RBI::Scope),
+          )
+        end
+
+        sig { returns(RBI::Scope) }
         def routing_methods_module
           @routing_methods_module ||= T.let(
             api.create_module(RoutingMethodsModuleName),
@@ -110,6 +118,7 @@ module Tapioca
 
         sig { void }
         def create_classes_and_includes
+          api.create_extend(CallbacksMethodsModuleName)
           api.create_extend(RoutingMethodsModuleName)
           create_api_class
           create_endpoint_class
@@ -142,13 +151,26 @@ module Tapioca
         end
 
         sig { void }
+        def create_callbacks_methods
+          CALLBACKS_METHODS.each do |callback|
+            callbacks_methods_module.create_method(
+              callback.to_s,
+              parameters: [
+                create_block_param("block", type: "T.proc.bind(#{EndpointClassName}).void"),
+              ],
+              return_type: "void",
+            )
+          end
+        end
+
+        sig { void }
         def create_routing_methods
           HTTP_VERB_METHODS.each do |verb|
             routing_methods_module.create_method(
               verb.to_s,
               parameters: [
                 create_rest_param("args", type: "T.untyped"),
-                create_block_param("blk", type: "T.nilable(T.proc.bind(#{EndpointClassName}).void)"),
+                create_block_param("block", type: "T.nilable(T.proc.bind(#{EndpointClassName}).void)"),
               ],
               return_type: "void",
             )
@@ -158,25 +180,11 @@ module Tapioca
             "route_param",
             parameters: [
               create_param("param", type: "Symbol"),
-              create_opt_param("options", type: "T.nilable(T::Hash[Symbol, T.untyped])", default: "nil"),
-              create_block_param("blk", type: "T.nilable(T.proc.bind(T.class_of(#{APIInstanceClassName})).void)"),
+              create_opt_param("options", type: "T::Hash[Symbol, T.untyped]", default: "{}"),
+              create_block_param("block", type: "T.nilable(T.proc.bind(T.class_of(#{APIInstanceClassName})).void)"),
             ],
             return_type: "void",
           )
-        end
-
-        sig { void }
-        def create_callbacks_methods
-          CALLBACKS_METHODS.each do |callback|
-            routing_methods_module.create_method(
-              callback.to_s,
-              parameters: [
-                create_rest_param("args", type: "T.untyped"),
-                create_block_param("blk", type: "T.nilable(T.proc.bind(#{EndpointClassName}).void)"),
-              ],
-              return_type: "void",
-            )
-          end
         end
       end
     end
