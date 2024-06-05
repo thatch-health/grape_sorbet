@@ -68,6 +68,7 @@ module Tapioca
         def decorate
           create_classes_and_includes
           create_routing_methods
+          create_callbacks_methods
         end
 
         class << self
@@ -81,6 +82,11 @@ module Tapioca
 
         HTTP_VERB_METHODS = T.let(
           [:get, :post, :put, :patch, :delete, :head, :options].freeze,
+          T::Array[Symbol],
+        )
+
+        CALLBACKS_METHODS = T.let(
+          [:before, :before_validation, :after_validation, :after, :finally].freeze,
           T::Array[Symbol],
         )
 
@@ -157,6 +163,20 @@ module Tapioca
             ],
             return_type: "void",
           )
+        end
+
+        sig { void }
+        def create_callbacks_methods
+          CALLBACKS_METHODS.each do |callback|
+            routing_methods_module.create_method(
+              callback.to_s,
+              parameters: [
+                create_rest_param("args", type: "T.untyped"),
+                create_block_param("blk", type: "T.nilable(T.proc.bind(#{EndpointClassName}).void)"),
+              ],
+              return_type: "void",
+            )
+          end
         end
       end
     end

@@ -67,7 +67,22 @@ module Tapioca
 
                   module GeneratedRoutingMethods
                     sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def after(*args, &blk); end
+
+                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def after_validation(*args, &blk); end
+
+                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def before(*args, &blk); end
+
+                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def before_validation(*args, &blk); end
+
+                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
                     def delete(*args, &blk); end
+
+                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def finally(*args, &blk); end
 
                     sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
                     def get(*args, &blk); end
