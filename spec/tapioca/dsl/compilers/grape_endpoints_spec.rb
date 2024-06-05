@@ -63,47 +63,50 @@ module Tapioca
                 # typed: strong
 
                 class TwitterAPI
+                  extend GeneratedCallbacksMethods
                   extend GeneratedRoutingMethods
 
+                  module GeneratedCallbacksMethods
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def after(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def after_validation(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def before(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def before_validation(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def finally(&block); end
+                  end
+
                   module GeneratedRoutingMethods
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def after(*args, &blk); end
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def delete(*args, &block); end
 
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def after_validation(*args, &blk); end
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def get(*args, &block); end
 
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def before(*args, &blk); end
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def head(*args, &block); end
 
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def before_validation(*args, &blk); end
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def options(*args, &block); end
 
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def delete(*args, &blk); end
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def patch(*args, &block); end
 
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def finally(*args, &blk); end
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def post(*args, &block); end
 
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def get(*args, &blk); end
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def put(*args, &block); end
 
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def head(*args, &blk); end
-
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def options(*args, &blk); end
-
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def patch(*args, &blk); end
-
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def post(*args, &blk); end
-
-                    sig { params(args: T.untyped, blk: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def put(*args, &blk); end
-
-                    sig { params(param: Symbol, options: T.nilable(T::Hash[Symbol, T.untyped]), blk: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
-                    def route_param(param, options = nil, &blk); end
+                    sig { params(param: Symbol, options: T::Hash[Symbol, T.untyped], block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
+                    def route_param(param, options = {}, &block); end
                   end
 
                   class PrivateAPIInstance < ::Grape::API::Instance

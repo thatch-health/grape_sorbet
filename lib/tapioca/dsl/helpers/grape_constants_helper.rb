@@ -7,6 +7,7 @@ module Tapioca
       module GrapeConstantsHelper
         extend T::Sig
 
+        CallbacksMethodsModuleName = "GeneratedCallbacksMethods"
         RoutingMethodsModuleName = "GeneratedRoutingMethods"
 
         APIInstanceClassName = "PrivateAPIInstance"

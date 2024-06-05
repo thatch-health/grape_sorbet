@@ -2,11 +2,6 @@
 # frozen_string_literal: true
 
 module Grape
-  module DSL::Callbacks::ClassMethods
-    sig { params(block: T.proc.bind(Grape::Endpoint).void).void }
-    def before(&block); end
-  end
-
   module DSL::Desc
     # grape evaluates config_block in the context of a dynamically created module that implements the DSL it exposes
     # at runtime. There's no good way to represent this statically, so block is just typed as T.untyped to prevent

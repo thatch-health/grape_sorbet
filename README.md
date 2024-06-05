@@ -90,7 +90,29 @@ module Twitter
 end
 ```
 
-At this point Sorbet is still reporting errors in the `get :home_timeline` block, because it doesn't know that these blocks are executed in a context where the `Helpers` module methods will be available. The Tapioca compiler provided by this gem will fix that. Run `bundle exec tapioca dsl`. This should generate a `sorbet/rbi/dsl/twitter/api.rbi` file (assuming the source file is in `lib/twitter/api.rb`). After this,
+At this point Sorbet is still reporting errors in the `get :home_timeline` block, because it doesn't know that these blocks are executed in a context where the `Helpers` module methods will be available. The Tapioca compiler provided by this gem will fix that. Run `bundle exec tapioca dsl`. This should generate a `sorbet/rbi/dsl/twitter/api.rbi` file (assuming the source file is in `lib/twitter/api.rb`).
+
+After this, Sorbet should no longer report any errors.
+
+## Limitations and known issues
+
+### Subclassing from `Grape::API::Instance` instead of `Grape::API`
+
+Grape overrides `Grape::API.new` and uses the `inherited` hook so that subclasses of `Grape::API` are really subclasses of `Grape::API::Instance`.
+
+This might be fixable in a future update of grape_sorbet, but is very low priority.
+
+### Not being able to call `helpers` with block arguments
+
+Possibly fixable in a future update.
+
+### Having to use `T.bind(self, T.any(Grape::Endpoint, <HelpersModuleName>))` in helper methods
+
+Possibly fixable in a future update.
+
+### Having to use `T.bind(self, T.any(Grape::Endpoint, <HelpersModuleName>))` in `before` and `after` callback blocks
+
+The compiler already generates proper signatures for callback methods so `T.bind` should not be needed (and is in fact unneeded for the other callback methods, `before_validation`, `after_validation` and `finally`). The reason it doesn't work for `before` and `after` is because of a [bug](https://github.com/sorbet/sorbet/issues/7950) in Sorbet itself.
 
 ## Development
 
