@@ -1,6 +1,7 @@
 # grape_sorbet
 
 [![Build Status](https://github.com/thatch-health/grape_sorbet/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/thatch-health/grape_sorbet/actions?query=branch%3Amain)
+[![Gem Version ](https://img.shields.io/gem/v/grape_sorbet.svg?style=flat)](https://rubygems.org/gems/grape_sorbet)
 
 grape_sorbet is a gem that provides hand written signatures and a Tapioca DSL compiler that makes it more pleasant to use the [Grape](https://github.com/ruby-grape/grape) API framework in Ruby projects that use the [Sorbet](https://sorbet.org/) typechecker.
 
