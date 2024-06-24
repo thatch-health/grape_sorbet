@@ -1,3 +1,7 @@
+## 0.0.4 (2024-06-24)
+
+- Update `grape.rbi`
+
 ## 0.0.3 (2024-06-05)
 
 - Better support for callbacks
