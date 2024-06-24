@@ -14,8 +14,7 @@ Install the gem and add to the application's Gemfile by executing:
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install specific_install
-    $ gem specific_install https://github.com/thatch-health/grape_sorbet.git
+    $ gem install grape_sorbet
 
 After installing the gem, make sure to run `bundle exec tapioca gem grape_sorbet` in your project to import the hand written signatures.
 
