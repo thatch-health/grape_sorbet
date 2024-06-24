@@ -122,7 +122,7 @@ module Tapioca
               assert_equal(expected, rbi_for(:TwitterAPI))
             end
 
-            it "does not process anonymous helpers" do
+            it "ignores anonymous helpers" do
               add_ruby_file("twitter_api.rb", <<~RUBY)
                 class TwitterAPI < Grape::API::Instance
                   version 'v1', using: :header, vendor: 'twitter'
@@ -130,12 +130,9 @@ module Tapioca
                   prefix :api
 
                   helpers do
-                    def current_user
-                      @current_user ||= User.authorize!(env)
-                    end
-
-                    def authenticate!
-                      error!('401 Unauthorized', 401) unless current_user
+                    params :pagination do
+                      optional :page, type: Integer
+                      optional :per_page, type: Integer
                     end
                   end
 
@@ -148,9 +145,65 @@ module Tapioca
                 end
               RUBY
 
-              assert_raises(RuntimeError, /Cannot compile Grape API with anonymous helpers/) do
-                rbi_for(:TwitterAPI)
-              end
+              expected = template(<<~RUBY)
+                # typed: strong
+
+                class TwitterAPI
+                  extend GeneratedCallbacksMethods
+                  extend GeneratedRoutingMethods
+
+                  module GeneratedCallbacksMethods
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def after(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def after_validation(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def before(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def before_validation(&block); end
+
+                    sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
+                    def finally(&block); end
+                  end
+
+                  module GeneratedRoutingMethods
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def delete(*args, &block); end
+
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def get(*args, &block); end
+
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def head(*args, &block); end
+
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def options(*args, &block); end
+
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def patch(*args, &block); end
+
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def post(*args, &block); end
+
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def put(*args, &block); end
+
+                    sig { params(param: Symbol, options: T::Hash[Symbol, T.untyped], block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
+                    def route_param(param, options = {}, &block); end
+                  end
+
+                  class PrivateAPIInstance < ::Grape::API::Instance
+                    extend GeneratedRoutingMethods
+                  end
+
+                  class PrivateEndpoint < ::Grape::Endpoint; end
+                end
+              RUBY
+
+              assert_equal(expected, rbi_for(:TwitterAPI))
             end
           end
         end
