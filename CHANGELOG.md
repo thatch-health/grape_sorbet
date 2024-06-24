@@ -1,3 +1,7 @@
+## 0.0.5 (2024-06-24)
+
+- Ignore anonymous helpers
+
 ## 0.0.4 (2024-06-24)
 
 - Update `grape.rbi`
