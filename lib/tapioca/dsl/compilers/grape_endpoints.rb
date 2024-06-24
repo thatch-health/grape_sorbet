@@ -137,14 +137,10 @@ module Tapioca
         def create_endpoint_class
           superclass = "::Grape::Endpoint"
 
-          helper_mods = constant.namespace_stackable(:helpers)
-
-          if helper_mods.any? { |mod| mod.name.nil? }
-            raise "Cannot compile Grape API with anonymous helpers"
-          end
+          named_helper_mods = constant.namespace_stackable(:helpers).reject { |mod| mod.name.nil? }
 
           api.create_class(EndpointClassName, superclass_name: superclass) do |klass|
-            helper_mods.each do |mod|
+            named_helper_mods.each do |mod|
               klass.create_include(mod.name)
             end
           end

@@ -22,6 +22,11 @@ module Grape
         sig { params(name: Symbol, block: T.proc.bind(Grape::Validations::ParamsScope).void).void }
         def params(name, &block); end
       end
+
+      module ClassMethods
+        sig { params(new_modules: T.untyped, block: T.nilable(T.proc.bind(Grape::DSL::Helpers::BaseHelper).void)).void }
+        def helpers(*new_modules, &block); end
+      end
     end
 
     module RequestResponse
