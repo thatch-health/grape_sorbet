@@ -10,7 +10,7 @@ grape_sorbet is a gem that provides hand written signatures and a Tapioca DSL co
 
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add grape_sorbet --github=thatch-health/grape_sorbet
+    $ bundle add grape_sorbet
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
