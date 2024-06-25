@@ -1,3 +1,7 @@
+## 0.0.6 (2024-06-25)
+
+- Add support for `rescue_from`
+
 ## 0.0.5 (2024-06-24)
 
 - Ignore anonymous helpers
