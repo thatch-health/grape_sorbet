@@ -8,6 +8,7 @@ module Tapioca
         extend T::Sig
 
         CallbacksMethodsModuleName = "GeneratedCallbacksMethods"
+        RequestResponseMethodsModuleName = "GeneratedRequestResponseMethods"
         RoutingMethodsModuleName = "GeneratedRoutingMethods"
 
         APIInstanceClassName = "PrivateAPIInstance"

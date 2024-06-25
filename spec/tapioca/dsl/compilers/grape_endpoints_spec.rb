@@ -64,6 +64,7 @@ module Tapioca
 
                 class TwitterAPI
                   extend GeneratedCallbacksMethods
+                  extend GeneratedRequestResponseMethods
                   extend GeneratedRoutingMethods
 
                   module GeneratedCallbacksMethods
@@ -81,6 +82,11 @@ module Tapioca
 
                     sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
                     def finally(&block); end
+                  end
+
+                  module GeneratedRequestResponseMethods
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: Exception).void)).void }
+                    def rescue_from(*args, &block); end
                   end
 
                   module GeneratedRoutingMethods
@@ -150,6 +156,7 @@ module Tapioca
 
                 class TwitterAPI
                   extend GeneratedCallbacksMethods
+                  extend GeneratedRequestResponseMethods
                   extend GeneratedRoutingMethods
 
                   module GeneratedCallbacksMethods
@@ -167,6 +174,11 @@ module Tapioca
 
                     sig { params(block: T.proc.bind(PrivateEndpoint).void).void }
                     def finally(&block); end
+                  end
+
+                  module GeneratedRequestResponseMethods
+                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: Exception).void)).void }
+                    def rescue_from(*args, &block); end
                   end
 
                   module GeneratedRoutingMethods
