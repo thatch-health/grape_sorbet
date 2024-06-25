@@ -31,7 +31,7 @@ module Grape
 
     module RequestResponse
       module ClassMethods
-        sig { params(args: T.untyped, block: T.proc.bind(Grape::Endpoint).void).void }
+        sig { params(args: T.untyped, block: T.proc.bind(Grape::Endpoint).params(e: Exception).void).void }
         def rescue_from(*args, &block); end
       end
     end

@@ -67,8 +67,10 @@ module Tapioca
         sig { override.void }
         def decorate
           create_classes_and_includes
-          create_routing_methods
+
           create_callbacks_methods
+          create_request_response_methods
+          create_routing_methods
         end
 
         class << self
@@ -109,6 +111,14 @@ module Tapioca
         end
 
         sig { returns(RBI::Scope) }
+        def request_response_methods_module
+          @request_response_methods_module ||= T.let(
+            api.create_module(RequestResponseMethodsModuleName),
+            T.nilable(RBI::Scope),
+          )
+        end
+
+        sig { returns(RBI::Scope) }
         def routing_methods_module
           @routing_methods_module ||= T.let(
             api.create_module(RoutingMethodsModuleName),
@@ -119,6 +129,7 @@ module Tapioca
         sig { void }
         def create_classes_and_includes
           api.create_extend(CallbacksMethodsModuleName)
+          api.create_extend(RequestResponseMethodsModuleName)
           api.create_extend(RoutingMethodsModuleName)
           create_api_class
           create_endpoint_class
@@ -157,6 +168,21 @@ module Tapioca
               return_type: "void",
             )
           end
+        end
+
+        sig { void }
+        def create_request_response_methods
+          request_response_methods_module.create_method(
+            "rescue_from",
+            parameters: [
+              create_rest_param("args", type: "T.untyped"),
+              create_block_param(
+                "block",
+                type: "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: Exception).void)",
+              ),
+            ],
+            return_type: "void",
+          )
         end
 
         sig { void }
