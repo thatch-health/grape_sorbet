@@ -181,7 +181,7 @@ class Dry::Inflector
   # @return [String]
   # @since 0.2.0
   #
-  # source://dry-inflector//lib/dry/inflector.rb#308
+  # source://dry-inflector//lib/dry/inflector.rb#310
   def inspect; end
 
   # Ordinalize a number
@@ -250,7 +250,7 @@ class Dry::Inflector
   # @return [String]
   # @since 0.2.0
   #
-  # source://dry-inflector//lib/dry/inflector.rb#308
+  # source://dry-inflector//lib/dry/inflector.rb#310
   def to_s; end
 
   # Check if the input is an uncountable word
@@ -281,13 +281,13 @@ class Dry::Inflector
 
   # @since 0.1.0
   #
-  # source://dry-inflector//lib/dry/inflector.rb#323
+  # source://dry-inflector//lib/dry/inflector.rb#325
   def inflections; end
 
   # @api private
   # @since 0.1.3
   #
-  # source://dry-inflector//lib/dry/inflector.rb#327
+  # source://dry-inflector//lib/dry/inflector.rb#329
   def internal_camelize(input, upper); end
 end
 
@@ -335,7 +335,7 @@ end
 # @api private
 # @since 0.1.2
 #
-# source://dry-inflector//lib/dry/inflector.rb#321
+# source://dry-inflector//lib/dry/inflector.rb#323
 Dry::Inflector::DEFAULT_SEPARATOR = T.let(T.unsafe(nil), String)
 
 # Inflections
@@ -614,7 +614,7 @@ end
 # @api private
 # @since 0.1.0
 #
-# source://dry-inflector//lib/dry/inflector.rb#317
+# source://dry-inflector//lib/dry/inflector.rb#319
 Dry::Inflector::ORDINALIZE_TH = T.let(T.unsafe(nil), Hash)
 
 # A set of inflection rules

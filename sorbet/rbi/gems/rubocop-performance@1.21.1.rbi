@@ -1480,49 +1480,49 @@ RuboCop::Cop::Performance::IoReadlines::RESTRICT_ON_SEND = T.let(T.unsafe(nil), 
 #   ary.map(&:foo).compact!
 #   ary.compact.map(&:foo)
 #
-# source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#30
+# source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#31
 class RuboCop::Cop::Performance::MapCompact < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::RangeHelp
   extend ::RuboCop::Cop::AutoCorrector
   extend ::RuboCop::Cop::TargetRubyVersion
 
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#40
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#41
   def map_compact(param0 = T.unsafe(nil)); end
 
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#53
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#54
   def on_csend(node); end
 
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#53
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#54
   def on_send(node); end
 
   private
 
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#94
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#95
   def compact_method_with_final_newline_range(compact_method_range); end
 
   # @return [Boolean]
   #
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#90
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#91
   def invoke_method_after_map_compact_on_same_line?(compact_node, chained_method); end
 
   # @return [Boolean]
   #
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#86
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#87
   def map_method_and_compact_method_on_same_line?(map_node, compact_node); end
 
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#68
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#69
   def remove_compact_method(corrector, map_node, compact_node, chained_method); end
 
   # @return [Boolean]
   #
-  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#82
+  # source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#83
   def use_dot?(node); end
 end
 
-# source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#35
+# source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#36
 RuboCop::Cop::Performance::MapCompact::MSG = T.let(T.unsafe(nil), String)
 
-# source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#36
+# source://rubocop-performance//lib/rubocop/cop/performance/map_compact.rb#37
 RuboCop::Cop::Performance::MapCompact::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 
 # Checks if the map method is used in a chain.

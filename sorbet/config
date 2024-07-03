@@ -2,3 +2,4 @@
 .
 --ignore=tmp/
 --ignore=vendor/
+--suppress-payload-superclass-redefinition-for=Reline::ANSI
