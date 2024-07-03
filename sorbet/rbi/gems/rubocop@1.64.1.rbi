@@ -5093,7 +5093,7 @@ class RuboCop::Cop::Corrector < ::Parser::Source::TreeRewriter
 
   # Legacy
   #
-  # source://parser/3.3.2.0/lib/parser/source/tree_rewriter.rb#252
+  # source://parser/3.3.3.0/lib/parser/source/tree_rewriter.rb#252
   def rewrite; end
 
   # Swaps sources at the given ranges.
@@ -24837,7 +24837,7 @@ class RuboCop::Cop::Lint::UnusedMethodArgument < ::RuboCop::Cop::Base
   def message(variable); end
 
   class << self
-    # source://rubocop-performance/1.21.0/lib/rubocop-performance.rb#15
+    # source://rubocop-performance/1.21.1/lib/rubocop-performance.rb#15
     def autocorrect_incompatible_with; end
 
     # source://rubocop//lib/rubocop/cop/lint/unused_method_argument.rb#75
