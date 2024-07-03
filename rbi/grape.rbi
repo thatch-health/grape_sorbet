@@ -29,6 +29,26 @@ module Grape
       end
     end
 
+    module InsideRoute
+      sig do
+        params(
+          message: T.any(String, T::Hash[Symbol, T.untyped]),
+          status: T.nilable(T.any(Integer, Symbol)),
+          additional_headers: T.nilable(T::Hash[String, String]),
+        ).returns(T.noreturn)
+      end
+      def error!(message, status = nil, additional_headers = nil); end
+
+      sig { params(status: T.nilable(T.any(Integer, Symbol))).returns(Integer) }
+      def status(status = nil); end
+
+      sig { returns(Grape::Cookies) }
+      def cookies; end
+
+      sig { returns(Grape::Router::Route) }
+      def route; end
+    end
+
     module RequestResponse
       module ClassMethods
         sig { params(args: T.untyped, block: T.proc.bind(Grape::Endpoint).params(e: Exception).void).void }
