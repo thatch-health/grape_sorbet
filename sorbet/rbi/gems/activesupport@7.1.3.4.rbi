@@ -9249,10 +9249,10 @@ class ActiveSupport::Notifications::Fanout
   # source://activesupport//lib/active_support/notifications/fanout.rb#314
   def listening?(name); end
 
-  # source://mutex_m/0.2.0/mutex_m.rb#91
+  # source://mutex_m/0.2.0/lib/mutex_m.rb#91
   def lock; end
 
-  # source://mutex_m/0.2.0/mutex_m.rb#81
+  # source://mutex_m/0.2.0/lib/mutex_m.rb#81
   def locked?; end
 
   # source://activesupport//lib/active_support/notifications/fanout.rb#293
@@ -9267,13 +9267,13 @@ class ActiveSupport::Notifications::Fanout
   # source://activesupport//lib/active_support/notifications/fanout.rb#68
   def subscribe(pattern = T.unsafe(nil), callable = T.unsafe(nil), monotonic: T.unsafe(nil), &block); end
 
-  # source://mutex_m/0.2.0/mutex_m.rb#76
+  # source://mutex_m/0.2.0/lib/mutex_m.rb#76
   def synchronize(&block); end
 
-  # source://mutex_m/0.2.0/mutex_m.rb#86
+  # source://mutex_m/0.2.0/lib/mutex_m.rb#86
   def try_lock; end
 
-  # source://mutex_m/0.2.0/mutex_m.rb#96
+  # source://mutex_m/0.2.0/lib/mutex_m.rb#96
   def unlock; end
 
   # source://activesupport//lib/active_support/notifications/fanout.rb#85

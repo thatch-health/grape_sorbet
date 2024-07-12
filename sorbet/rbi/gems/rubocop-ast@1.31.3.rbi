@@ -5271,6 +5271,9 @@ RuboCop::AST::NodePattern::Sets::SET_LOAD_RESTORE = T.let(T.unsafe(nil), Set)
 RuboCop::AST::NodePattern::Sets::SET_MAP_COLLECT = T.let(T.unsafe(nil), Set)
 
 # source://rubocop-ast//lib/rubocop/ast/node_pattern/sets.rb#10
+RuboCop::AST::NodePattern::Sets::SET_MAP_FILTER_MAP = T.let(T.unsafe(nil), Set)
+
+# source://rubocop-ast//lib/rubocop/ast/node_pattern/sets.rb#10
 RuboCop::AST::NodePattern::Sets::SET_MATCH_MATCH = T.let(T.unsafe(nil), Set)
 
 # source://rubocop-ast//lib/rubocop/ast/node_pattern/sets.rb#10
