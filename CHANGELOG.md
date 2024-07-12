@@ -1,3 +1,7 @@
+## 0.0.8 (2024-07-112)
+
+- Improve types for `rescue_from`
+
 ## 0.0.7 (2024-07-03)
 
 - Add signatures for `error!` and a few other methods

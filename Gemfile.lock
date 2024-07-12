@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    grape_sorbet (0.0.7)
+    grape_sorbet (0.0.8)
       activesupport
       grape (~> 2.0)
       sorbet-runtime (~> 0.5.10741)
