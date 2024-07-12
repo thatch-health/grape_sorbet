@@ -1267,33 +1267,35 @@ RuboCop::Cop::Minitest::LiteralAsActualArgument::RESTRICT_ON_SEND = T.let(T.unsa
 #
 # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#30
 class RuboCop::Cop::Minitest::MultipleAssertions < ::RuboCop::Cop::Base
-  include ::RuboCop::Cop::ConfigurableMax
   include ::RuboCop::Cop::VisibilityHelp
   include ::RuboCop::Cop::DefNode
   include ::RuboCop::Cop::MinitestExplorationHelpers
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#36
+  # source://rubocop/1.65.0/lib/rubocop/cop/exclude_limit.rb#11
+  def max=(value); end
+
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#37
   def on_class(class_node); end
 
   private
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#53
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#54
   def assertions_count(node); end
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#61
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#62
   def assertions_count_based_on_type(node); end
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#76
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#77
   def assertions_count_in_assignment(node); end
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#94
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#95
   def assertions_count_in_branches(branches); end
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#98
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#99
   def max_assertions; end
 end
 
-# source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#34
+# source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#33
 RuboCop::Cop::Minitest::MultipleAssertions::MSG = T.let(T.unsafe(nil), String)
 
 # Common functionality for `AssertNil` and `RefuteNil` cops.

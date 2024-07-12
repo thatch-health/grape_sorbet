@@ -31,9 +31,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Uncomment to register a new dependency of your gem
-  spec.add_runtime_dependency("activesupport")
-  spec.add_runtime_dependency("grape", "~> 2.0")
-  spec.add_runtime_dependency("sorbet-runtime", "~> 0.5.10741")
+  spec.add_dependency("activesupport")
+  spec.add_dependency("grape", "~> 2.0")
+  spec.add_dependency("sorbet-runtime", "~> 0.5.10741")
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
