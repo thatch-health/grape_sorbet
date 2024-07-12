@@ -172,16 +172,30 @@ module Tapioca
 
         sig { void }
         def create_request_response_methods
-          request_response_methods_module.create_method(
+          sigs = [
+            request_response_methods_module.create_sig(
+              parameters: {
+                args: "Symbol",
+                block: "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: Exception).void)",
+              },
+              return_type: "void",
+            ),
+            request_response_methods_module.create_sig(
+              type_parameters: ["E"],
+              parameters: {
+                args: "T::Class[T.all(::Exception, T.type_parameter(:E))]",
+                block: "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: T.type_parameter(:E)).void)",
+              },
+              return_type: "void",
+            ),
+          ]
+          request_response_methods_module.create_method_with_sigs(
             "rescue_from",
+            sigs: sigs,
             parameters: [
-              create_rest_param("args", type: "T.untyped"),
-              create_block_param(
-                "block",
-                type: "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: Exception).void)",
-              ),
+              RBI::RestParam.new("args"),
+              RBI::BlockParam.new("block"),
             ],
-            return_type: "void",
           )
         end
 

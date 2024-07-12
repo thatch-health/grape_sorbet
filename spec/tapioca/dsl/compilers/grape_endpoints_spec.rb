@@ -85,7 +85,8 @@ module Tapioca
                   end
 
                   module GeneratedRequestResponseMethods
-                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: Exception).void)).void }
+                    sig { params(args: Symbol, block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: Exception).void)).void }
+                    sig { type_parameters(:E).params(args: T::Class[T.all(::Exception, T.type_parameter(:E))], block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: T.type_parameter(:E)).void)).void }
                     def rescue_from(*args, &block); end
                   end
 
@@ -177,7 +178,8 @@ module Tapioca
                   end
 
                   module GeneratedRequestResponseMethods
-                    sig { params(args: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: Exception).void)).void }
+                    sig { params(args: Symbol, block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: Exception).void)).void }
+                    sig { type_parameters(:E).params(args: T::Class[T.all(::Exception, T.type_parameter(:E))], block: T.nilable(T.proc.bind(PrivateEndpoint).params(e: T.type_parameter(:E)).void)).void }
                     def rescue_from(*args, &block); end
                   end
 
