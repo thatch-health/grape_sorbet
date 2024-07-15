@@ -32,4 +32,6 @@ group :test do
   gem "minitest-reporters", "~> 1.4"
 
   gem "simplecov", require: false
+
+  gem "grape-entity", require: false
 end

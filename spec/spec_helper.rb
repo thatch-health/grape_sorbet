@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "grape_sorbet"
+
 require "tapioca/internal"
 require "minitest/autorun"
 require "minitest/spec"
