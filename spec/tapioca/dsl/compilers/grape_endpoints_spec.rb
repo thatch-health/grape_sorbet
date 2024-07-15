@@ -117,6 +117,8 @@ module Tapioca
                   end
 
                   class PrivateAPIInstance < ::Grape::API::Instance
+                    extend GeneratedCallbacksMethods
+                    extend GeneratedRequestResponseMethods
                     extend GeneratedRoutingMethods
                   end
 
@@ -210,6 +212,8 @@ module Tapioca
                   end
 
                   class PrivateAPIInstance < ::Grape::API::Instance
+                    extend GeneratedCallbacksMethods
+                    extend GeneratedRequestResponseMethods
                     extend GeneratedRoutingMethods
                   end
 

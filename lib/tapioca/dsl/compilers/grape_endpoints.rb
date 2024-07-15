@@ -140,6 +140,8 @@ module Tapioca
           superclass = "::Grape::API::Instance"
 
           api.create_class(APIInstanceClassName, superclass_name: superclass) do |klass|
+            klass.create_extend(CallbacksMethodsModuleName)
+            klass.create_extend(RequestResponseMethodsModuleName)
             klass.create_extend(RoutingMethodsModuleName)
           end
         end
