@@ -1,3 +1,7 @@
+## 0.0.10 (2024-07-15)
+
+- Add missing `extend`s to `PrivateAPIInstance`
+
 ## 0.0.9 (2024-07-15)
 
 - Entity name setter method
