@@ -1,4 +1,8 @@
-## 0.0.8 (2024-07-112)
+## 0.0.9 (2024-07-15)
+
+- Entity name setter method
+
+## 0.0.8 (2024-07-12)
 
 - Improve types for `rescue_from`
 
