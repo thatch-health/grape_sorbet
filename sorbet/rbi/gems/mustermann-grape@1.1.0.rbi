@@ -8,22 +8,22 @@
 # source://mustermann-grape//lib/mustermann/grape.rb#6
 module Mustermann
   class << self
-    # source://mustermann/3.0.0/lib/mustermann.rb#89
+    # source://mustermann/3.0.1/lib/mustermann.rb#89
     def [](name); end
 
-    # source://mustermann/3.0.0/lib/mustermann.rb#120
+    # source://mustermann/3.0.1/lib/mustermann.rb#120
     def extend_object(object); end
 
-    # source://mustermann/3.0.0/lib/mustermann.rb#62
+    # source://mustermann/3.0.1/lib/mustermann.rb#62
     def new(*input, type: T.unsafe(nil), operator: T.unsafe(nil), **options); end
 
-    # source://mustermann/3.0.0/lib/mustermann.rb#115
+    # source://mustermann/3.0.1/lib/mustermann.rb#115
     def normalized_type(type); end
 
-    # source://mustermann/3.0.0/lib/mustermann.rb#110
+    # source://mustermann/3.0.1/lib/mustermann.rb#110
     def register(name, type); end
 
-    # source://mustermann/3.0.0/lib/mustermann.rb#101
+    # source://mustermann/3.0.1/lib/mustermann.rb#101
     def try_require(path); end
   end
 end

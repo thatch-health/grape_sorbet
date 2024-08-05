@@ -7,7 +7,7 @@
 
 # :include: activesupport/README.rdoc
 #
-# source://activesupport//lib/active_support/deep_mergeable.rb#3
+# source://activesupport//lib/active_support/gem_version.rb#3
 module ActiveSupport
   extend ::ActiveSupport::LazyLoadHooks
   extend ::ActiveSupport::Autoload
@@ -3016,6 +3016,41 @@ end
 # source://activesupport//lib/active_support/code_generator.rb#6
 ActiveSupport::CodeGenerator::MethodSet::METHOD_CACHES = T.let(T.unsafe(nil), Hash)
 
+# source://activesupport//lib/active_support/core_ext/range/compare_range.rb#4
+module ActiveSupport::CompareWithRange
+  # Extends the default Range#=== to support range comparisons.
+  #  (1..5) === (1..5)  # => true
+  #  (1..5) === (2..3)  # => true
+  #  (1..5) === (1...6) # => true
+  #  (1..5) === (2..6)  # => false
+  #
+  # The native Range#=== behavior is untouched.
+  #  ('a'..'f') === ('c') # => true
+  #  (5..9) === (11) # => false
+  #
+  # The given range must be fully bounded, with both start and end.
+  #
+  # source://activesupport//lib/active_support/core_ext/range/compare_range.rb#16
+  def ===(value); end
+
+  # Extends the default Range#include? to support range comparisons.
+  #  (1..5).include?(1..5)  # => true
+  #  (1..5).include?(2..3)  # => true
+  #  (1..5).include?(1...6) # => true
+  #  (1..5).include?(2..6)  # => false
+  #
+  # The native Range#include? behavior is untouched.
+  #  ('a'..'f').include?('c') # => true
+  #  (5..9).include?(11) # => false
+  #
+  # The given range must be fully bounded, with both start and end.
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/range/compare_range.rb#41
+  def include?(value); end
+end
+
 # = Active Support \Concern
 #
 # A typical module looks like this:
@@ -5290,6 +5325,22 @@ end
 
 # source://activesupport//lib/active_support/duration.rb#131
 ActiveSupport::Duration::VARIABLE_PARTS = T.let(T.unsafe(nil), Array)
+
+# source://activesupport//lib/active_support/core_ext/range/each.rb#6
+module ActiveSupport::EachTimeWithZone
+  # source://activesupport//lib/active_support/core_ext/range/each.rb#7
+  def each(&block); end
+
+  # source://activesupport//lib/active_support/core_ext/range/each.rb#12
+  def step(n = T.unsafe(nil), &block); end
+
+  private
+
+  # @raise [TypeError]
+  #
+  # source://activesupport//lib/active_support/core_ext/range/each.rb#18
+  def ensure_iteration_allowed; end
+end
 
 # source://activesupport//lib/active_support/core_ext/enumerable.rb#4
 module ActiveSupport::EnumerableCoreExt; end
@@ -10344,6 +10395,227 @@ class ActiveSupport::NumberHelper::RoundingHelper
   def convert_to_decimal(number); end
 end
 
+# source://activesupport//lib/active_support/core_ext/numeric/conversions.rb#7
+module ActiveSupport::NumericWithFormat
+  # \Numeric With Format
+  #
+  # Provides options for converting numbers into formatted strings.
+  # Options are provided for phone numbers, currency, percentage,
+  # precision, positional notation, file size, and pretty printing.
+  #
+  # This method is aliased to <tt>to_formatted_s</tt>.
+  #
+  # ==== Options
+  #
+  # For details on which formats use which options, see ActiveSupport::NumberHelper
+  #
+  # ==== Examples
+  #
+  #  Phone Numbers:
+  #  5551234.to_fs(:phone)                                     # => "555-1234"
+  #  1235551234.to_fs(:phone)                                  # => "123-555-1234"
+  #  1235551234.to_fs(:phone, area_code: true)                 # => "(123) 555-1234"
+  #  1235551234.to_fs(:phone, delimiter: ' ')                  # => "123 555 1234"
+  #  1235551234.to_fs(:phone, area_code: true, extension: 555) # => "(123) 555-1234 x 555"
+  #  1235551234.to_fs(:phone, country_code: 1)                 # => "+1-123-555-1234"
+  #  1235551234.to_fs(:phone, country_code: 1, extension: 1343, delimiter: '.')
+  #  # => "+1.123.555.1234 x 1343"
+  #
+  #  Currency:
+  #  1234567890.50.to_fs(:currency)                     # => "$1,234,567,890.50"
+  #  1234567890.506.to_fs(:currency)                    # => "$1,234,567,890.51"
+  #  1234567890.506.to_fs(:currency, precision: 3)      # => "$1,234,567,890.506"
+  #  1234567890.506.to_fs(:currency, round_mode: :down) # => "$1,234,567,890.50"
+  #  1234567890.506.to_fs(:currency, locale: :fr)       # => "1 234 567 890,51 €"
+  #  -1234567890.50.to_fs(:currency, negative_format: '(%u%n)')
+  #  # => "($1,234,567,890.50)"
+  #  1234567890.50.to_fs(:currency, unit: '&pound;', separator: ',', delimiter: '')
+  #  # => "&pound;1234567890,50"
+  #  1234567890.50.to_fs(:currency, unit: '&pound;', separator: ',', delimiter: '', format: '%n %u')
+  #  # => "1234567890,50 &pound;"
+  #
+  #  Percentage:
+  #  100.to_fs(:percentage)                                  # => "100.000%"
+  #  100.to_fs(:percentage, precision: 0)                    # => "100%"
+  #  1000.to_fs(:percentage, delimiter: '.', separator: ',') # => "1.000,000%"
+  #  302.24398923423.to_fs(:percentage, precision: 5)        # => "302.24399%"
+  #  302.24398923423.to_fs(:percentage, round_mode: :down)   # => "302.243%"
+  #  1000.to_fs(:percentage, locale: :fr)                    # => "1 000,000%"
+  #  100.to_fs(:percentage, format: '%n  %')                 # => "100.000  %"
+  #
+  #  Delimited:
+  #  12345678.to_fs(:delimited)                     # => "12,345,678"
+  #  12345678.05.to_fs(:delimited)                  # => "12,345,678.05"
+  #  12345678.to_fs(:delimited, delimiter: '.')     # => "12.345.678"
+  #  12345678.to_fs(:delimited, delimiter: ',')     # => "12,345,678"
+  #  12345678.05.to_fs(:delimited, separator: ' ')  # => "12,345,678 05"
+  #  12345678.05.to_fs(:delimited, locale: :fr)     # => "12 345 678,05"
+  #  98765432.98.to_fs(:delimited, delimiter: ' ', separator: ',')
+  #  # => "98 765 432,98"
+  #
+  #  Rounded:
+  #  111.2345.to_fs(:rounded)                                      # => "111.235"
+  #  111.2345.to_fs(:rounded, precision: 2)                        # => "111.23"
+  #  111.2345.to_fs(:rounded, precision: 2, round_mode: :up)       # => "111.24"
+  #  13.to_fs(:rounded, precision: 5)                              # => "13.00000"
+  #  389.32314.to_fs(:rounded, precision: 0)                       # => "389"
+  #  111.2345.to_fs(:rounded, significant: true)                   # => "111"
+  #  111.2345.to_fs(:rounded, precision: 1, significant: true)     # => "100"
+  #  13.to_fs(:rounded, precision: 5, significant: true)           # => "13.000"
+  #  111.234.to_fs(:rounded, locale: :fr)                          # => "111,234"
+  #  13.to_fs(:rounded, precision: 5, significant: true, strip_insignificant_zeros: true)
+  #  # => "13"
+  #  389.32314.to_fs(:rounded, precision: 4, significant: true)    # => "389.3"
+  #  1111.2345.to_fs(:rounded, precision: 2, separator: ',', delimiter: '.')
+  #  # => "1.111,23"
+  #
+  #  Human-friendly size in Bytes:
+  #  123.to_fs(:human_size)                                    # => "123 Bytes"
+  #  1234.to_fs(:human_size)                                   # => "1.21 KB"
+  #  12345.to_fs(:human_size)                                  # => "12.1 KB"
+  #  1234567.to_fs(:human_size)                                # => "1.18 MB"
+  #  1234567890.to_fs(:human_size)                             # => "1.15 GB"
+  #  1234567890123.to_fs(:human_size)                          # => "1.12 TB"
+  #  1234567890123456.to_fs(:human_size)                       # => "1.1 PB"
+  #  1234567890123456789.to_fs(:human_size)                    # => "1.07 EB"
+  #  1234567.to_fs(:human_size, precision: 2)                  # => "1.2 MB"
+  #  1234567.to_fs(:human_size, precision: 2, round_mode: :up) # => "1.3 MB"
+  #  483989.to_fs(:human_size, precision: 2)                   # => "470 KB"
+  #  1234567.to_fs(:human_size, precision: 2, separator: ',')  # => "1,2 MB"
+  #  1234567890123.to_fs(:human_size, precision: 5)            # => "1.1228 TB"
+  #  524288000.to_fs(:human_size, precision: 5)                # => "500 MB"
+  #
+  #  Human-friendly format:
+  #  123.to_fs(:human)                                       # => "123"
+  #  1234.to_fs(:human)                                      # => "1.23 Thousand"
+  #  12345.to_fs(:human)                                     # => "12.3 Thousand"
+  #  1234567.to_fs(:human)                                   # => "1.23 Million"
+  #  1234567890.to_fs(:human)                                # => "1.23 Billion"
+  #  1234567890123.to_fs(:human)                             # => "1.23 Trillion"
+  #  1234567890123456.to_fs(:human)                          # => "1.23 Quadrillion"
+  #  1234567890123456789.to_fs(:human)                       # => "1230 Quadrillion"
+  #  489939.to_fs(:human, precision: 2)                      # => "490 Thousand"
+  #  489939.to_fs(:human, precision: 2, round_mode: :down)   # => "480 Thousand"
+  #  489939.to_fs(:human, precision: 4)                      # => "489.9 Thousand"
+  #  1234567.to_fs(:human, precision: 4,
+  #                   significant: false)                             # => "1.2346 Million"
+  #  1234567.to_fs(:human, precision: 1,
+  #                   separator: ',',
+  #                   significant: false)                             # => "1,2 Million"
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/conversions.rb#113
+  def to_formatted_s(format = T.unsafe(nil), options = T.unsafe(nil)); end
+
+  # \Numeric With Format
+  #
+  # Provides options for converting numbers into formatted strings.
+  # Options are provided for phone numbers, currency, percentage,
+  # precision, positional notation, file size, and pretty printing.
+  #
+  # This method is aliased to <tt>to_formatted_s</tt>.
+  #
+  # ==== Options
+  #
+  # For details on which formats use which options, see ActiveSupport::NumberHelper
+  #
+  # ==== Examples
+  #
+  #  Phone Numbers:
+  #  5551234.to_fs(:phone)                                     # => "555-1234"
+  #  1235551234.to_fs(:phone)                                  # => "123-555-1234"
+  #  1235551234.to_fs(:phone, area_code: true)                 # => "(123) 555-1234"
+  #  1235551234.to_fs(:phone, delimiter: ' ')                  # => "123 555 1234"
+  #  1235551234.to_fs(:phone, area_code: true, extension: 555) # => "(123) 555-1234 x 555"
+  #  1235551234.to_fs(:phone, country_code: 1)                 # => "+1-123-555-1234"
+  #  1235551234.to_fs(:phone, country_code: 1, extension: 1343, delimiter: '.')
+  #  # => "+1.123.555.1234 x 1343"
+  #
+  #  Currency:
+  #  1234567890.50.to_fs(:currency)                     # => "$1,234,567,890.50"
+  #  1234567890.506.to_fs(:currency)                    # => "$1,234,567,890.51"
+  #  1234567890.506.to_fs(:currency, precision: 3)      # => "$1,234,567,890.506"
+  #  1234567890.506.to_fs(:currency, round_mode: :down) # => "$1,234,567,890.50"
+  #  1234567890.506.to_fs(:currency, locale: :fr)       # => "1 234 567 890,51 €"
+  #  -1234567890.50.to_fs(:currency, negative_format: '(%u%n)')
+  #  # => "($1,234,567,890.50)"
+  #  1234567890.50.to_fs(:currency, unit: '&pound;', separator: ',', delimiter: '')
+  #  # => "&pound;1234567890,50"
+  #  1234567890.50.to_fs(:currency, unit: '&pound;', separator: ',', delimiter: '', format: '%n %u')
+  #  # => "1234567890,50 &pound;"
+  #
+  #  Percentage:
+  #  100.to_fs(:percentage)                                  # => "100.000%"
+  #  100.to_fs(:percentage, precision: 0)                    # => "100%"
+  #  1000.to_fs(:percentage, delimiter: '.', separator: ',') # => "1.000,000%"
+  #  302.24398923423.to_fs(:percentage, precision: 5)        # => "302.24399%"
+  #  302.24398923423.to_fs(:percentage, round_mode: :down)   # => "302.243%"
+  #  1000.to_fs(:percentage, locale: :fr)                    # => "1 000,000%"
+  #  100.to_fs(:percentage, format: '%n  %')                 # => "100.000  %"
+  #
+  #  Delimited:
+  #  12345678.to_fs(:delimited)                     # => "12,345,678"
+  #  12345678.05.to_fs(:delimited)                  # => "12,345,678.05"
+  #  12345678.to_fs(:delimited, delimiter: '.')     # => "12.345.678"
+  #  12345678.to_fs(:delimited, delimiter: ',')     # => "12,345,678"
+  #  12345678.05.to_fs(:delimited, separator: ' ')  # => "12,345,678 05"
+  #  12345678.05.to_fs(:delimited, locale: :fr)     # => "12 345 678,05"
+  #  98765432.98.to_fs(:delimited, delimiter: ' ', separator: ',')
+  #  # => "98 765 432,98"
+  #
+  #  Rounded:
+  #  111.2345.to_fs(:rounded)                                      # => "111.235"
+  #  111.2345.to_fs(:rounded, precision: 2)                        # => "111.23"
+  #  111.2345.to_fs(:rounded, precision: 2, round_mode: :up)       # => "111.24"
+  #  13.to_fs(:rounded, precision: 5)                              # => "13.00000"
+  #  389.32314.to_fs(:rounded, precision: 0)                       # => "389"
+  #  111.2345.to_fs(:rounded, significant: true)                   # => "111"
+  #  111.2345.to_fs(:rounded, precision: 1, significant: true)     # => "100"
+  #  13.to_fs(:rounded, precision: 5, significant: true)           # => "13.000"
+  #  111.234.to_fs(:rounded, locale: :fr)                          # => "111,234"
+  #  13.to_fs(:rounded, precision: 5, significant: true, strip_insignificant_zeros: true)
+  #  # => "13"
+  #  389.32314.to_fs(:rounded, precision: 4, significant: true)    # => "389.3"
+  #  1111.2345.to_fs(:rounded, precision: 2, separator: ',', delimiter: '.')
+  #  # => "1.111,23"
+  #
+  #  Human-friendly size in Bytes:
+  #  123.to_fs(:human_size)                                    # => "123 Bytes"
+  #  1234.to_fs(:human_size)                                   # => "1.21 KB"
+  #  12345.to_fs(:human_size)                                  # => "12.1 KB"
+  #  1234567.to_fs(:human_size)                                # => "1.18 MB"
+  #  1234567890.to_fs(:human_size)                             # => "1.15 GB"
+  #  1234567890123.to_fs(:human_size)                          # => "1.12 TB"
+  #  1234567890123456.to_fs(:human_size)                       # => "1.1 PB"
+  #  1234567890123456789.to_fs(:human_size)                    # => "1.07 EB"
+  #  1234567.to_fs(:human_size, precision: 2)                  # => "1.2 MB"
+  #  1234567.to_fs(:human_size, precision: 2, round_mode: :up) # => "1.3 MB"
+  #  483989.to_fs(:human_size, precision: 2)                   # => "470 KB"
+  #  1234567.to_fs(:human_size, precision: 2, separator: ',')  # => "1,2 MB"
+  #  1234567890123.to_fs(:human_size, precision: 5)            # => "1.1228 TB"
+  #  524288000.to_fs(:human_size, precision: 5)                # => "500 MB"
+  #
+  #  Human-friendly format:
+  #  123.to_fs(:human)                                       # => "123"
+  #  1234.to_fs(:human)                                      # => "1.23 Thousand"
+  #  12345.to_fs(:human)                                     # => "12.3 Thousand"
+  #  1234567.to_fs(:human)                                   # => "1.23 Million"
+  #  1234567890.to_fs(:human)                                # => "1.23 Billion"
+  #  1234567890123.to_fs(:human)                             # => "1.23 Trillion"
+  #  1234567890123456.to_fs(:human)                          # => "1.23 Quadrillion"
+  #  1234567890123456789.to_fs(:human)                       # => "1230 Quadrillion"
+  #  489939.to_fs(:human, precision: 2)                      # => "490 Thousand"
+  #  489939.to_fs(:human, precision: 2, round_mode: :down)   # => "480 Thousand"
+  #  489939.to_fs(:human, precision: 4)                      # => "489.9 Thousand"
+  #  1234567.to_fs(:human, precision: 4,
+  #                   significant: false)                             # => "1.2346 Million"
+  #  1234567.to_fs(:human, precision: 1,
+  #                   separator: ',',
+  #                   significant: false)                             # => "1,2 Million"
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/conversions.rb#113
+  def to_fs(format = T.unsafe(nil), options = T.unsafe(nil)); end
+end
+
 # source://activesupport//lib/active_support/option_merger.rb#6
 class ActiveSupport::OptionMerger
   # @return [OptionMerger] a new instance of OptionMerger
@@ -10476,6 +10748,64 @@ class ActiveSupport::ProxyObject < ::BasicObject
   # source://activesupport//lib/active_support/proxy_object.rb#13
   def raise(*args); end
 end
+
+# = \Range With Format
+#
+# source://activesupport//lib/active_support/core_ext/range/conversions.rb#5
+module ActiveSupport::RangeWithFormat
+  # Convert range to a formatted string. See RANGE_FORMATS for predefined formats.
+  #
+  # This method is aliased to <tt>to_formatted_s</tt>.
+  #
+  #   range = (1..100)           # => 1..100
+  #
+  #   range.to_s                 # => "1..100"
+  #   range.to_fs(:db)           # => "BETWEEN '1' AND '100'"
+  #
+  #   range = (1..)              # => 1..
+  #   range.to_fs(:db)           # => ">= '1'"
+  #
+  #   range = (..100)            # => ..100
+  #   range.to_fs(:db)           # => "<= '100'"
+  #
+  # == Adding your own range formats to to_fs
+  # You can add your own formats to the Range::RANGE_FORMATS hash.
+  # Use the format name as the hash key and a Proc instance.
+  #
+  #   # config/initializers/range_formats.rb
+  #   Range::RANGE_FORMATS[:short] = ->(start, stop) { "Between #{start.to_fs(:db)} and #{stop.to_fs(:db)}" }
+  #
+  # source://activesupport//lib/active_support/core_ext/range/conversions.rb#51
+  def to_formatted_s(format = T.unsafe(nil)); end
+
+  # Convert range to a formatted string. See RANGE_FORMATS for predefined formats.
+  #
+  # This method is aliased to <tt>to_formatted_s</tt>.
+  #
+  #   range = (1..100)           # => 1..100
+  #
+  #   range.to_s                 # => "1..100"
+  #   range.to_fs(:db)           # => "BETWEEN '1' AND '100'"
+  #
+  #   range = (1..)              # => 1..
+  #   range.to_fs(:db)           # => ">= '1'"
+  #
+  #   range = (..100)            # => ..100
+  #   range.to_fs(:db)           # => "<= '100'"
+  #
+  # == Adding your own range formats to to_fs
+  # You can add your own formats to the Range::RANGE_FORMATS hash.
+  # Use the format name as the hash key and a Proc instance.
+  #
+  #   # config/initializers/range_formats.rb
+  #   Range::RANGE_FORMATS[:short] = ->(start, stop) { "Between #{start.to_fs(:db)} and #{stop.to_fs(:db)}" }
+  #
+  # source://activesupport//lib/active_support/core_ext/range/conversions.rb#51
+  def to_fs(format = T.unsafe(nil)); end
+end
+
+# source://activesupport//lib/active_support/core_ext/range/conversions.rb#6
+ActiveSupport::RangeWithFormat::RANGE_FORMATS = T.let(T.unsafe(nil), Hash)
 
 # = Active Support \Reloader
 #
@@ -13884,7 +14214,7 @@ end
 # source://activesupport//lib/active_support/xml_mini/rexml.rb#11
 ActiveSupport::XmlMini_REXML::CONTENT_KEY = T.let(T.unsafe(nil), String)
 
-# source://activesupport//lib/active_support/core_ext/object/blank.rb#83
+# source://activesupport//lib/active_support/core_ext/array/wrap.rb#3
 class Array
   include ::Enumerable
 
@@ -13913,6 +14243,27 @@ class Array
   # source://activesupport//lib/active_support/core_ext/object/deep_dup.rb#29
   def deep_dup; end
 
+  # Returns a copy of the Array excluding the specified elements.
+  #
+  #   ["David", "Rafael", "Aaron", "Todd"].excluding("Aaron", "Todd") # => ["David", "Rafael"]
+  #   [ [ 0, 1 ], [ 1, 0 ] ].excluding([ [ 1, 0 ] ]) # => [ [ 0, 1 ] ]
+  #
+  # Note: This is an optimization of <tt>Enumerable#excluding</tt> that uses <tt>Array#-</tt>
+  # instead of <tt>Array#reject</tt> for performance reasons.
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#47
+  def excluding(*elements); end
+
+  # Removes and returns the elements for which the block returns a true value.
+  # If no block is given, an Enumerator is returned instead.
+  #
+  #   numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  #   odd_numbers = numbers.extract! { |number| number.odd? } # => [1, 3, 5, 7, 9]
+  #   numbers # => [0, 2, 4, 6, 8]
+  #
+  # source://activesupport//lib/active_support/core_ext/array/extract.rb#10
+  def extract!; end
+
   # Extracts options from a set of arguments. Removes and returns the last
   # element in the array if it's a hash, otherwise returns a blank hash.
   #
@@ -13925,6 +14276,153 @@ class Array
   #
   # source://activesupport//lib/active_support/core_ext/array/extract_options.rb#24
   def extract_options!; end
+
+  # Equal to <tt>self[4]</tt>.
+  #
+  #   %w( a b c d e ).fifth # => "e"
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#76
+  def fifth; end
+
+  # Equal to <tt>self[41]</tt>. Also known as accessing "the reddit".
+  #
+  #   (1..42).to_a.forty_two # => 42
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#83
+  def forty_two; end
+
+  # Equal to <tt>self[3]</tt>.
+  #
+  #   %w( a b c d e ).fourth # => "d"
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#69
+  def fourth; end
+
+  # Returns the tail of the array from +position+.
+  #
+  #   %w( a b c d ).from(0)  # => ["a", "b", "c", "d"]
+  #   %w( a b c d ).from(2)  # => ["c", "d"]
+  #   %w( a b c d ).from(10) # => []
+  #   %w().from(0)           # => []
+  #   %w( a b c d ).from(-2) # => ["c", "d"]
+  #   %w( a b c ).from(-10)  # => []
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#12
+  def from(position); end
+
+  # Splits or iterates over the array in +number+ of groups, padding any
+  # remaining slots with +fill_with+ unless it is +false+.
+  #
+  #   %w(1 2 3 4 5 6 7 8 9 10).in_groups(3) {|group| p group}
+  #   ["1", "2", "3", "4"]
+  #   ["5", "6", "7", nil]
+  #   ["8", "9", "10", nil]
+  #
+  #   %w(1 2 3 4 5 6 7 8 9 10).in_groups(3, '&nbsp;') {|group| p group}
+  #   ["1", "2", "3", "4"]
+  #   ["5", "6", "7", "&nbsp;"]
+  #   ["8", "9", "10", "&nbsp;"]
+  #
+  #   %w(1 2 3 4 5 6 7).in_groups(3, false) {|group| p group}
+  #   ["1", "2", "3"]
+  #   ["4", "5"]
+  #   ["6", "7"]
+  #
+  # source://activesupport//lib/active_support/core_ext/array/grouping.rb#62
+  def in_groups(number, fill_with = T.unsafe(nil), &block); end
+
+  # Splits or iterates over the array in groups of size +number+,
+  # padding any remaining slots with +fill_with+ unless it is +false+.
+  #
+  #   %w(1 2 3 4 5 6 7 8 9 10).in_groups_of(3) {|group| p group}
+  #   ["1", "2", "3"]
+  #   ["4", "5", "6"]
+  #   ["7", "8", "9"]
+  #   ["10", nil, nil]
+  #
+  #   %w(1 2 3 4 5).in_groups_of(2, '&nbsp;') {|group| p group}
+  #   ["1", "2"]
+  #   ["3", "4"]
+  #   ["5", "&nbsp;"]
+  #
+  #   %w(1 2 3 4 5).in_groups_of(2, false) {|group| p group}
+  #   ["1", "2"]
+  #   ["3", "4"]
+  #   ["5"]
+  #
+  # source://activesupport//lib/active_support/core_ext/array/grouping.rb#22
+  def in_groups_of(number, fill_with = T.unsafe(nil), &block); end
+
+  # Returns a new array that includes the passed elements.
+  #
+  #   [ 1, 2, 3 ].including(4, 5) # => [ 1, 2, 3, 4, 5 ]
+  #   [ [ 0, 1 ] ].including([ [ 1, 0 ] ]) # => [ [ 0, 1 ], [ 1, 0 ] ]
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#36
+  def including(*elements); end
+
+  # Wraps the array in an ActiveSupport::ArrayInquirer object, which gives a
+  # friendlier way to check its string-like contents.
+  #
+  #   pets = [:cat, :dog].inquiry
+  #
+  #   pets.cat?     # => true
+  #   pets.ferret?  # => false
+  #
+  #   pets.any?(:cat, :ferret)  # => true
+  #   pets.any?(:ferret, :alligator)  # => false
+  #
+  # source://activesupport//lib/active_support/core_ext/array/inquiry.rb#16
+  def inquiry; end
+
+  # Equal to <tt>self[1]</tt>.
+  #
+  #   %w( a b c d e ).second # => "b"
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#55
+  def second; end
+
+  # Equal to <tt>self[-2]</tt>.
+  #
+  #   %w( a b c d e ).second_to_last # => "d"
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#97
+  def second_to_last; end
+
+  # Divides the array into one or more subarrays based on a delimiting +value+
+  # or the result of an optional block.
+  #
+  #   [1, 2, 3, 4, 5].split(3)              # => [[1, 2], [4, 5]]
+  #   (1..10).to_a.split { |i| i % 3 == 0 } # => [[1, 2], [4, 5], [7, 8], [10]]
+  #
+  # source://activesupport//lib/active_support/core_ext/array/grouping.rb#93
+  def split(value = T.unsafe(nil), &block); end
+
+  # Equal to <tt>self[2]</tt>.
+  #
+  #   %w( a b c d e ).third # => "c"
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#62
+  def third; end
+
+  # Equal to <tt>self[-3]</tt>.
+  #
+  #   %w( a b c d e ).third_to_last # => "c"
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#90
+  def third_to_last; end
+
+  # Returns the beginning of the array up to +position+.
+  #
+  #   %w( a b c d ).to(0)  # => ["a"]
+  #   %w( a b c d ).to(2)  # => ["a", "b", "c"]
+  #   %w( a b c d ).to(10) # => ["a", "b", "c", "d"]
+  #   %w().to(0)           # => []
+  #   %w( a b c d ).to(-2) # => ["a", "b", "c"]
+  #   %w( a b c ).to(-10)  # => []
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#24
+  def to(position); end
 
   # source://activesupport//lib/active_support/deprecation/method_wrappers.rb#46
   def to_default_s(*args, **_arg1, &block); end
@@ -14100,6 +14598,17 @@ class Array
   # source://activesupport//lib/active_support/core_ext/array/conversions.rb#185
   def to_xml(options = T.unsafe(nil)); end
 
+  # Returns a copy of the Array excluding the specified elements.
+  #
+  #   ["David", "Rafael", "Aaron", "Todd"].excluding("Aaron", "Todd") # => ["David", "Rafael"]
+  #   [ [ 0, 1 ], [ 1, 0 ] ].excluding([ [ 1, 0 ] ]) # => [ [ 0, 1 ] ]
+  #
+  # Note: This is an optimization of <tt>Enumerable#excluding</tt> that uses <tt>Array#-</tt>
+  # instead of <tt>Array#reject</tt> for performance reasons.
+  #
+  # source://activesupport//lib/active_support/core_ext/array/access.rb#47
+  def without(*elements); end
+
   class << self
     # Wraps its argument in an array unless it is already an array (or array-like).
     #
@@ -14145,6 +14654,7 @@ end
 # source://activesupport//lib/active_support/core_ext/object/json.rb#126
 class BigDecimal < ::Numeric
   include ::ActiveSupport::BigDecimalWithDefaultFormat
+  include ::ActiveSupport::NumericWithFormat
 
   # A BigDecimal would be naturally represented as a JSON number. Most libraries,
   # however, parse non-integer JSON numbers directly as floats. Clients using
@@ -14163,7 +14673,7 @@ class BigDecimal < ::Numeric
   def to_s(format = T.unsafe(nil)); end
 end
 
-# source://activesupport//lib/active_support/core_ext/class/subclasses.rb#6
+# source://activesupport//lib/active_support/core_ext/class/attribute.rb#5
 class Class < ::Module
   include ::ActiveSupport::DescendantsTracker::ReloadedClassesFiltering
 
@@ -14285,7 +14795,7 @@ class Data
   def as_json(options = T.unsafe(nil)); end
 end
 
-# source://activesupport//lib/active_support/core_ext/date/zones.rb#6
+# source://activesupport//lib/active_support/core_ext/date/acts_like.rb#5
 class Date
   include ::Comparable
   include ::DateAndTime::Zones
@@ -14301,6 +14811,13 @@ class Date
   #
   # source://activesupport//lib/active_support/core_ext/date/calculations.rb#152
   def <=>(other); end
+
+  # Duck-types as a Date-like class. See Object#acts_like?.
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/date/acts_like.rb#7
+  def acts_like_date?; end
 
   # Provides precise Date calculations for years, months, and days. The +options+ parameter takes a hash with
   # any of these keys: <tt>:years</tt>, <tt>:months</tt>, <tt>:weeks</tt>, <tt>:days</tt>.
@@ -14365,6 +14882,15 @@ class Date
   #
   # source://activesupport//lib/active_support/core_ext/date/calculations.rb#67
   def beginning_of_day; end
+
+  # No Date is blank:
+  #
+  #   Date.today.blank? # => false
+  #
+  # @return [false]
+  #
+  # source://activesupport//lib/active_support/core_ext/date/blank.rb#11
+  def blank?; end
 
   # Returns a new Date where one or more of the elements have been changed according to the +options+ parameter.
   # The +options+ parameter is a hash with a combination of these keys: <tt>:year</tt>, <tt>:month</tt>, <tt>:day</tt>.
@@ -15088,11 +15614,27 @@ end
 
 # source://activesupport//lib/active_support/core_ext/date_time/calculations.rb#5
 class DateTime < ::Date
+  include ::DateAndTime::Compatibility
+
   # Layers additional behavior on DateTime#<=> so that Time and
   # ActiveSupport::TimeWithZone instances can be compared with a DateTime.
   #
   # source://activesupport//lib/active_support/core_ext/date_time/calculations.rb#208
   def <=>(other); end
+
+  # Duck-types as a Date-like class. See Object#acts_like?.
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/date_time/acts_like.rb#8
+  def acts_like_date?; end
+
+  # Duck-types as a Time-like class. See Object#acts_like?.
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/date_time/acts_like.rb#13
+  def acts_like_time?; end
 
   # Uses Date to provide precise Time calculations for years, months, and days.
   # The +options+ parameter takes a hash with any of these keys: <tt>:years</tt>,
@@ -15179,6 +15721,15 @@ class DateTime < ::Date
   #
   # source://activesupport//lib/active_support/core_ext/date_time/calculations.rb#158
   def beginning_of_minute; end
+
+  # No DateTime is ever blank:
+  #
+  #   DateTime.now.blank? # => false
+  #
+  # @return [false]
+  #
+  # source://activesupport//lib/active_support/core_ext/date_time/blank.rb#11
+  def blank?; end
 
   # Returns a new DateTime where one or more of the elements have been changed
   # according to the +options+ parameter. The time options (<tt>:hour</tt>,
@@ -15401,6 +15952,14 @@ class DateTime < ::Date
   # source://activesupport//lib/active_support/core_ext/date_time/conversions.rb#88
   def to_i; end
 
+  # Either return an instance of +Time+ with the same UTC offset
+  # as +self+ or an instance of +Time+ representing the same time
+  # in the local system timezone depending on the setting of
+  # on the setting of +ActiveSupport.to_time_preserves_timezone+.
+  #
+  # source://activesupport//lib/active_support/core_ext/date_time/compatibility.rb#15
+  def to_time; end
+
   # Returns the fraction of a second as microseconds
   #
   # source://activesupport//lib/active_support/core_ext/date_time/conversions.rb#93
@@ -15459,6 +16018,53 @@ end
 class Delegator < ::BasicObject
   include ::ActiveSupport::Tryable
 end
+
+# source://activesupport//lib/active_support/core_ext/digest/uuid.rb#7
+module Digest::UUID
+  class << self
+    # Generates a v5 non-random UUID (Universally Unique IDentifier).
+    #
+    # Using OpenSSL::Digest::MD5 generates version 3 UUIDs; OpenSSL::Digest::SHA1 generates version 5 UUIDs.
+    # uuid_from_hash always generates the same UUID for a given name and namespace combination.
+    #
+    # See RFC 4122 for details of UUID at: https://www.ietf.org/rfc/rfc4122.txt
+    #
+    # source://activesupport//lib/active_support/core_ext/digest/uuid.rb#19
+    def uuid_from_hash(hash_class, namespace, name); end
+
+    # Convenience method for uuid_from_hash using OpenSSL::Digest::MD5.
+    #
+    # source://activesupport//lib/active_support/core_ext/digest/uuid.rb#42
+    def uuid_v3(uuid_namespace, name); end
+
+    # Convenience method for SecureRandom.uuid.
+    #
+    # source://activesupport//lib/active_support/core_ext/digest/uuid.rb#52
+    def uuid_v4; end
+
+    # Convenience method for uuid_from_hash using OpenSSL::Digest::SHA1.
+    #
+    # source://activesupport//lib/active_support/core_ext/digest/uuid.rb#47
+    def uuid_v5(uuid_namespace, name); end
+
+    private
+
+    # source://activesupport//lib/active_support/core_ext/digest/uuid.rb#56
+    def pack_uuid_namespace(namespace); end
+  end
+end
+
+# source://activesupport//lib/active_support/core_ext/digest/uuid.rb#8
+Digest::UUID::DNS_NAMESPACE = T.let(T.unsafe(nil), String)
+
+# source://activesupport//lib/active_support/core_ext/digest/uuid.rb#10
+Digest::UUID::OID_NAMESPACE = T.let(T.unsafe(nil), String)
+
+# source://activesupport//lib/active_support/core_ext/digest/uuid.rb#9
+Digest::UUID::URL_NAMESPACE = T.let(T.unsafe(nil), String)
+
+# source://activesupport//lib/active_support/core_ext/digest/uuid.rb#11
+Digest::UUID::X500_NAMESPACE = T.let(T.unsafe(nil), String)
 
 # source://activesupport//lib/active_support/core_ext/erb/util.rb#39
 module ERB::Util
@@ -15856,7 +16462,7 @@ class Exception
   def as_json(options = T.unsafe(nil)); end
 end
 
-# source://activesupport//lib/active_support/core_ext/object/blank.rb#61
+# source://activesupport//lib/active_support/core_ext/object/to_query.rb#32
 class FalseClass
   # source://activesupport//lib/active_support/core_ext/object/json.rb#89
   def as_json(options = T.unsafe(nil)); end
@@ -15907,6 +16513,8 @@ end
 
 # source://activesupport//lib/active_support/core_ext/object/json.rb#118
 class Float < ::Numeric
+  include ::ActiveSupport::NumericWithFormat
+
   # Encoding Infinity or NaN to JSON should return "null". The default returns
   # "Infinity" or "NaN" which are not valid JSON.
   #
@@ -16031,6 +16639,25 @@ class Hash
   #
   # source://activesupport//lib/active_support/core_ext/hash/keys.rb#72
   def deep_transform_keys!(&block); end
+
+  # Returns a new hash with all values converted by the block operation.
+  # This includes the values from the root hash and from all
+  # nested hashes and arrays.
+  #
+  #   hash = { person: { name: 'Rob', age: '28' } }
+  #
+  #   hash.deep_transform_values{ |value| value.to_s.upcase }
+  #   # => {person: {name: "ROB", age: "28"}}
+  #
+  # source://activesupport//lib/active_support/core_ext/hash/deep_transform_values.rb#12
+  def deep_transform_values(&block); end
+
+  # Destructively converts all values by using the block operation.
+  # This includes the values from the root hash and from all
+  # nested hashes and arrays.
+  #
+  # source://activesupport//lib/active_support/core_ext/hash/deep_transform_values.rb#19
+  def deep_transform_values!(&block); end
 
   # Removes the given keys from hash and returns it.
   #   hash = { a: true, b: false, c: nil }
@@ -16297,6 +16924,14 @@ class Hash
   # source://activesupport//lib/active_support/core_ext/hash/keys.rb#129
   def _deep_transform_keys_in_object!(object, &block); end
 
+  # Support methods for deep transforming nested hashes and arrays.
+  #
+  # source://activesupport//lib/active_support/core_ext/hash/deep_transform_values.rb#25
+  def _deep_transform_values_in_object(object, &block); end
+
+  # source://activesupport//lib/active_support/core_ext/hash/deep_transform_values.rb#36
+  def _deep_transform_values_in_object!(object, &block); end
+
   class << self
     # Builds a Hash from XML just like <tt>Hash.from_xml</tt>, but also allows Symbol and YAML.
     #
@@ -16476,11 +17111,93 @@ class IPAddr
   def as_json(options = T.unsafe(nil)); end
 end
 
-class Integer < ::Numeric; end
+# source://activesupport//lib/active_support/core_ext/integer/multiple.rb#3
+class Integer < ::Numeric
+  include ::ActiveSupport::NumericWithFormat
 
-# source://activesupport//lib/active_support/core_ext/kernel/reporting.rb#3
+  # Returns a Duration instance matching the number of months provided.
+  #
+  #   2.months # => 2 months
+  #
+  # source://activesupport//lib/active_support/core_ext/integer/time.rb#10
+  def month; end
+
+  # Returns a Duration instance matching the number of months provided.
+  #
+  #   2.months # => 2 months
+  #
+  # source://activesupport//lib/active_support/core_ext/integer/time.rb#10
+  def months; end
+
+  # Check whether the integer is evenly divisible by the argument.
+  #
+  #   0.multiple_of?(0)  # => true
+  #   6.multiple_of?(5)  # => false
+  #   10.multiple_of?(2) # => true
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/integer/multiple.rb#9
+  def multiple_of?(number); end
+
+  # Ordinal returns the suffix used to denote the position
+  # in an ordered sequence such as 1st, 2nd, 3rd, 4th.
+  #
+  #   1.ordinal     # => "st"
+  #   2.ordinal     # => "nd"
+  #   1002.ordinal  # => "nd"
+  #   1003.ordinal  # => "rd"
+  #   -11.ordinal   # => "th"
+  #   -1001.ordinal # => "st"
+  #
+  # source://activesupport//lib/active_support/core_ext/integer/inflections.rb#28
+  def ordinal; end
+
+  # Ordinalize turns a number into an ordinal string used to denote the
+  # position in an ordered sequence such as 1st, 2nd, 3rd, 4th.
+  #
+  #   1.ordinalize     # => "1st"
+  #   2.ordinalize     # => "2nd"
+  #   1002.ordinalize  # => "1002nd"
+  #   1003.ordinalize  # => "1003rd"
+  #   -11.ordinalize   # => "-11th"
+  #   -1001.ordinalize # => "-1001st"
+  #
+  # source://activesupport//lib/active_support/core_ext/integer/inflections.rb#15
+  def ordinalize; end
+
+  # Returns a Duration instance matching the number of years provided.
+  #
+  #   2.years # => 2 years
+  #
+  # source://activesupport//lib/active_support/core_ext/integer/time.rb#18
+  def year; end
+
+  # Returns a Duration instance matching the number of years provided.
+  #
+  #   2.years # => 2 years
+  #
+  # source://activesupport//lib/active_support/core_ext/integer/time.rb#18
+  def years; end
+end
+
+Integer::GMP_VERSION = T.let(T.unsafe(nil), String)
+
+# source://activesupport//lib/active_support/core_ext/kernel/concern.rb#5
 module Kernel
+  # class_eval on an object acts like +singleton_class.class_eval+.
+  #
+  # source://activesupport//lib/active_support/core_ext/kernel/singleton_class.rb#5
+  def class_eval(*args, &block); end
+
   private
+
+  # A shortcut to define a toplevel concern, not within a module.
+  #
+  # See Module::Concerning for more.
+  #
+  # source://activesupport//lib/active_support/core_ext/kernel/concern.rb#11
+  def concern(topic, &module_definition); end
 
   # Sets $VERBOSE to +true+ for the duration of the block and back to its
   # original value afterwards.
@@ -16519,6 +17236,13 @@ module Kernel
   def with_warnings(flag); end
 
   class << self
+    # A shortcut to define a toplevel concern, not within a module.
+    #
+    # See Module::Concerning for more.
+    #
+    # source://activesupport//lib/active_support/core_ext/kernel/concern.rb#11
+    def concern(topic, &module_definition); end
+
     # Sets $VERBOSE to +true+ for the duration of the block and back to its
     # original value afterwards.
     #
@@ -16557,6 +17281,19 @@ module Kernel
   end
 end
 
+# source://activesupport//lib/active_support/core_ext/load_error.rb#3
+class LoadError < ::ScriptError
+  include ::DidYouMean::Correctable
+
+  # Returns true if the given path name (except perhaps for the ".rb"
+  # extension) is the missing file which caused the exception to be raised.
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/load_error.rb#6
+  def is_missing?(location); end
+end
+
 # source://activesupport//lib/active_support/core_ext/object/duplicable.rb#31
 class Method
   # Methods are not duplicable:
@@ -16584,8 +17321,82 @@ end
 #
 # source://activesupport//lib/active_support/core_ext/module/attribute_accessors.rb#8
 class Module
+  include ::Module::Concerning
+
+  # Allows you to make aliases for attributes, which includes
+  # getter, setter, and a predicate.
+  #
+  #   class Content < ActiveRecord::Base
+  #     # has a title attribute
+  #   end
+  #
+  #   class Email < Content
+  #     alias_attribute :subject, :title
+  #   end
+  #
+  #   e = Email.find(1)
+  #   e.title    # => "Superstars"
+  #   e.subject  # => "Superstars"
+  #   e.subject? # => true
+  #   e.subject = "Megastars"
+  #   e.title    # => "Megastars"
+  #
+  # source://activesupport//lib/active_support/core_ext/module/aliasing.rb#21
+  def alias_attribute(new_name, old_name); end
+
+  # A module may or may not have a name.
+  #
+  #   module M; end
+  #   M.name # => "M"
+  #
+  #   m = Module.new
+  #   m.name # => nil
+  #
+  # +anonymous?+ method returns true if module does not have a name, false otherwise:
+  #
+  #   Module.new.anonymous? # => true
+  #
+  #   module M; end
+  #   M.anonymous?          # => false
+  #
+  # A module gets a name when it is first assigned to a constant. Either
+  # via the +module+ or +class+ keyword or by an explicit assignment:
+  #
+  #   m = Module.new # creates an anonymous module
+  #   m.anonymous?   # => true
+  #   M = m          # m gets a name here as a side-effect
+  #   m.name         # => "M"
+  #   m.anonymous?   # => false
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/module/anonymous.rb#27
+  def anonymous?; end
+
   # source://activesupport//lib/active_support/core_ext/object/json.rb#53
   def as_json(options = T.unsafe(nil)); end
+
+  # Declares an attribute reader and writer backed by an internally-named instance
+  # variable.
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#16
+  def attr_internal(*attrs); end
+
+  # Declares an attribute reader and writer backed by an internally-named instance
+  # variable.
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#16
+  def attr_internal_accessor(*attrs); end
+
+  # Declares an attribute reader backed by an internally-named instance variable.
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#5
+  def attr_internal_reader(*attrs); end
+
+  # Declares an attribute writer backed by an internally-named instance variable.
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#10
+  def attr_internal_writer(*attrs); end
 
   # Defines both class and instance accessors for class attributes.
   # All class and instance methods created will be public, even if
@@ -17168,6 +17979,48 @@ class Module
   # source://activesupport//lib/active_support/core_ext/module/redefine_method.rb#30
   def method_visibility(method); end
 
+  # Returns the module which contains this one according to its name.
+  #
+  #   module M
+  #     module N
+  #     end
+  #   end
+  #   X = M::N
+  #
+  #   M::N.module_parent # => M
+  #   X.module_parent    # => M
+  #
+  # The parent of top-level and anonymous modules is Object.
+  #
+  #   M.module_parent          # => Object
+  #   Module.new.module_parent # => Object
+  #
+  # source://activesupport//lib/active_support/core_ext/module/introspection.rb#34
+  def module_parent; end
+
+  # Returns the name of the module containing this one.
+  #
+  #   M::N.module_parent_name # => "M"
+  #
+  # source://activesupport//lib/active_support/core_ext/module/introspection.rb#9
+  def module_parent_name; end
+
+  # Returns all the parents of this module according to its name, ordered from
+  # nested outwards. The receiver is not contained within the result.
+  #
+  #   module M
+  #     module N
+  #     end
+  #   end
+  #   X = M::N
+  #
+  #   M.module_parents    # => [Object]
+  #   M::N.module_parents # => [M, Object]
+  #   X.module_parents    # => [M, Object]
+  #
+  # source://activesupport//lib/active_support/core_ext/module/introspection.rb#50
+  def module_parents; end
+
   # Replaces the existing method definition, if there is one, with the passed
   # block as its body.
   #
@@ -17196,6 +18049,362 @@ class Module
   #
   # source://activesupport//lib/active_support/core_ext/module/redefine_method.rb#7
   def silence_redefinition_of_method(method); end
+
+  # Defines both class and instance accessors for class attributes.
+  #
+  #   class Account
+  #     thread_mattr_accessor :user
+  #   end
+  #
+  #   Account.user = "DHH"
+  #   Account.user     # => "DHH"
+  #   Account.new.user # => "DHH"
+  #
+  # Unlike +mattr_accessor+, values are *not* shared with subclasses or parent classes.
+  # If a subclass changes the value, the parent class' value is not changed.
+  # If the parent class changes the value, the value of subclasses is not changed.
+  #
+  #   class Customer < Account
+  #   end
+  #
+  #   Account.user   # => "DHH"
+  #   Customer.user  # => nil
+  #   Customer.user  = "Rafael"
+  #   Customer.user  # => "Rafael"
+  #   Account.user   # => "DHH"
+  #
+  # To omit the instance writer method, pass <tt>instance_writer: false</tt>.
+  # To omit the instance reader method, pass <tt>instance_reader: false</tt>.
+  #
+  #   class Current
+  #     thread_mattr_accessor :user, instance_writer: false, instance_reader: false
+  #   end
+  #
+  #   Current.new.user = "DHH"  # => NoMethodError
+  #   Current.new.user          # => NoMethodError
+  #
+  # Or pass <tt>instance_accessor: false</tt>, to omit both instance methods.
+  #
+  #   class Current
+  #     thread_mattr_accessor :user, instance_accessor: false
+  #   end
+  #
+  #   Current.new.user = "DHH"  # => NoMethodError
+  #   Current.new.user          # => NoMethodError
+  #
+  # A default value may be specified using the +:default+ option. Because
+  # multiple threads can access the default value, non-frozen default values
+  # will be <tt>dup</tt>ed and frozen.
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attribute_accessors_per_thread.rb#170
+  def thread_cattr_accessor(*syms, instance_reader: T.unsafe(nil), instance_writer: T.unsafe(nil), instance_accessor: T.unsafe(nil), default: T.unsafe(nil)); end
+
+  # Defines a per-thread class attribute and creates class and instance reader methods.
+  # The underlying per-thread class variable is set to +nil+, if it is not previously defined.
+  #
+  #   module Current
+  #     thread_mattr_reader :user
+  #   end
+  #
+  #   Current.user = "DHH"
+  #   Current.user # => "DHH"
+  #   Thread.new { Current.user }.value # => nil
+  #
+  # The attribute name must be a valid method name in Ruby.
+  #
+  #   module Foo
+  #     thread_mattr_reader :"1_Badname"
+  #   end
+  #   # => NameError: invalid attribute name: 1_Badname
+  #
+  # To omit the instance reader method, pass
+  # <tt>instance_reader: false</tt> or <tt>instance_accessor: false</tt>.
+  #
+  #   class Current
+  #     thread_mattr_reader :user, instance_reader: false
+  #   end
+  #
+  #   Current.new.user # => NoMethodError
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attribute_accessors_per_thread.rb#41
+  def thread_cattr_reader(*syms, instance_reader: T.unsafe(nil), instance_accessor: T.unsafe(nil), default: T.unsafe(nil)); end
+
+  # Defines a per-thread class attribute and creates a class and instance writer methods to
+  # allow assignment to the attribute.
+  #
+  #   module Current
+  #     thread_mattr_writer :user
+  #   end
+  #
+  #   Current.user = "DHH"
+  #   Thread.current[:attr_Current_user] # => "DHH"
+  #
+  # To omit the instance writer method, pass
+  # <tt>instance_writer: false</tt> or <tt>instance_accessor: false</tt>.
+  #
+  #   class Current
+  #     thread_mattr_writer :user, instance_writer: false
+  #   end
+  #
+  #   Current.new.user = "DHH" # => NoMethodError
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attribute_accessors_per_thread.rb#101
+  def thread_cattr_writer(*syms, instance_writer: T.unsafe(nil), instance_accessor: T.unsafe(nil)); end
+
+  # Defines both class and instance accessors for class attributes.
+  #
+  #   class Account
+  #     thread_mattr_accessor :user
+  #   end
+  #
+  #   Account.user = "DHH"
+  #   Account.user     # => "DHH"
+  #   Account.new.user # => "DHH"
+  #
+  # Unlike +mattr_accessor+, values are *not* shared with subclasses or parent classes.
+  # If a subclass changes the value, the parent class' value is not changed.
+  # If the parent class changes the value, the value of subclasses is not changed.
+  #
+  #   class Customer < Account
+  #   end
+  #
+  #   Account.user   # => "DHH"
+  #   Customer.user  # => nil
+  #   Customer.user  = "Rafael"
+  #   Customer.user  # => "Rafael"
+  #   Account.user   # => "DHH"
+  #
+  # To omit the instance writer method, pass <tt>instance_writer: false</tt>.
+  # To omit the instance reader method, pass <tt>instance_reader: false</tt>.
+  #
+  #   class Current
+  #     thread_mattr_accessor :user, instance_writer: false, instance_reader: false
+  #   end
+  #
+  #   Current.new.user = "DHH"  # => NoMethodError
+  #   Current.new.user          # => NoMethodError
+  #
+  # Or pass <tt>instance_accessor: false</tt>, to omit both instance methods.
+  #
+  #   class Current
+  #     thread_mattr_accessor :user, instance_accessor: false
+  #   end
+  #
+  #   Current.new.user = "DHH"  # => NoMethodError
+  #   Current.new.user          # => NoMethodError
+  #
+  # A default value may be specified using the +:default+ option. Because
+  # multiple threads can access the default value, non-frozen default values
+  # will be <tt>dup</tt>ed and frozen.
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attribute_accessors_per_thread.rb#170
+  def thread_mattr_accessor(*syms, instance_reader: T.unsafe(nil), instance_writer: T.unsafe(nil), instance_accessor: T.unsafe(nil), default: T.unsafe(nil)); end
+
+  # Defines a per-thread class attribute and creates class and instance reader methods.
+  # The underlying per-thread class variable is set to +nil+, if it is not previously defined.
+  #
+  #   module Current
+  #     thread_mattr_reader :user
+  #   end
+  #
+  #   Current.user = "DHH"
+  #   Current.user # => "DHH"
+  #   Thread.new { Current.user }.value # => nil
+  #
+  # The attribute name must be a valid method name in Ruby.
+  #
+  #   module Foo
+  #     thread_mattr_reader :"1_Badname"
+  #   end
+  #   # => NameError: invalid attribute name: 1_Badname
+  #
+  # To omit the instance reader method, pass
+  # <tt>instance_reader: false</tt> or <tt>instance_accessor: false</tt>.
+  #
+  #   class Current
+  #     thread_mattr_reader :user, instance_reader: false
+  #   end
+  #
+  #   Current.new.user # => NoMethodError
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attribute_accessors_per_thread.rb#41
+  def thread_mattr_reader(*syms, instance_reader: T.unsafe(nil), instance_accessor: T.unsafe(nil), default: T.unsafe(nil)); end
+
+  # Defines a per-thread class attribute and creates a class and instance writer methods to
+  # allow assignment to the attribute.
+  #
+  #   module Current
+  #     thread_mattr_writer :user
+  #   end
+  #
+  #   Current.user = "DHH"
+  #   Thread.current[:attr_Current_user] # => "DHH"
+  #
+  # To omit the instance writer method, pass
+  # <tt>instance_writer: false</tt> or <tt>instance_accessor: false</tt>.
+  #
+  #   class Current
+  #     thread_mattr_writer :user, instance_writer: false
+  #   end
+  #
+  #   Current.new.user = "DHH" # => NoMethodError
+  #
+  # source://activesupport//lib/active_support/core_ext/module/attribute_accessors_per_thread.rb#101
+  def thread_mattr_writer(*syms, instance_writer: T.unsafe(nil), instance_accessor: T.unsafe(nil)); end
+
+  private
+
+  # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#30
+  def attr_internal_define(attr_name, type); end
+
+  # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#26
+  def attr_internal_ivar_name(attr); end
+
+  class << self
+    # Returns the value of attribute attr_internal_naming_format.
+    #
+    # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#22
+    def attr_internal_naming_format; end
+
+    # Sets the attribute attr_internal_naming_format
+    #
+    # @param value the value to set the attribute attr_internal_naming_format to.
+    #
+    # source://activesupport//lib/active_support/core_ext/module/attr_internal.rb#22
+    def attr_internal_naming_format=(_arg0); end
+  end
+end
+
+# == Bite-sized separation of concerns
+#
+# We often find ourselves with a medium-sized chunk of behavior that we'd
+# like to extract, but only mix in to a single class.
+#
+# Extracting a plain old Ruby object to encapsulate it and collaborate or
+# delegate to the original object is often a good choice, but when there's
+# no additional state to encapsulate or we're making DSL-style declarations
+# about the parent class, introducing new collaborators can obfuscate rather
+# than simplify.
+#
+# The typical route is to just dump everything in a monolithic class, perhaps
+# with a comment, as a least-bad alternative. Using modules in separate files
+# means tedious sifting to get a big-picture view.
+#
+# == Dissatisfying ways to separate small concerns
+#
+# === Using comments:
+#
+#   class Todo < ApplicationRecord
+#     # Other todo implementation
+#     # ...
+#
+#     ## Event tracking
+#     has_many :events
+#
+#     before_create :track_creation
+#
+#     private
+#       def track_creation
+#         # ...
+#       end
+#   end
+#
+# === With an inline module:
+#
+# Noisy syntax.
+#
+#   class Todo < ApplicationRecord
+#     # Other todo implementation
+#     # ...
+#
+#     module EventTracking
+#       extend ActiveSupport::Concern
+#
+#       included do
+#         has_many :events
+#         before_create :track_creation
+#       end
+#
+#       private
+#         def track_creation
+#           # ...
+#         end
+#     end
+#     include EventTracking
+#   end
+#
+# === Mix-in noise exiled to its own file:
+#
+# Once our chunk of behavior starts pushing the scroll-to-understand-it
+# boundary, we give in and move it to a separate file. At this size, the
+# increased overhead can be a reasonable tradeoff even if it reduces our
+# at-a-glance perception of how things work.
+#
+#   class Todo < ApplicationRecord
+#     # Other todo implementation
+#     # ...
+#
+#     include TodoEventTracking
+#   end
+#
+# == Introducing Module#concerning
+#
+# By quieting the mix-in noise, we arrive at a natural, low-ceremony way to
+# separate bite-sized concerns.
+#
+#   class Todo < ApplicationRecord
+#     # Other todo implementation
+#     # ...
+#
+#     concerning :EventTracking do
+#       included do
+#         has_many :events
+#         before_create :track_creation
+#       end
+#
+#       private
+#         def track_creation
+#           # ...
+#         end
+#     end
+#   end
+#
+#   Todo.ancestors
+#   # => [Todo, Todo::EventTracking, ApplicationRecord, Object]
+#
+# This small step has some wonderful ripple effects. We can
+# * grok the behavior of our class in one glance,
+# * clean up monolithic junk-drawer classes by separating their concerns, and
+# * stop leaning on protected/private for crude "this is internal stuff" modularity.
+#
+# === Prepending concerning
+#
+# <tt>concerning</tt> supports a <tt>prepend: true</tt> argument which will <tt>prepend</tt> the
+# concern instead of using <tt>include</tt> for it.
+#
+# source://activesupport//lib/active_support/core_ext/module/concerning.rb#112
+module Module::Concerning
+  # A low-cruft shortcut to define a concern.
+  #
+  #   concern :EventTracking do
+  #     ...
+  #   end
+  #
+  # is equivalent to
+  #
+  #   module EventTracking
+  #     extend ActiveSupport::Concern
+  #
+  #     ...
+  #   end
+  #
+  # source://activesupport//lib/active_support/core_ext/module/concerning.rb#132
+  def concern(topic, &module_definition); end
+
+  # Define a new concern and mix it in.
+  #
+  # source://activesupport//lib/active_support/core_ext/module/concerning.rb#114
+  def concerning(topic, prepend: T.unsafe(nil), &block); end
 end
 
 # source://activesupport//lib/active_support/core_ext/module/delegation.rb#13
@@ -17213,12 +18422,47 @@ class Module::DelegationError < ::NoMethodError; end
 # source://activesupport//lib/active_support/core_ext/module/delegation.rb#10
 Module::RUBY_RESERVED_KEYWORDS = T.let(T.unsafe(nil), Array)
 
+# source://activesupport//lib/active_support/core_ext/name_error.rb#3
 class NameError < ::StandardError
   include ::ErrorHighlight::CoreExt
   include ::DidYouMean::Correctable
+
+  # Extract the name of the missing constant from the exception message.
+  #
+  #   begin
+  #     HelloWorld
+  #   rescue NameError => e
+  #     e.missing_name
+  #   end
+  #   # => "HelloWorld"
+  #
+  # source://activesupport//lib/active_support/core_ext/name_error.rb#12
+  def missing_name; end
+
+  # Was this exception raised because the given name was missing?
+  #
+  #   begin
+  #     HelloWorld
+  #   rescue NameError => e
+  #     e.missing_name?("HelloWorld")
+  #   end
+  #   # => true
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/name_error.rb#44
+  def missing_name?(name); end
+
+  private
+
+  # source://activesupport//lib/active_support/core_ext/name_error.rb#56
+  def real_mod_name(mod); end
 end
 
-# source://activesupport//lib/active_support/core_ext/object/blank.rb#50
+# source://activesupport//lib/active_support/core_ext/name_error.rb#53
+NameError::UNBOUND_METHOD_MODULE_NAME = T.let(T.unsafe(nil), UnboundMethod)
+
+# source://activesupport//lib/active_support/core_ext/object/try.rb#137
 class NilClass
   # source://activesupport//lib/active_support/core_ext/object/json.rb#95
   def as_json(options = T.unsafe(nil)); end
@@ -17290,6 +18534,20 @@ class Numeric
   # source://activesupport//lib/active_support/core_ext/numeric/bytes.rb#15
   def bytes; end
 
+  # Returns a Duration instance matching the number of days provided.
+  #
+  #   2.days # => 2 days
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#37
+  def day; end
+
+  # Returns a Duration instance matching the number of days provided.
+  #
+  #   2.days # => 2 days
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#37
+  def days; end
+
   # Returns the number of bytes equivalent to the exabytes provided.
   #
   #   2.exabytes # => 2_305_843_009_213_693_952
@@ -17303,6 +18561,20 @@ class Numeric
   #
   # source://activesupport//lib/active_support/core_ext/numeric/bytes.rb#63
   def exabytes; end
+
+  # Returns a Duration instance matching the number of fortnights provided.
+  #
+  #   2.fortnights # => 4 weeks
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#53
+  def fortnight; end
+
+  # Returns a Duration instance matching the number of fortnights provided.
+  #
+  #   2.fortnights # => 4 weeks
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#53
+  def fortnights; end
 
   # Returns the number of bytes equivalent to the gigabytes provided.
   #
@@ -17318,10 +18590,33 @@ class Numeric
   # source://activesupport//lib/active_support/core_ext/numeric/bytes.rb#39
   def gigabytes; end
 
+  # Returns a Duration instance matching the number of hours provided.
+  #
+  #   2.hours # => 2 hours
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#29
+  def hour; end
+
+  # Returns a Duration instance matching the number of hours provided.
+  #
+  #   2.hours # => 2 hours
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#29
+  def hours; end
+
   # @return [Boolean]
   #
   # source://activesupport//lib/active_support/core_ext/string/output_safety.rb#13
   def html_safe?; end
+
+  # Returns the number of milliseconds equivalent to the seconds provided.
+  # Used with the standard time durations.
+  #
+  #   2.in_milliseconds # => 2000
+  #   1.hour.in_milliseconds # => 3600000
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#63
+  def in_milliseconds; end
 
   # Returns the number of bytes equivalent to the kilobytes provided.
   #
@@ -17351,6 +18646,20 @@ class Numeric
   # source://activesupport//lib/active_support/core_ext/numeric/bytes.rb#31
   def megabytes; end
 
+  # Returns a Duration instance matching the number of minutes provided.
+  #
+  #   2.minutes # => 2 minutes
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#21
+  def minute; end
+
+  # Returns a Duration instance matching the number of minutes provided.
+  #
+  #   2.minutes # => 2 minutes
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#21
+  def minutes; end
+
   # Returns the number of bytes equivalent to the petabytes provided.
   #
   #   2.petabytes # => 2_251_799_813_685_248
@@ -17365,6 +18674,20 @@ class Numeric
   # source://activesupport//lib/active_support/core_ext/numeric/bytes.rb#55
   def petabytes; end
 
+  # Returns a Duration instance matching the number of seconds provided.
+  #
+  #   2.seconds # => 2 seconds
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#13
+  def second; end
+
+  # Returns a Duration instance matching the number of seconds provided.
+  #
+  #   2.seconds # => 2 seconds
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#13
+  def seconds; end
+
   # Returns the number of bytes equivalent to the terabytes provided.
   #
   #   2.terabytes # => 2_199_023_255_552
@@ -17378,6 +18701,20 @@ class Numeric
   #
   # source://activesupport//lib/active_support/core_ext/numeric/bytes.rb#47
   def terabytes; end
+
+  # Returns a Duration instance matching the number of weeks provided.
+  #
+  #   2.weeks # => 2 weeks
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#45
+  def week; end
+
+  # Returns a Duration instance matching the number of weeks provided.
+  #
+  #   2.weeks # => 2 weeks
+  #
+  # source://activesupport//lib/active_support/core_ext/numeric/time.rb#45
+  def weeks; end
 
   # Returns the number of bytes equivalent to the zettabytes provided.
   #
@@ -17434,7 +18771,7 @@ Numeric::ZETTABYTE = T.let(T.unsafe(nil), Integer)
 # using that rescue idiom.
 # ++
 #
-# source://activesupport//lib/active_support/core_ext/object/blank.rb#5
+# source://activesupport//lib/active_support/core_ext/object/try.rb#35
 class Object < ::BasicObject
   include ::ActiveSupport::ToJsonWithActiveSupportEncoder
   include ::ActiveSupport::Dependencies::RequireDependency
@@ -17616,12 +18953,154 @@ class Object < ::BasicObject
   #
   # source://activesupport//lib/active_support/core_ext/object/to_query.rb#13
   def to_query(key); end
+
+  # Set and restore public attributes around a block.
+  #
+  #   client.timeout # => 5
+  #   client.with(timeout: 1) do
+  #     client.timeout # => 1
+  #   end
+  #   client.timeout # => 5
+  #
+  # This method is a shorthand for the common begin/ensure pattern:
+  #
+  #   old_value = object.attribute
+  #   begin
+  #     object.attribute = new_value
+  #     # do things
+  #   ensure
+  #     object.attribute = old_value
+  #   end
+  #
+  # It can be used on any object as long as both the reader and writer methods
+  # are public.
+  #
+  # source://activesupport//lib/active_support/core_ext/object/with.rb#24
+  def with(**attributes); end
+
+  # An elegant way to factor duplication out of options passed to a series of
+  # method calls. Each method called in the block, with the block variable as
+  # the receiver, will have its options merged with the default +options+
+  # <tt>Hash</tt> or <tt>Hash</tt>-like object provided. Each method called on
+  # the block variable must take an options hash as its final argument.
+  #
+  # Without <tt>with_options</tt>, this code contains duplication:
+  #
+  #   class Account < ActiveRecord::Base
+  #     has_many :customers, dependent: :destroy
+  #     has_many :products,  dependent: :destroy
+  #     has_many :invoices,  dependent: :destroy
+  #     has_many :expenses,  dependent: :destroy
+  #   end
+  #
+  # Using <tt>with_options</tt>, we can remove the duplication:
+  #
+  #   class Account < ActiveRecord::Base
+  #     with_options dependent: :destroy do |assoc|
+  #       assoc.has_many :customers
+  #       assoc.has_many :products
+  #       assoc.has_many :invoices
+  #       assoc.has_many :expenses
+  #     end
+  #   end
+  #
+  # It can also be used with an explicit receiver:
+  #
+  #   I18n.with_options locale: user.locale, scope: 'newsletter' do |i18n|
+  #     subject i18n.t :subject
+  #     body    i18n.t :body, user_name: user.name
+  #   end
+  #
+  # When you don't pass an explicit receiver, it executes the whole block
+  # in merging options context:
+  #
+  #   class Account < ActiveRecord::Base
+  #     with_options dependent: :destroy do
+  #       has_many :customers
+  #       has_many :products
+  #       has_many :invoices
+  #       has_many :expenses
+  #     end
+  #   end
+  #
+  # <tt>with_options</tt> can also be nested since the call is forwarded to its receiver.
+  #
+  # NOTE: Each nesting level will merge inherited defaults in addition to their own.
+  #
+  #   class Post < ActiveRecord::Base
+  #     with_options if: :persisted?, length: { minimum: 50 } do
+  #       validates :content, if: -> { content.present? }
+  #     end
+  #   end
+  #
+  # The code is equivalent to:
+  #
+  #   validates :content, length: { minimum: 50 }, if: -> { content.present? }
+  #
+  # Hence the inherited default for +if+ key is ignored.
+  #
+  # NOTE: You cannot call class methods implicitly inside of +with_options+.
+  # You can access these methods using the class name instead:
+  #
+  #   class Phone < ActiveRecord::Base
+  #     enum :phone_number_type, { home: 0, office: 1, mobile: 2 }
+  #
+  #     with_options presence: true do
+  #       validates :phone_number_type, inclusion: { in: Phone.phone_number_types.keys }
+  #     end
+  #   end
+  #
+  # When the block argument is omitted, the decorated Object instance is returned:
+  #
+  #   module MyStyledHelpers
+  #     def styled
+  #       with_options style: "color: red;"
+  #     end
+  #   end
+  #
+  #   styled.link_to "I'm red", "/"
+  #   # => <a href="/" style="color: red;">I'm red</a>
+  #
+  #   styled.button_tag "I'm red too!"
+  #   # => <button style="color: red;">I'm red too!</button>
+  #
+  # source://activesupport//lib/active_support/core_ext/object/with_options.rb#92
+  def with_options(options, &block); end
 end
 
 # source://activesupport//lib/active_support/core_ext/object/json.rb#230
 class Pathname
   # source://activesupport//lib/active_support/core_ext/object/json.rb#231
   def as_json(options = T.unsafe(nil)); end
+
+  # An Pathname is blank if it's empty:
+  #
+  #   Pathname.new("").blank?      # => true
+  #   Pathname.new(" ").blank?     # => false
+  #   Pathname.new("test").blank?  # => false
+  #
+  # @return [true, false]
+  #
+  # source://activesupport//lib/active_support/core_ext/pathname/blank.rb#13
+  def blank?; end
+
+  # Returns the receiver if the named file exists otherwise returns +nil+.
+  # <tt>pathname.existence</tt> is equivalent to
+  #
+  #    pathname.exist? ? pathname : nil
+  #
+  # For example, something like
+  #
+  #   content = pathname.read if pathname.exist?
+  #
+  # becomes
+  #
+  #   content = pathname.existence&.read
+  #
+  # @return [Pathname]
+  #
+  # source://activesupport//lib/active_support/core_ext/pathname/existence.rb#20
+  def existence; end
 end
 
 module Process
@@ -17641,10 +19120,25 @@ end
 
 # source://activesupport//lib/active_support/core_ext/enumerable.rb#233
 class Range
+  include ::ActiveSupport::RangeWithFormat
+  include ::ActiveSupport::CompareWithRange
+  include ::ActiveSupport::EachTimeWithZone
   include ::Enumerable
+
+  # source://activesupport//lib/active_support/core_ext/range/compare_range.rb#16
+  def ===(value); end
 
   # source://activesupport//lib/active_support/core_ext/object/json.rb#160
   def as_json(options = T.unsafe(nil)); end
+
+  # source://activesupport//lib/active_support/core_ext/range/each.rb#7
+  def each(&block); end
+
+  # source://activesupport//lib/active_support/core_ext/range/compare_range.rb#41
+  def include?(value); end
+
+  # source://activesupport//lib/active_support/core_ext/range/each.rb#12
+  def step(n = T.unsafe(nil), &block); end
 
   # Optimize range sum to use arithmetic progression if a block is not given and
   # we have a range of numeric values.
@@ -17657,7 +19151,37 @@ end
 class Regexp
   # source://activesupport//lib/active_support/core_ext/object/json.rb#142
   def as_json(options = T.unsafe(nil)); end
+
+  # Returns +true+ if the regexp has the multiline flag set.
+  #
+  #   (/./).multiline?  # => false
+  #   (/./m).multiline? # => true
+  #
+  #   Regexp.new(".").multiline?                    # => false
+  #   Regexp.new(".", Regexp::MULTILINE).multiline? # => true
+  #
+  # @return [Boolean]
+  #
+  # source://activesupport//lib/active_support/core_ext/regexp.rb#11
+  def multiline?; end
 end
+
+# source://activesupport//lib/active_support/core_ext/securerandom.rb#5
+module SecureRandom
+  class << self
+    # source://activesupport//lib/active_support/core_ext/securerandom.rb#45
+    def base36(n = T.unsafe(nil)); end
+
+    # source://activesupport//lib/active_support/core_ext/securerandom.rb#20
+    def base58(n = T.unsafe(nil)); end
+  end
+end
+
+# source://activesupport//lib/active_support/core_ext/securerandom.rb#7
+SecureRandom::BASE36_ALPHABET = T.let(T.unsafe(nil), Array)
+
+# source://activesupport//lib/active_support/core_ext/securerandom.rb#6
+SecureRandom::BASE58_ALPHABET = T.let(T.unsafe(nil), Array)
 
 # source://activesupport//lib/active_support/core_ext/object/duplicable.rb#53
 module Singleton
@@ -17678,7 +19202,7 @@ end
 #
 #   'ScaleScore'.tableize # => "scale_scores"
 #
-# source://activesupport//lib/active_support/core_ext/object/blank.rb#103
+# source://activesupport//lib/active_support/core_ext/string/multibyte.rb#5
 class String
   include ::Comparable
 
@@ -17929,6 +19453,61 @@ class String
   # source://activesupport//lib/active_support/core_ext/string/inflections.rb#262
   def humanize(capitalize: T.unsafe(nil), keep_id_suffix: T.unsafe(nil)); end
 
+  # Converts String to a TimeWithZone in the current zone if Time.zone or Time.zone_default
+  # is set, otherwise converts String to a Time via String#to_time
+  #
+  # source://activesupport//lib/active_support/core_ext/string/zones.rb#9
+  def in_time_zone(zone = T.unsafe(nil)); end
+
+  # Indents the lines in the receiver:
+  #
+  #   <<EOS.indent(2)
+  #   def some_method
+  #     some_code
+  #   end
+  #   EOS
+  #   # =>
+  #     def some_method
+  #       some_code
+  #     end
+  #
+  # The second argument, +indent_string+, specifies which indent string to
+  # use. The default is +nil+, which tells the method to make a guess by
+  # peeking at the first indented line, and fall back to a space if there is
+  # none.
+  #
+  #   "  foo".indent(2)        # => "    foo"
+  #   "foo\n\t\tbar".indent(2) # => "\t\tfoo\n\t\t\t\tbar"
+  #   "foo".indent(2, "\t")    # => "\t\tfoo"
+  #
+  # While +indent_string+ is typically one space or tab, it may be any string.
+  #
+  # The third argument, +indent_empty_lines+, is a flag that says whether
+  # empty lines should be indented. Default is false.
+  #
+  #   "foo\n\nbar".indent(2)            # => "  foo\n\n  bar"
+  #   "foo\n\nbar".indent(2, nil, true) # => "  foo\n  \n  bar"
+  #
+  # source://activesupport//lib/active_support/core_ext/string/indent.rb#42
+  def indent(amount, indent_string = T.unsafe(nil), indent_empty_lines = T.unsafe(nil)); end
+
+  # Same as +indent+, except it indents the receiver in-place.
+  #
+  # Returns the indented string, or +nil+ if there was nothing to indent.
+  #
+  # source://activesupport//lib/active_support/core_ext/string/indent.rb#7
+  def indent!(amount, indent_string = T.unsafe(nil), indent_empty_lines = T.unsafe(nil)); end
+
+  # Wraps the current string in the ActiveSupport::StringInquirer class,
+  # which gives you a prettier way to test for equality.
+  #
+  #   env = 'production'.inquiry
+  #   env.production?  # => true
+  #   env.development? # => false
+  #
+  # source://activesupport//lib/active_support/core_ext/string/inquiry.rb#13
+  def inquiry; end
+
   # Returns +true+ if string has utf_8 encoding.
   #
   #   utf_8_str = "some string".encode "UTF-8"
@@ -18126,6 +19705,28 @@ class String
   #
   # source://activesupport//lib/active_support/core_ext/string/filters.rb#21
   def squish!; end
+
+  # Strips indentation in heredocs.
+  #
+  # For example in
+  #
+  #   if options[:usage]
+  #     puts <<-USAGE.strip_heredoc
+  #       This command does such and such.
+  #
+  #       Supported options are:
+  #         -h         This message
+  #         ...
+  #     USAGE
+  #   end
+  #
+  # the user would see the usage message aligned against the left margin.
+  #
+  # Technically, it looks for the least indented non-empty line
+  # in the whole string, and removes that amount of leading whitespace.
+  #
+  # source://activesupport//lib/active_support/core_ext/string/strip.rb#22
+  def strip_heredoc; end
 
   # Creates the name of a table like \Rails does for models to table names. This method
   # uses the +pluralize+ method on the last word in the string.
@@ -18347,11 +19948,12 @@ class Thread
   def active_support_execution_state=(_arg0); end
 end
 
-# source://activesupport//lib/active_support/core_ext/object/blank.rb#146
+# source://activesupport//lib/active_support/core_ext/time/acts_like.rb#5
 class Time
   include ::Comparable
   include ::DateAndTime::Zones
   include ::DateAndTime::Calculations
+  include ::DateAndTime::Compatibility
 
   # source://activesupport//lib/active_support/core_ext/time/calculations.rb#300
   def +(other); end
@@ -18699,6 +20301,12 @@ class Time
   # source://activesupport//lib/active_support/core_ext/time/conversions.rb#53
   def to_fs(format = T.unsafe(nil)); end
 
+  # Either return +self+ or the time in the local system timezone depending
+  # on the setting of +ActiveSupport.to_time_preserves_timezone+.
+  #
+  # source://activesupport//lib/active_support/core_ext/time/compatibility.rb#13
+  def to_time; end
+
   class << self
     # Overriding case equality method so that it returns true for ActiveSupport::TimeWithZone instances
     #
@@ -18844,7 +20452,7 @@ Time::COMMON_YEAR_DAYS_IN_MONTH = T.let(T.unsafe(nil), Array)
 # source://activesupport//lib/active_support/core_ext/time/conversions.rb#8
 Time::DATE_FORMATS = T.let(T.unsafe(nil), Hash)
 
-# source://activesupport//lib/active_support/core_ext/object/blank.rb#72
+# source://activesupport//lib/active_support/core_ext/object/to_query.rb#25
 class TrueClass
   # source://activesupport//lib/active_support/core_ext/object/json.rb#83
   def as_json(options = T.unsafe(nil)); end

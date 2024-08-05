@@ -1004,7 +1004,7 @@ class Spoom::Coverage::D3::ColorPalette < ::T::Struct
   prop :strong, ::String
 
   class << self
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -1344,7 +1344,7 @@ class Spoom::Coverage::Snapshot < ::T::Struct
     sig { params(obj: T::Hash[::String, T.untyped]).returns(::Spoom::Coverage::Snapshot) }
     def from_obj(obj); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -1480,7 +1480,7 @@ class Spoom::Deadcode::Definition < ::T::Struct
   def to_json(*args); end
 
   class << self
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2034,6 +2034,10 @@ class Spoom::Deadcode::Plugins::Minitest < ::Spoom::Deadcode::Plugins::Base
   # source://spoom//lib/spoom/deadcode/plugins/minitest.rb#22
   sig { override.params(definition: ::Spoom::Model::Method).void }
   def on_define_method(definition); end
+
+  # source://spoom//lib/spoom/deadcode/plugins/minitest.rb#28
+  sig { override.params(send: ::Spoom::Deadcode::Send).void }
+  def on_send(send); end
 end
 
 # source://spoom//lib/spoom/deadcode/plugins/namespaces.rb#7
@@ -2364,7 +2368,7 @@ class Spoom::Deadcode::Send < ::T::Struct
   def each_arg_assoc(&block); end
 
   class << self
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2384,7 +2388,7 @@ class Spoom::ExecResult < ::T::Struct
   def to_s; end
 
   class << self
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2582,7 +2586,7 @@ class Spoom::FileTree::Node < ::T::Struct
   def path; end
 
   class << self
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2648,7 +2652,7 @@ class Spoom::Git::Commit < ::T::Struct
   def timestamp; end
 
   class << self
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
 
     # Parse a line formatted as `%h %at` into a `Commit`
@@ -2760,7 +2764,7 @@ class Spoom::LSP::Diagnostic < ::T::Struct
     sig { params(json: T::Hash[T.untyped, T.untyped]).returns(::Spoom::LSP::Diagnostic) }
     def from_json(json); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2793,7 +2797,7 @@ class Spoom::LSP::DocumentSymbol < ::T::Struct
     sig { params(json: T::Hash[T.untyped, T.untyped]).returns(::Spoom::LSP::DocumentSymbol) }
     def from_json(json); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2851,7 +2855,7 @@ class Spoom::LSP::Hover < ::T::Struct
     sig { params(json: T::Hash[T.untyped, T.untyped]).returns(::Spoom::LSP::Hover) }
     def from_json(json); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2876,7 +2880,7 @@ class Spoom::LSP::Location < ::T::Struct
     sig { params(json: T::Hash[T.untyped, T.untyped]).returns(::Spoom::LSP::Location) }
     def from_json(json); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2939,7 +2943,7 @@ class Spoom::LSP::Position < ::T::Struct
     sig { params(json: T::Hash[T.untyped, T.untyped]).returns(::Spoom::LSP::Position) }
     def from_json(json); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -2977,7 +2981,7 @@ class Spoom::LSP::Range < ::T::Struct
     sig { params(json: T::Hash[T.untyped, T.untyped]).returns(::Spoom::LSP::Range) }
     def from_json(json); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -3043,7 +3047,7 @@ class Spoom::LSP::SignatureHelp < ::T::Struct
     sig { params(json: T::Hash[T.untyped, T.untyped]).returns(::Spoom::LSP::SignatureHelp) }
     def from_json(json); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
   end
 end
@@ -3095,55 +3099,57 @@ end
 class Spoom::Location
   include ::Comparable
 
-  # source://spoom//lib/spoom/location.rb#53
+  # @raise [LocationError]
+  #
+  # source://spoom//lib/spoom/location.rb#73
   sig do
     params(
       file: ::String,
-      start_line: ::Integer,
-      start_column: ::Integer,
-      end_line: ::Integer,
-      end_column: ::Integer
+      start_line: T.nilable(::Integer),
+      start_column: T.nilable(::Integer),
+      end_line: T.nilable(::Integer),
+      end_column: T.nilable(::Integer)
     ).void
   end
-  def initialize(file, start_line, start_column, end_line, end_column); end
+  def initialize(file, start_line: T.unsafe(nil), start_column: T.unsafe(nil), end_line: T.unsafe(nil), end_column: T.unsafe(nil)); end
 
-  # source://spoom//lib/spoom/location.rb#73
+  # source://spoom//lib/spoom/location.rb#106
   sig { override.params(other: ::BasicObject).returns(T.nilable(::Integer)) }
   def <=>(other); end
 
-  # @return [Integer]
+  # @return [Integer, nil]
   #
-  # source://spoom//lib/spoom/location.rb#42
+  # source://spoom//lib/spoom/location.rb#62
   def end_column; end
 
-  # @return [Integer]
+  # @return [Integer, nil]
   #
-  # source://spoom//lib/spoom/location.rb#42
+  # source://spoom//lib/spoom/location.rb#62
   def end_line; end
 
-  # source://spoom//lib/spoom/location.rb#39
+  # source://spoom//lib/spoom/location.rb#59
   sig { returns(::String) }
   def file; end
 
-  # source://spoom//lib/spoom/location.rb#62
+  # source://spoom//lib/spoom/location.rb#93
   sig { params(other: ::Spoom::Location).returns(T::Boolean) }
   def include?(other); end
 
-  # @return [Integer]
+  # @return [Integer, nil]
   #
-  # source://spoom//lib/spoom/location.rb#42
+  # source://spoom//lib/spoom/location.rb#62
   def start_column; end
 
-  # source://spoom//lib/spoom/location.rb#42
-  sig { returns(::Integer) }
+  # source://spoom//lib/spoom/location.rb#62
+  sig { returns(T.nilable(::Integer)) }
   def start_line; end
 
-  # source://spoom//lib/spoom/location.rb#80
+  # source://spoom//lib/spoom/location.rb#129
   sig { returns(::String) }
   def to_s; end
 
   class << self
-    # source://spoom//lib/spoom/location.rb#33
+    # source://spoom//lib/spoom/location.rb#47
     sig { params(file: ::String, location: ::Prism::Location).returns(::Spoom::Location) }
     def from_prism(file, location); end
 
@@ -3467,7 +3473,7 @@ class Spoom::Model::Reference < ::T::Struct
     sig { params(name: ::String, location: ::Spoom::Location).returns(::Spoom::Model::Reference) }
     def constant(name, location); end
 
-    # source://sorbet-runtime/0.5.11481/lib/types/struct.rb#13
+    # source://sorbet-runtime/0.5.11506/lib/types/struct.rb#13
     def inherited(s); end
 
     # source://spoom//lib/spoom/model/reference.rb#29

@@ -729,7 +729,7 @@ module Grape::DSL::InsideRoute
   #
   #   GET /body # => "Body"
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#276
+  # source://grape//lib/grape/dsl/inside_route.rb#278
   def body(value = T.unsafe(nil)); end
 
   # source://grape//lib/grape/dsl/inside_route.rb#158
@@ -737,10 +737,10 @@ module Grape::DSL::InsideRoute
 
   # Set response content-type
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#246
+  # source://grape//lib/grape/dsl/inside_route.rb#248
   def content_type(val = T.unsafe(nil)); end
 
-  # source://grape//lib/grape/dsl/inside_route.rb#465
+  # source://grape//lib/grape/dsl/inside_route.rb#467
   def context; end
 
   # Set or get a cookie
@@ -751,7 +751,7 @@ module Grape::DSL::InsideRoute
   #   cookies[:more] = { value: '123', expires: Time.at(0) }
   #   cookies.delete :more
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#262
+  # source://grape//lib/grape/dsl/inside_route.rb#264
   def cookies; end
 
   # A filtering method that will return a hash
@@ -780,31 +780,33 @@ module Grape::DSL::InsideRoute
   # @param options [Hash]
   # @return [Class] the located Entity class, or nil if none is found
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#432
+  # source://grape//lib/grape/dsl/inside_route.rb#434
   def entity_class_for_obj(object, options); end
 
   # @return the representation of the given object as done through
   #   the given entity_class.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#455
+  # source://grape//lib/grape/dsl/inside_route.rb#457
   def entity_representation_for(entity_class, object, options); end
 
   # End the request and display an error to the
   # end user with the specified message.
   #
   # @param message [String] The message to display.
-  # @param status [Integer] the HTTP Status Code. Defaults to default_error_status, 500 if not set.
+  # @param status [Integer] The HTTP Status Code. Defaults to default_error_status, 500 if not set.
   # @param additional_headers [Hash] Addtional headers for the response.
+  # @param backtrace [Array<String>] The backtrace of the exception that caused the error.
+  # @param original_exception [Exception] The original exception that caused the error.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#168
-  def error!(message, status = T.unsafe(nil), additional_headers = T.unsafe(nil)); end
+  # source://grape//lib/grape/dsl/inside_route.rb#170
+  def error!(message, status = T.unsafe(nil), additional_headers = T.unsafe(nil), backtrace = T.unsafe(nil), original_exception = T.unsafe(nil)); end
 
   # Deprecated method to send files to the client. Use `sendfile` or `stream`
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#302
+  # source://grape//lib/grape/dsl/inside_route.rb#304
   def file(value = T.unsafe(nil)); end
 
-  # source://grape//lib/grape/dsl/inside_route.rb#461
+  # source://grape//lib/grape/dsl/inside_route.rb#463
   def http_version; end
 
   # Allows you to make use of Grape Entities by setting
@@ -823,7 +825,7 @@ module Grape::DSL::InsideRoute
   #   admin: current_user.admin?
   #   end
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#382
+  # source://grape//lib/grape/dsl/inside_route.rb#384
   def present(*args); end
 
   # Creates a Rack response based on the provided message, status, and headers.
@@ -836,7 +838,7 @@ module Grape::DSL::InsideRoute
   # @param message [String] The content of the response.
   # @param status [Integer] The HTTP status code.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#186
+  # source://grape//lib/grape/dsl/inside_route.rb#188
   def rack_response(message, status = T.unsafe(nil), headers = T.unsafe(nil)); end
 
   # Redirect to a new url.
@@ -846,7 +848,7 @@ module Grape::DSL::InsideRoute
   #   :permanent, default false.
   #   :body, default a short message including the URL.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#198
+  # source://grape//lib/grape/dsl/inside_route.rb#200
   def redirect(url, permanent: T.unsafe(nil), body: T.unsafe(nil), **_options); end
 
   # Allows you to explicitly return no content.
@@ -859,7 +861,7 @@ module Grape::DSL::InsideRoute
   #
   #   DELETE /12 # => 204 No Content, ""
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#296
+  # source://grape//lib/grape/dsl/inside_route.rb#298
   def return_no_content; end
 
   # Returns route information for the current request.
@@ -871,7 +873,7 @@ module Grape::DSL::InsideRoute
   #   route.description
   #   end
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#420
+  # source://grape//lib/grape/dsl/inside_route.rb#422
   def route; end
 
   # Allows you to send a file to the client via sendfile.
@@ -883,14 +885,14 @@ module Grape::DSL::InsideRoute
   #
   #   GET /file # => "contents of file"
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#323
+  # source://grape//lib/grape/dsl/inside_route.rb#325
   def sendfile(value = T.unsafe(nil)); end
 
   # Set or retrieve the HTTP status code.
   #
   # @param status [Integer] The HTTP Status Code to return for this request.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#218
+  # source://grape//lib/grape/dsl/inside_route.rb#220
   def status(status = T.unsafe(nil)); end
 
   # Allows you to define the response as a streamable object.
@@ -909,7 +911,7 @@ module Grape::DSL::InsideRoute
   #
   #   GET /stream # => "chunked contents of file"
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#349
+  # source://grape//lib/grape/dsl/inside_route.rb#351
   def stream(value = T.unsafe(nil)); end
 
   # The API version as specified in the URL.
@@ -2646,8 +2648,8 @@ Grape::Http::Headers::TRANSFER_ENCODING = T.let(T.unsafe(nil), String)
 # source://grape//lib/grape/http/headers.rb#12
 Grape::Http::Headers::X_CASCADE = T.let(T.unsafe(nil), String)
 
-# source://grape//lib/grape/json.rb#7
-Grape::Json = JSON
+# source://grape//lib/grape/json.rb#5
+Grape::Json = MultiJson
 
 # source://grape//lib/grape/dsl/api.rb#0
 module Grape::Middleware; end
@@ -4808,7 +4810,7 @@ class Grape::Validations::ParamsScope
 
   # @return [Boolean]
   #
-  # source://grape//lib/grape/validations/params_scope.rb#508
+  # source://grape//lib/grape/validations/params_scope.rb#514
   def all_element_blank?(scoped_params); end
 
   # Enforce correct usage of :coerce_with parameter.
@@ -4818,12 +4820,12 @@ class Grape::Validations::ParamsScope
   #
   # @raise [ArgumentError]
   #
-  # source://grape//lib/grape/validations/params_scope.rb#414
+  # source://grape//lib/grape/validations/params_scope.rb#420
   def check_coerce_with(validations); end
 
   # @raise [Grape::Exceptions::IncompatibleOptionValues]
   #
-  # source://grape//lib/grape/validations/params_scope.rb#458
+  # source://grape//lib/grape/validations/params_scope.rb#464
   def check_incompatible_option_values(default, values, except_values, excepts); end
 
   # Add type coercion validation to this scope,
@@ -4833,24 +4835,24 @@ class Grape::Validations::ParamsScope
   # parameter, and needs to be run before most other
   # validations.
   #
-  # source://grape//lib/grape/validations/params_scope.rb#432
+  # source://grape//lib/grape/validations/params_scope.rb#438
   def coerce_type(validations, attrs, doc, opts); end
 
   # Pushes declared params to parent or settings
   #
-  # source://grape//lib/grape/validations/params_scope.rb#305
+  # source://grape//lib/grape/validations/params_scope.rb#311
   def configure_declared_params; end
 
   # Validators don't have access to each other and they don't need, however,
   # some validators might influence others, so their options should be shared
   #
-  # source://grape//lib/grape/validations/params_scope.rb#514
+  # source://grape//lib/grape/validations/params_scope.rb#520
   def derive_validator_options(validations); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#497
+  # source://grape//lib/grape/validations/params_scope.rb#503
   def extract_message_option(attrs); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#448
+  # source://grape//lib/grape/validations/params_scope.rb#454
   def guess_coerce_type(coerce_type, *values_list); end
 
   # Validate and comprehend the +:type+, +:types+, and +:coerce_with+
@@ -4867,7 +4869,7 @@ class Grape::Validations::ParamsScope
   # @raise [ArgumentError] if the given type options are invalid
   # @return [class-like] type to which the parameter will be coerced
   #
-  # source://grape//lib/grape/validations/params_scope.rb#385
+  # source://grape//lib/grape/validations/params_scope.rb#391
   def infer_coercion(validations); end
 
   # Returns a new parameter scope, subordinate to the current one and nested
@@ -4877,7 +4879,7 @@ class Grape::Validations::ParamsScope
   #   `optional` invocation that opened this scope.
   # @yield parameter scope
   #
-  # source://grape//lib/grape/validations/params_scope.rb#300
+  # source://grape//lib/grape/validations/params_scope.rb#306
   def new_group_scope(attrs, &block); end
 
   # Returns a new parameter scope, not nested under any current-level param
@@ -4887,7 +4889,7 @@ class Grape::Validations::ParamsScope
   # @param options [Hash] options to control how this new scope behaves
   # @yield parameter scope
   #
-  # source://grape//lib/grape/validations/params_scope.rb#283
+  # source://grape//lib/grape/validations/params_scope.rb#289
   def new_lateral_scope(options, &block); end
 
   # Returns a new parameter scope, subordinate to the current one and nested
@@ -4899,12 +4901,12 @@ class Grape::Validations::ParamsScope
   #   is optional or not (and hence, whether this block's params will be).
   # @yield parameter scope
   #
-  # source://grape//lib/grape/validations/params_scope.rb#256
+  # source://grape//lib/grape/validations/params_scope.rb#262
   def new_scope(attrs, optional = T.unsafe(nil), &block); end
 
   # @return [Boolean]
   #
-  # source://grape//lib/grape/validations/params_scope.rb#504
+  # source://grape//lib/grape/validations/params_scope.rb#510
   def options_key?(type, key, validations); end
 
   # Add a new parameter which should be renamed when using the +#declared+
@@ -4915,28 +4917,28 @@ class Grape::Validations::ParamsScope
   # @param new_name [String, Symbol] the new name of the parameter (the
   #   renamed name, with the +as: ...+ semantic)
   #
-  # source://grape//lib/grape/validations/params_scope.rb#205
+  # source://grape//lib/grape/validations/params_scope.rb#211
   def push_renamed_param(path, new_name); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#231
+  # source://grape//lib/grape/validations/params_scope.rb#237
   def require_optional_fields(context, opts); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#211
+  # source://grape//lib/grape/validations/params_scope.rb#217
   def require_required_and_optional_fields(context, opts); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#472
+  # source://grape//lib/grape/validations/params_scope.rb#478
   def validate(type, options, attrs, doc, opts); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#243
+  # source://grape//lib/grape/validations/params_scope.rb#249
   def validate_attributes(attrs, opts, &block); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#484
+  # source://grape//lib/grape/validations/params_scope.rb#490
   def validate_value_coercion(coerce_type, *values_list); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#318
+  # source://grape//lib/grape/validations/params_scope.rb#324
   def validates(attrs, validations); end
 
-  # source://grape//lib/grape/validations/params_scope.rb#523
+  # source://grape//lib/grape/validations/params_scope.rb#529
   def validates_presence(validations, attrs, doc, opts); end
 end
 
