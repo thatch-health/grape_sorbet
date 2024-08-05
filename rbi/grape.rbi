@@ -45,9 +45,13 @@ module Grape
           message: T.any(String, T::Hash[Symbol, T.untyped]),
           status: T.nilable(T.any(Integer, Symbol)),
           additional_headers: T.nilable(T::Hash[String, String]),
+          backtrace: T.nilable(T::Array[String]),
+          original_exception: T.nilable(Exception),
         ).returns(T.noreturn)
       end
-      def error!(message, status = nil, additional_headers = nil); end
+      def error!(message, status = T.unsafe(nil), additional_headers = T.unsafe(nil), backtrace = T.unsafe(nil),
+        original_exception = T.unsafe(nil))
+      end
 
       sig { params(status: T.nilable(T.any(Integer, Symbol))).returns(Integer) }
       def status(status = nil); end

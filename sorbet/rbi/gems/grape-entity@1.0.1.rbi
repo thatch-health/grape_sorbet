@@ -8,7 +8,7 @@
 # source://grape-entity//lib/grape_entity/entity.rb#5
 module Grape
   class << self
-    # source://grape/2.1.2/lib/grape.rb#61
+    # source://grape/2.1.3/lib/grape.rb#61
     def deprecator; end
   end
 end
@@ -91,6 +91,8 @@ class Grape::Entity
   def formatters; end
 
   # Prevent default serialization of :options or :delegator.
+  #
+  # source://grape-entity//lib/grape_entity/entity.rb#474
   def inspect; end
 
   # @return [Boolean]
