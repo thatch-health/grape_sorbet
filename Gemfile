@@ -15,7 +15,7 @@ end
 
 group :development do
   gem "sorbet", "~> 0.5.10736"
-  gem "tapioca", require: false
+  gem "tapioca", ">= 0.16.0", require: false
 
   gem "rubocop", require: false
   gem "rubocop-minitest", require: false

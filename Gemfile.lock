@@ -77,8 +77,8 @@ GEM
       mustermann (>= 1.0.0)
     mutex_m (0.2.0)
     netrc (0.11.0)
-    parallel (1.25.1)
-    parser (3.3.4.0)
+    parallel (1.26.1)
+    parser (3.3.4.2)
       ast (~> 2.4.1)
       racc
     prism (0.30.0)
@@ -131,15 +131,15 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.12.3)
     simplecov_json_formatter (0.1.4)
-    sorbet (0.5.11506)
-      sorbet-static (= 0.5.11506)
-    sorbet-runtime (0.5.11506)
-    sorbet-static (0.5.11506-aarch64-linux)
-    sorbet-static (0.5.11506-universal-darwin)
-    sorbet-static (0.5.11506-x86_64-linux)
-    sorbet-static-and-runtime (0.5.11506)
-      sorbet (= 0.5.11506)
-      sorbet-runtime (= 0.5.11506)
+    sorbet (0.5.11514)
+      sorbet-static (= 0.5.11514)
+    sorbet-runtime (0.5.11514)
+    sorbet-static (0.5.11514-aarch64-linux)
+    sorbet-static (0.5.11514-universal-darwin)
+    sorbet-static (0.5.11514-x86_64-linux)
+    sorbet-static-and-runtime (0.5.11514)
+      sorbet (= 0.5.11514)
+      sorbet-runtime (= 0.5.11514)
     spoom (1.4.2)
       erubi (>= 1.10.0)
       prism (>= 0.28.0)
@@ -147,11 +147,11 @@ GEM
       thor (>= 0.19.2)
     stringio (3.1.1)
     strscan (3.1.0)
-    tapioca (0.15.1)
+    tapioca (0.16.0)
       bundler (>= 2.2.25)
       netrc (>= 0.11.0)
       parallel (>= 1.21.0)
-      rbi (>= 0.1.4, < 0.2)
+      rbi (>= 0.1.14, < 0.2)
       sorbet-static-and-runtime (>= 0.5.11087)
       spoom (>= 1.2.0)
       thor (>= 1.2.0)
@@ -187,7 +187,7 @@ DEPENDENCIES
   rubocop-sorbet
   simplecov
   sorbet (~> 0.5.10736)
-  tapioca
+  tapioca (>= 0.16.0)
 
 BUNDLED WITH
    2.5.17

@@ -174,31 +174,24 @@ module Tapioca
 
         sig { void }
         def create_request_response_methods
-          sigs = [
-            request_response_methods_module.create_sig(
-              parameters: {
-                args: "Symbol",
-                block: "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: Exception).void)",
-              },
-              return_type: "void",
-            ),
-            request_response_methods_module.create_sig(
-              type_parameters: ["E"],
-              parameters: {
-                args: "T::Class[T.all(::Exception, T.type_parameter(:E))]",
-                block: "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: T.type_parameter(:E)).void)",
-              },
-              return_type: "void",
-            ),
-          ]
-          request_response_methods_module.create_method_with_sigs(
-            "rescue_from",
-            sigs: sigs,
-            parameters: [
-              RBI::RestParam.new("args"),
-              RBI::BlockParam.new("block"),
-            ],
-          )
+          request_response_methods_module.create_method("rescue_from") do |method|
+            method.add_rest_param("args")
+            method.add_block_param("block")
+
+            method.add_sig do |sig|
+              sig.add_param("args", "Symbol")
+              sig.add_param("block", "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: Exception).void)")
+              sig.return_type = "void"
+            end
+            method.add_sig(type_params: ["E"]) do |sig|
+              sig.add_param("args", "T::Class[T.all(::Exception, T.type_parameter(:E))]")
+              sig.add_param(
+                "block",
+                "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: T.type_parameter(:E)).void)",
+              )
+              sig.return_type = "void"
+            end
+          end
         end
 
         sig { void }
