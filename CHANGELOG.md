@@ -1,3 +1,8 @@
+## 0.0.12 (2024-08-08)
+
+- Upgrade compiler for Tapioca 0.16 (#14)
+- Bump dependencies and update RBI signatures (#13)
+
 ## 0.0.11 (2024-07-15)
 
 - Add support for `options` param in `params` type signature (#12)
