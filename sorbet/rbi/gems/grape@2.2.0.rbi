@@ -395,21 +395,30 @@ Grape::API::NON_OVERRIDABLE = T.let(T.unsafe(nil), Array)
 
 # source://grape//lib/grape/content_types.rb#4
 module Grape::ContentTypes
-  extend ::Grape::Util::Registrable
+  private
+
+  # source://grape//lib/grape/content_types.rb#18
+  def content_types_for(from_settings); end
+
+  # source://grape//lib/grape/content_types.rb#22
+  def mime_types_for(from_settings); end
 
   class << self
-    # source://grape//lib/grape/content_types.rb#21
+    # source://grape//lib/grape/content_types.rb#18
     def content_types_for(from_settings); end
 
-    # source://grape//lib/grape/content_types.rb#17
-    def content_types_for_settings(settings); end
+    # source://grape//lib/grape/content_types.rb#22
+    def mime_types_for(from_settings); end
   end
 end
 
 # Content types are listed in order of preference.
 #
 # source://grape//lib/grape/content_types.rb#8
-Grape::ContentTypes::CONTENT_TYPES = T.let(T.unsafe(nil), Hash)
+Grape::ContentTypes::DEFAULTS = T.let(T.unsafe(nil), Hash)
+
+# source://grape//lib/grape/content_types.rb#16
+Grape::ContentTypes::MIME_TYPES = T.let(T.unsafe(nil), Hash)
 
 # source://grape//lib/grape/cookies.rb#4
 class Grape::Cookies
@@ -637,29 +646,29 @@ end
 # This module extends user defined helpers
 # to provide some API-specific functionality.
 #
-# source://grape//lib/grape/dsl/helpers.rb#81
+# source://grape//lib/grape/dsl/helpers.rb#85
 module Grape::DSL::Helpers::BaseHelper
   # Returns the value of attribute api.
   #
-  # source://grape//lib/grape/dsl/helpers.rb#82
+  # source://grape//lib/grape/dsl/helpers.rb#86
   def api; end
 
   # Sets the attribute api
   #
   # @param value the value to set the attribute api to.
   #
-  # source://grape//lib/grape/dsl/helpers.rb#82
+  # source://grape//lib/grape/dsl/helpers.rb#86
   def api=(_arg0); end
 
-  # source://grape//lib/grape/dsl/helpers.rb#89
+  # source://grape//lib/grape/dsl/helpers.rb#93
   def api_changed(new_api); end
 
-  # source://grape//lib/grape/dsl/helpers.rb#84
+  # source://grape//lib/grape/dsl/helpers.rb#88
   def params(name, &block); end
 
   protected
 
-  # source://grape//lib/grape/dsl/helpers.rb#96
+  # source://grape//lib/grape/dsl/helpers.rb#100
   def process_named_params; end
 end
 
@@ -693,22 +702,22 @@ module Grape::DSL::Helpers::ClassMethods
 
   protected
 
-  # source://grape//lib/grape/dsl/helpers.rb#66
+  # source://grape//lib/grape/dsl/helpers.rb#70
   def define_boolean_in_mod(mod); end
 
-  # source://grape//lib/grape/dsl/helpers.rb#59
+  # source://grape//lib/grape/dsl/helpers.rb#63
   def include_all_in_scope; end
 
-  # source://grape//lib/grape/dsl/helpers.rb#47
+  # source://grape//lib/grape/dsl/helpers.rb#49
   def include_block(block); end
 
   # source://grape//lib/grape/dsl/helpers.rb#43
   def include_new_modules(modules); end
 
-  # source://grape//lib/grape/dsl/helpers.rb#72
+  # source://grape//lib/grape/dsl/helpers.rb#76
   def inject_api_helpers_to_mod(mod, &block); end
 
-  # source://grape//lib/grape/dsl/helpers.rb#53
+  # source://grape//lib/grape/dsl/helpers.rb#57
   def make_inclusion(mod, &block); end
 end
 
@@ -729,7 +738,7 @@ module Grape::DSL::InsideRoute
   #
   #   GET /body # => "Body"
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#278
+  # source://grape//lib/grape/dsl/inside_route.rb#283
   def body(value = T.unsafe(nil)); end
 
   # source://grape//lib/grape/dsl/inside_route.rb#158
@@ -737,10 +746,10 @@ module Grape::DSL::InsideRoute
 
   # Set response content-type
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#248
+  # source://grape//lib/grape/dsl/inside_route.rb#253
   def content_type(val = T.unsafe(nil)); end
 
-  # source://grape//lib/grape/dsl/inside_route.rb#467
+  # source://grape//lib/grape/dsl/inside_route.rb#472
   def context; end
 
   # Set or get a cookie
@@ -751,7 +760,7 @@ module Grape::DSL::InsideRoute
   #   cookies[:more] = { value: '123', expires: Time.at(0) }
   #   cookies.delete :more
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#264
+  # source://grape//lib/grape/dsl/inside_route.rb#269
   def cookies; end
 
   # A filtering method that will return a hash
@@ -780,13 +789,13 @@ module Grape::DSL::InsideRoute
   # @param options [Hash]
   # @return [Class] the located Entity class, or nil if none is found
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#434
+  # source://grape//lib/grape/dsl/inside_route.rb#439
   def entity_class_for_obj(object, options); end
 
   # @return the representation of the given object as done through
   #   the given entity_class.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#457
+  # source://grape//lib/grape/dsl/inside_route.rb#462
   def entity_representation_for(entity_class, object, options); end
 
   # End the request and display an error to the
@@ -803,10 +812,10 @@ module Grape::DSL::InsideRoute
 
   # Deprecated method to send files to the client. Use `sendfile` or `stream`
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#304
+  # source://grape//lib/grape/dsl/inside_route.rb#309
   def file(value = T.unsafe(nil)); end
 
-  # source://grape//lib/grape/dsl/inside_route.rb#463
+  # source://grape//lib/grape/dsl/inside_route.rb#468
   def http_version; end
 
   # Allows you to make use of Grape Entities by setting
@@ -825,7 +834,7 @@ module Grape::DSL::InsideRoute
   #   admin: current_user.admin?
   #   end
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#384
+  # source://grape//lib/grape/dsl/inside_route.rb#389
   def present(*args); end
 
   # Creates a Rack response based on the provided message, status, and headers.
@@ -838,7 +847,7 @@ module Grape::DSL::InsideRoute
   # @param message [String] The content of the response.
   # @param status [Integer] The HTTP status code.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#188
+  # source://grape//lib/grape/dsl/inside_route.rb#193
   def rack_response(message, status = T.unsafe(nil), headers = T.unsafe(nil)); end
 
   # Redirect to a new url.
@@ -848,7 +857,7 @@ module Grape::DSL::InsideRoute
   #   :permanent, default false.
   #   :body, default a short message including the URL.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#200
+  # source://grape//lib/grape/dsl/inside_route.rb#205
   def redirect(url, permanent: T.unsafe(nil), body: T.unsafe(nil), **_options); end
 
   # Allows you to explicitly return no content.
@@ -861,7 +870,7 @@ module Grape::DSL::InsideRoute
   #
   #   DELETE /12 # => 204 No Content, ""
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#298
+  # source://grape//lib/grape/dsl/inside_route.rb#303
   def return_no_content; end
 
   # Returns route information for the current request.
@@ -873,7 +882,7 @@ module Grape::DSL::InsideRoute
   #   route.description
   #   end
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#422
+  # source://grape//lib/grape/dsl/inside_route.rb#427
   def route; end
 
   # Allows you to send a file to the client via sendfile.
@@ -885,14 +894,14 @@ module Grape::DSL::InsideRoute
   #
   #   GET /file # => "contents of file"
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#325
+  # source://grape//lib/grape/dsl/inside_route.rb#330
   def sendfile(value = T.unsafe(nil)); end
 
   # Set or retrieve the HTTP status code.
   #
   # @param status [Integer] The HTTP Status Code to return for this request.
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#220
+  # source://grape//lib/grape/dsl/inside_route.rb#225
   def status(status = T.unsafe(nil)); end
 
   # Allows you to define the response as a streamable object.
@@ -911,7 +920,7 @@ module Grape::DSL::InsideRoute
   #
   #   GET /stream # => "chunked contents of file"
   #
-  # source://grape//lib/grape/dsl/inside_route.rb#351
+  # source://grape//lib/grape/dsl/inside_route.rb#356
   def stream(value = T.unsafe(nil)); end
 
   # The API version as specified in the URL.
@@ -1326,22 +1335,22 @@ module Grape::DSL::RequestResponse::ClassMethods
   # Specify additional content-types, e.g.:
   #   content_type :xls, 'application/vnd.ms-excel'
   #
-  # source://grape//lib/grape/dsl/request_response.rb#66
+  # source://grape//lib/grape/dsl/request_response.rb#62
   def content_type(key, val); end
 
   # All available content types.
   #
-  # source://grape//lib/grape/dsl/request_response.rb#71
+  # source://grape//lib/grape/dsl/request_response.rb#67
   def content_types; end
 
   # Specify a default error formatter.
   #
-  # source://grape//lib/grape/dsl/request_response.rb#45
+  # source://grape//lib/grape/dsl/request_response.rb#43
   def default_error_formatter(new_formatter_name = T.unsafe(nil)); end
 
   # Specify the default status code for errors.
   #
-  # source://grape//lib/grape/dsl/request_response.rb#77
+  # source://grape//lib/grape/dsl/request_response.rb#73
   def default_error_status(new_status = T.unsafe(nil)); end
 
   # Specify the default format for the API's serializers.
@@ -1350,23 +1359,25 @@ module Grape::DSL::RequestResponse::ClassMethods
   # source://grape//lib/grape/dsl/request_response.rb#13
   def default_format(new_format = T.unsafe(nil)); end
 
-  # source://grape//lib/grape/dsl/request_response.rb#54
+  # source://grape//lib/grape/dsl/request_response.rb#50
   def error_formatter(format, options); end
 
   # Specify the format for the API's serializers.
   # May be `:json`, `:xml`, `:txt`, etc.
+  #
+  # @raise [Grape::Exceptions::MissingMimeType]
   #
   # source://grape//lib/grape/dsl/request_response.rb#19
   def format(new_format = T.unsafe(nil)); end
 
   # Specify a custom formatter for a content-type.
   #
-  # source://grape//lib/grape/dsl/request_response.rb#35
+  # source://grape//lib/grape/dsl/request_response.rb#33
   def formatter(content_type, new_formatter); end
 
   # Specify a custom parser for a content-type.
   #
-  # source://grape//lib/grape/dsl/request_response.rb#40
+  # source://grape//lib/grape/dsl/request_response.rb#38
   def parser(content_type, new_parser); end
 
   # Allows you to specify a default representation entity for a
@@ -1391,7 +1402,7 @@ module Grape::DSL::RequestResponse::ClassMethods
   # @param options [Hash] a customizable set of options
   # @raise [Grape::Exceptions::InvalidWithOptionForRepresent]
   #
-  # source://grape//lib/grape/dsl/request_response.rb#155
+  # source://grape//lib/grape/dsl/request_response.rb#151
   def represent(model_class, options); end
 
   # Allows you to rescue certain exceptions that occur to return
@@ -1407,14 +1418,14 @@ module Grape::DSL::RequestResponse::ClassMethods
   # @overload rescue_from
   # @raise [ArgumentError]
   #
-  # source://grape//lib/grape/dsl/request_response.rb#101
+  # source://grape//lib/grape/dsl/request_response.rb#97
   def rescue_from(*args, &block); end
 
   private
 
   # @raise [ArgumentError]
   #
-  # source://grape//lib/grape/dsl/request_response.rb#163
+  # source://grape//lib/grape/dsl/request_response.rb#159
   def extract_with(options); end
 end
 
@@ -1897,16 +1908,16 @@ class Grape::Endpoint
   # source://grape//lib/grape/endpoint.rb#12
   def block=(_arg0); end
 
-  # source://grape//lib/grape/endpoint.rb#217
+  # source://grape//lib/grape/endpoint.rb#218
   def call(env); end
 
-  # source://grape//lib/grape/endpoint.rb#222
+  # source://grape//lib/grape/endpoint.rb#223
   def call!(env); end
 
   # Return the collection of endpoints within this endpoint.
   # This is the case when an Grape::API mounts another Grape::API.
   #
-  # source://grape//lib/grape/endpoint.rb#230
+  # source://grape//lib/grape/endpoint.rb#231
   def endpoints; end
 
   # Returns the value of attribute env.
@@ -1916,7 +1927,7 @@ class Grape::Endpoint
 
   # @return [Boolean]
   #
-  # source://grape//lib/grape/endpoint.rb#234
+  # source://grape//lib/grape/endpoint.rb#235
   def equals?(endpoint); end
 
   # Returns the value of attribute headers.
@@ -1930,10 +1941,17 @@ class Grape::Endpoint
   # source://grape//lib/grape/endpoint.rb#116
   def inherit_settings(namespace_stackable); end
 
-  # source://grape//lib/grape/endpoint.rb#204
+  # The purpose of this override is solely for stripping internals when an error occurs while calling
+  # an endpoint through an api. See https://github.com/ruby-grape/grape/issues/2398
+  # Otherwise, it calls super.
+  #
+  # source://grape//lib/grape/endpoint.rb#242
+  def inspect; end
+
+  # source://grape//lib/grape/endpoint.rb#203
   def map_routes; end
 
-  # source://grape//lib/grape/endpoint.rb#200
+  # source://grape//lib/grape/endpoint.rb#199
   def merge_route_options(**default); end
 
   # source://grape//lib/grape/endpoint.rb#129
@@ -1942,7 +1960,7 @@ class Grape::Endpoint
   # source://grape//lib/grape/endpoint.rb#147
   def mount_in(router); end
 
-  # source://grape//lib/grape/endpoint.rb#213
+  # source://grape//lib/grape/endpoint.rb#214
   def namespace; end
 
   # Returns the value of attribute options.
@@ -1965,7 +1983,7 @@ class Grape::Endpoint
   # source://grape//lib/grape/endpoint.rb#180
   def prepare_default_route_attributes; end
 
-  # source://grape//lib/grape/endpoint.rb#208
+  # source://grape//lib/grape/endpoint.rb#207
   def prepare_path(path); end
 
   # source://grape//lib/grape/endpoint.rb#173
@@ -2007,56 +2025,53 @@ class Grape::Endpoint
 
   protected
 
-  # source://grape//lib/grape/endpoint.rb#383
+  # source://grape//lib/grape/endpoint.rb#398
   def after_validations; end
 
-  # source://grape//lib/grape/endpoint.rb#387
+  # source://grape//lib/grape/endpoint.rb#402
   def afters; end
 
-  # source://grape//lib/grape/endpoint.rb#379
+  # source://grape//lib/grape/endpoint.rb#394
   def before_validations; end
 
-  # source://grape//lib/grape/endpoint.rb#375
+  # source://grape//lib/grape/endpoint.rb#390
   def befores; end
 
-  # source://grape//lib/grape/endpoint.rb#328
+  # source://grape//lib/grape/endpoint.rb#343
   def execute; end
 
-  # source://grape//lib/grape/endpoint.rb#391
+  # source://grape//lib/grape/endpoint.rb#406
   def finallies; end
 
-  # source://grape//lib/grape/endpoint.rb#332
+  # source://grape//lib/grape/endpoint.rb#347
   def helpers; end
 
-  # source://grape//lib/grape/endpoint.rb#408
-  def inspect; end
-
-  # source://grape//lib/grape/endpoint.rb#336
+  # source://grape//lib/grape/endpoint.rb#351
   def lazy_initialize!; end
 
   # @return [Boolean]
   #
-  # source://grape//lib/grape/endpoint.rb#403
+  # source://grape//lib/grape/endpoint.rb#418
   def options?; end
 
-  # source://grape//lib/grape/endpoint.rb#240
+  # source://grape//lib/grape/endpoint.rb#250
   def run; end
 
-  # source://grape//lib/grape/endpoint.rb#367
+  # source://grape//lib/grape/endpoint.rb#382
   def run_filters(filters, type = T.unsafe(nil)); end
 
-  # source://grape//lib/grape/endpoint.rb#349
+  # source://grape//lib/grape/endpoint.rb#364
   def run_validators(validators, request); end
 
-  # source://grape//lib/grape/endpoint.rb#395
+  # source://grape//lib/grape/endpoint.rb#410
   def validations; end
 
   private
 
-  # source://grape//lib/grape/endpoint.rb#321
+  # source://grape//lib/grape/endpoint.rb#334
   def build_helpers; end
 
-  # source://grape//lib/grape/endpoint.rb#280
+  # source://grape//lib/grape/endpoint.rb#290
   def build_stack(helpers); end
 
   class << self
@@ -2131,17 +2146,20 @@ Grape::Env::GRAPE_ROUTING_ARGS = T.let(T.unsafe(nil), String)
 
 # source://grape//lib/grape/error_formatter.rb#4
 module Grape::ErrorFormatter
-  extend ::Grape::Util::Registrable
+  private
+
+  # source://grape//lib/grape/error_formatter.rb#15
+  def formatter_for(format, error_formatters = T.unsafe(nil), default_error_formatter = T.unsafe(nil)); end
+
+  # source://grape//lib/grape/error_formatter.rb#19
+  def select_formatter(error_formatters, format); end
 
   class << self
-    # source://grape//lib/grape/error_formatter.rb#8
-    def builtin_formatters; end
+    # source://grape//lib/grape/error_formatter.rb#15
+    def formatter_for(format, error_formatters = T.unsafe(nil), default_error_formatter = T.unsafe(nil)); end
 
-    # source://grape//lib/grape/error_formatter.rb#22
-    def formatter_for(api_format, **options); end
-
-    # source://grape//lib/grape/error_formatter.rb#18
-    def formatters(**options); end
+    # source://grape//lib/grape/error_formatter.rb#19
+    def select_formatter(error_formatters, format); end
   end
 end
 
@@ -2150,6 +2168,9 @@ module Grape::ErrorFormatter::Base
   # source://grape//lib/grape/error_formatter/base.rb#6
   def present(message, env); end
 end
+
+# source://grape//lib/grape/error_formatter.rb#7
+Grape::ErrorFormatter::DEFAULTS = T.let(T.unsafe(nil), Hash)
 
 # source://grape//lib/grape/error_formatter/json.rb#5
 module Grape::ErrorFormatter::Json
@@ -2161,10 +2182,13 @@ module Grape::ErrorFormatter::Json
 
     private
 
-    # source://grape//lib/grape/error_formatter/json.rb#28
+    # source://grape//lib/grape/error_formatter/json.rb#29
     def ensure_utf8(message); end
 
-    # source://grape//lib/grape/error_formatter/json.rb#20
+    # source://grape//lib/grape/error_formatter/json.rb#35
+    def merge_rescue_options(result, backtrace, options, original_exception); end
+
+    # source://grape//lib/grape/error_formatter/json.rb#19
     def wrap_message(message); end
   end
 end
@@ -2544,19 +2568,28 @@ end
 
 # source://grape//lib/grape/formatter.rb#4
 module Grape::Formatter
-  extend ::Grape::Util::Registrable
+  private
+
+  # source://grape//lib/grape/formatter.rb#17
+  def formatter_for(api_format, formatters); end
+
+  # source://grape//lib/grape/formatter.rb#21
+  def select_formatter(formatters, api_format); end
 
   class << self
-    # source://grape//lib/grape/formatter.rb#8
-    def builtin_formatters; end
+    # source://grape//lib/grape/formatter.rb#17
+    def formatter_for(api_format, formatters); end
 
-    # source://grape//lib/grape/formatter.rb#22
-    def formatter_for(api_format, **options); end
-
-    # source://grape//lib/grape/formatter.rb#18
-    def formatters(**options); end
+    # source://grape//lib/grape/formatter.rb#21
+    def select_formatter(formatters, api_format); end
   end
 end
+
+# source://grape//lib/grape/formatter.rb#7
+Grape::Formatter::DEFAULTS = T.let(T.unsafe(nil), Hash)
+
+# source://grape//lib/grape/formatter.rb#15
+Grape::Formatter::DEFAULT_LAMBDA_FORMATTER = T.let(T.unsafe(nil), Proc)
 
 # source://grape//lib/grape/formatter/json.rb#5
 module Grape::Formatter::Json
@@ -2806,7 +2839,7 @@ class Grape::Middleware::Base
   # @param options [Hash] A hash of options, simply stored for use by subclasses.
   # @return [Base] a new instance of Base
   #
-  # source://grape//lib/grape/middleware/base.rb#16
+  # source://grape//lib/grape/middleware/base.rb#15
   def initialize(app, *options); end
 
   # Called after the application is called in the middleware lifecycle.
@@ -2814,62 +2847,65 @@ class Grape::Middleware::Base
   # @abstract
   # @return [Response, nil] a Rack SPEC response or nil to call the application afterwards.
   #
-  # source://grape//lib/grape/middleware/base.rb#56
+  # source://grape//lib/grape/middleware/base.rb#55
   def after; end
 
   # Returns the value of attribute app.
   #
-  # source://grape//lib/grape/middleware/base.rb#8
+  # source://grape//lib/grape/middleware/base.rb#9
   def app; end
 
   # Called before the application is called in the middleware lifecycle.
   #
   # @abstract
   #
-  # source://grape//lib/grape/middleware/base.rb#51
+  # source://grape//lib/grape/middleware/base.rb#50
   def before; end
 
-  # source://grape//lib/grape/middleware/base.rb#26
+  # source://grape//lib/grape/middleware/base.rb#25
   def call(env); end
 
-  # source://grape//lib/grape/middleware/base.rb#30
+  # source://grape//lib/grape/middleware/base.rb#29
   def call!(env); end
 
-  # source://grape//lib/grape/middleware/base.rb#72
+  # source://grape//lib/grape/middleware/base.rb#75
   def content_type; end
 
-  # source://grape//lib/grape/middleware/base.rb#64
+  # source://grape//lib/grape/middleware/base.rb#71
   def content_type_for(format); end
 
-  # source://grape//lib/grape/middleware/base.rb#68
+  # source://grape//lib/grape/middleware/base.rb#63
   def content_types; end
 
-  # source://grape//lib/grape/middleware/base.rb#22
+  # source://grape//lib/grape/middleware/base.rb#21
   def default_options; end
 
   # Returns the value of attribute env.
   #
-  # source://grape//lib/grape/middleware/base.rb#8
+  # source://grape//lib/grape/middleware/base.rb#9
   def env; end
 
-  # source://grape//lib/grape/middleware/base.rb#76
+  # source://grape//lib/grape/middleware/base.rb#67
   def mime_types; end
 
   # Returns the value of attribute options.
   #
-  # source://grape//lib/grape/middleware/base.rb#8
+  # source://grape//lib/grape/middleware/base.rb#9
   def options; end
 
-  # source://grape//lib/grape/middleware/base.rb#58
+  # source://grape//lib/grape/middleware/base.rb#57
   def response; end
 
   private
 
-  # source://grape//lib/grape/middleware/base.rb#84
+  # source://grape//lib/grape/middleware/base.rb#90
+  def content_types_indifferent_access; end
+
+  # source://grape//lib/grape/middleware/base.rb#81
   def merge_headers(response); end
 end
 
-# source://grape//lib/grape/middleware/base.rb#10
+# source://grape//lib/grape/middleware/base.rb#11
 Grape::Middleware::Base::TEXT_HTML = T.let(T.unsafe(nil), String)
 
 # source://grape//lib/grape/middleware/error.rb#5
@@ -3137,14 +3173,14 @@ end
 module Grape::Middleware::Versioner
   private
 
-  # @param strategy [Symbol] :path, :header or :param
+  # @param strategy [Symbol] :path, :header, :accept_version_header or :param
   # @return a middleware class based on strategy
   #
   # source://grape//lib/grape/middleware/versioner.rb#18
   def using(strategy); end
 
   class << self
-    # @param strategy [Symbol] :path, :header or :param
+    # @param strategy [Symbol] :path, :header, :accept_version_header or :param
     # @return a middleware class based on strategy
     #
     # source://grape//lib/grape/middleware/versioner.rb#18
@@ -3168,30 +3204,15 @@ end
 #
 # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#19
 class Grape::Middleware::Versioner::AcceptVersionHeader < ::Grape::Middleware::Base
-  # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#20
+  include ::Grape::Middleware::VersionerHelpers
+
+  # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#22
   def before; end
 
   private
 
-  # By default those errors contain an `X-Cascade` header set to `pass`, which allows nesting and stacking
-  # of routes (see Grape::Router) for more information). To prevent
-  # this behavior, and not add the `X-Cascade` header, one can set the `:cascade` option to `false`.
-  #
-  # @return [Boolean]
-  #
-  # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#49
-  def cascade?; end
-
-  # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#57
-  def error_headers; end
-
-  # @return [Boolean]
-  #
-  # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#42
-  def strict?; end
-
-  # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#38
-  def versions; end
+  # source://grape//lib/grape/middleware/versioner/accept_version_header.rb#34
+  def not_acceptable!(message); end
 end
 
 # This middleware sets various version related rack environment variables
@@ -3215,8 +3236,60 @@ end
 #
 # source://grape//lib/grape/middleware/versioner/header.rb#24
 class Grape::Middleware::Versioner::Header < ::Grape::Middleware::Base
-  # source://grape//lib/grape/middleware/versioner/header.rb#25
+  include ::Grape::Middleware::VersionerHelpers
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#27
   def before; end
+
+  private
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#57
+  def accept_header; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#68
+  def accept_header_check!; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#53
+  def allowed_methods; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#115
+  def available_media_types; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#96
+  def fail!(grape_allowed_methods); end
+
+  # @raise [Grape::Exceptions::InvalidAcceptHeader]
+  #
+  # source://grape//lib/grape/middleware/versioner/header.rb#88
+  def invalid_accept_header!(message); end
+
+  # @raise [Grape::Exceptions::InvalidVersionHeader]
+  #
+  # source://grape//lib/grape/middleware/versioner/header.rb#92
+  def invalid_version_header!(message); end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#41
+  def match_best_quality_media_type!; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#80
+  def q_values_mime_types; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#61
+  def strict_header_checks!; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#103
+  def vendor_not_found!(media_types); end
+
+  # @return [Boolean]
+  #
+  # source://grape//lib/grape/middleware/versioner/header.rb#84
+  def version_and_vendor?; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#74
+  def version_and_vendor_check!; end
+
+  # source://grape//lib/grape/middleware/versioner/header.rb#109
+  def version_not_found!(media_types); end
 end
 
 # This middleware sets various version related rack environment variables
@@ -3237,19 +3310,10 @@ end
 #
 # source://grape//lib/grape/middleware/versioner/param.rb#21
 class Grape::Middleware::Versioner::Param < ::Grape::Middleware::Base
-  # source://grape//lib/grape/middleware/versioner/param.rb#30
+  include ::Grape::Middleware::VersionerHelpers
+
+  # source://grape//lib/grape/middleware/versioner/param.rb#24
   def before; end
-
-  # source://grape//lib/grape/middleware/versioner/param.rb#22
-  def default_options; end
-
-  private
-
-  # source://grape//lib/grape/middleware/versioner/param.rb#41
-  def paramkey; end
-
-  # source://grape//lib/grape/middleware/versioner/param.rb#45
-  def version_options; end
 end
 
 # This middleware sets various version related rack environment variables
@@ -3267,25 +3331,69 @@ end
 #
 # source://grape//lib/grape/middleware/versioner/path.rb#19
 class Grape::Middleware::Versioner::Path < ::Grape::Middleware::Base
-  # source://grape//lib/grape/middleware/versioner/path.rb#26
-  def before; end
+  include ::Grape::Middleware::VersionerHelpers
 
-  # source://grape//lib/grape/middleware/versioner/path.rb#20
+  # source://grape//lib/grape/middleware/versioner/path.rb#22
+  def before; end
+end
+
+# source://grape//lib/grape/middleware/versioner_helpers.rb#5
+module Grape::Middleware::VersionerHelpers
+  # By default those errors contain an `X-Cascade` header set to `pass`, which allows nesting and stacking
+  # of routes (see Grape::Router) for more information). To prevent
+  # this behavior, and not add the `X-Cascade` header, one can set the `:cascade` option to `false`.
+  #
+  # @return [Boolean]
+  #
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#50
+  def cascade?; end
+
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#9
   def default_options; end
 
-  private
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#62
+  def error_headers; end
 
-  # source://grape//lib/grape/middleware/versioner/path.rb#52
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#31
   def mount_path; end
+
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#54
+  def parameter_key; end
+
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#35
+  def pattern; end
 
   # @return [Boolean]
   #
-  # source://grape//lib/grape/middleware/versioner/path.rb#45
-  def mounted_path?(path); end
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#66
+  def potential_version_match?(potential_version); end
 
-  # source://grape//lib/grape/middleware/versioner/path.rb#56
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#27
   def prefix; end
+
+  # @return [Boolean]
+  #
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#43
+  def strict?; end
+
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#58
+  def vendor; end
+
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#70
+  def version_not_found!; end
+
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#39
+  def version_options; end
+
+  # source://grape//lib/grape/middleware/versioner_helpers.rb#23
+  def versions; end
 end
+
+# source://grape//lib/grape/middleware/versioner_helpers.rb#7
+Grape::Middleware::VersionerHelpers::DEFAULT_PARAMETER = T.let(T.unsafe(nil), String)
+
+# source://grape//lib/grape/middleware/versioner_helpers.rb#6
+Grape::Middleware::VersionerHelpers::DEFAULT_PATTERN = T.let(T.unsafe(nil), Regexp)
 
 # A container for endpoints or other namespaces, which allows for both
 # logical grouping of endpoints as well as sharing common configuration.
@@ -3341,19 +3449,19 @@ end
 
 # source://grape//lib/grape/parser.rb#4
 module Grape::Parser
-  extend ::Grape::Util::Registrable
+  private
+
+  # source://grape//lib/grape/parser.rb#13
+  def parser_for(format, parsers = T.unsafe(nil)); end
 
   class << self
-    # source://grape//lib/grape/parser.rb#8
-    def builtin_parsers; end
-
-    # source://grape//lib/grape/parser.rb#20
-    def parser_for(api_format, **options); end
-
-    # source://grape//lib/grape/parser.rb#16
-    def parsers(**options); end
+    # source://grape//lib/grape/parser.rb#13
+    def parser_for(format, parsers = T.unsafe(nil)); end
   end
 end
+
+# source://grape//lib/grape/parser.rb#7
+Grape::Parser::DEFAULTS = T.let(T.unsafe(nil), Hash)
 
 # source://grape//lib/grape/parser/json.rb#5
 module Grape::Parser::Json
@@ -3479,7 +3587,7 @@ class Grape::Request < ::Rack::Request
   # source://grape//lib/grape/request.rb#14
   def params; end
 
-  # source://rack/3.1.7/lib/rack/request.rb#67
+  # source://rack/3.1.8/lib/rack/request.rb#67
   def rack_params; end
 
   private
@@ -3602,7 +3710,7 @@ class Grape::Router::BaseRoute
   # source://grape//lib/grape/router/base_route.rb#8
   def index; end
 
-  # source://activesupport/7.2.1/lib/active_support/delegation.rb#187
+  # source://activesupport/7.2.1.2/lib/active_support/delegation.rb#187
   def method_missing(method, *_arg1, **_arg2, &_arg3); end
 
   # Returns the value of attribute options.
@@ -3626,7 +3734,7 @@ class Grape::Router::BaseRoute
 
   private
 
-  # source://activesupport/7.2.1/lib/active_support/delegation.rb#179
+  # source://activesupport/7.2.1.2/lib/active_support/delegation.rb#179
   def respond_to_missing?(name, include_private = T.unsafe(nil)); end
 end
 
@@ -3850,86 +3958,6 @@ class Grape::Types::InvalidValue < ::Grape::Validations::Types::InvalidValue; en
 
 # source://grape//lib/grape/http/headers.rb#0
 module Grape::Util; end
-
-# source://grape//lib/grape/util/accept_header_handler.rb#5
-class Grape::Util::AcceptHeaderHandler
-  # @return [AcceptHeaderHandler] a new instance of AcceptHeaderHandler
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#8
-  def initialize(accept_header:, versions:, **options); end
-
-  # Returns the value of attribute accept_header.
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#6
-  def accept_header; end
-
-  # Returns the value of attribute cascade.
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#6
-  def cascade; end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#16
-  def match_best_quality_media_type!(content_types: T.unsafe(nil), allowed_methods: T.unsafe(nil)); end
-
-  # Returns the value of attribute strict.
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#6
-  def strict; end
-
-  # Returns the value of attribute vendor.
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#6
-  def vendor; end
-
-  # Returns the value of attribute versions.
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#6
-  def versions; end
-
-  private
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#37
-  def accept_header_check!; end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#88
-  def available_media_types(content_types); end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#84
-  def error_headers; end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#65
-  def fail!(grape_allowed_methods); end
-
-  # @raise [Grape::Exceptions::InvalidAcceptHeader]
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#57
-  def invalid_accept_header!(message); end
-
-  # @raise [Grape::Exceptions::InvalidVersionHeader]
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#61
-  def invalid_version_header!(message); end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#49
-  def q_values_mime_types; end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#30
-  def strict_header_checks!; end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#72
-  def vendor_not_found!(media_types); end
-
-  # @return [Boolean]
-  #
-  # source://grape//lib/grape/util/accept_header_handler.rb#53
-  def version_and_vendor?; end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#43
-  def version_and_vendor_check!; end
-
-  # source://grape//lib/grape/util/accept_header_handler.rb#78
-  def version_not_found!(media_types); end
-end
 
 # Base for classes which need to operate with own values kept
 # in the hash and inherited values kept in a Hash-like object.
@@ -4385,15 +4413,6 @@ end
 #
 # source://grape//lib/grape/util/media_type.rb#10
 Grape::Util::MediaType::VENDOR_VERSION_HEADER_REGEX = T.let(T.unsafe(nil), Regexp)
-
-# source://grape//lib/grape/util/registrable.rb#5
-module Grape::Util::Registrable
-  # source://grape//lib/grape/util/registrable.rb#6
-  def default_elements; end
-
-  # source://grape//lib/grape/util/registrable.rb#10
-  def register(format, element); end
-end
 
 # source://grape//lib/grape/util/reverse_stackable_values.rb#5
 class Grape::Util::ReverseStackableValues < ::Grape::Util::StackableValues
@@ -5968,12 +5987,12 @@ class Grape::Validations::Validators::LengthValidator < ::Grape::Validations::Va
   # source://grape//lib/grape/validations/validators/length_validator.rb#7
   def initialize(attrs, options, required, scope, **opts); end
 
-  # source://grape//lib/grape/validations/validators/length_validator.rb#28
+  # source://grape//lib/grape/validations/validators/length_validator.rb#33
   def build_message; end
 
-  # @raise [ArgumentError]
+  # @raise [Grape::Exceptions::Validation]
   #
-  # source://grape//lib/grape/validations/validators/length_validator.rb#18
+  # source://grape//lib/grape/validations/validators/length_validator.rb#23
   def validate_param!(attr_name, params); end
 end
 

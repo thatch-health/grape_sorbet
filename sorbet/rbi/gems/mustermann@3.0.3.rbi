@@ -112,7 +112,7 @@ end
 # source://mustermann//lib/mustermann/ast/boundaries.rb#0
 class Mustermann::AST::Boundaries::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # source://mustermann//lib/mustermann/ast/translator.rb#59
+    # source://mustermann//lib/mustermann/ast/translator.rb#62
     def translator; end
   end
 end
@@ -134,7 +134,7 @@ class Mustermann::AST::Compiler < ::Mustermann::AST::Translator
   # source://mustermann//lib/mustermann/ast/compiler.rb#126
   def encoded(char, uri_decode: T.unsafe(nil), space_matches_plus: T.unsafe(nil), **options); end
 
-  # source://mustermann//lib/mustermann/ast/translator.rb#67
+  # source://mustermann//lib/mustermann/ast/translator.rb#70
   def error_class; end
 
   class << self
@@ -190,7 +190,7 @@ end
 # source://mustermann//lib/mustermann/ast/compiler.rb#0
 class Mustermann::AST::Compiler::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # source://mustermann//lib/mustermann/ast/translator.rb#59
+    # source://mustermann//lib/mustermann/ast/translator.rb#62
     def translator; end
   end
 end
@@ -239,7 +239,7 @@ class Mustermann::AST::Expander < ::Mustermann::AST::Translator
   # source://mustermann//lib/mustermann/ast/expander.rb#141
   def add_to(list, result); end
 
-  # source://mustermann//lib/mustermann/ast/translator.rb#67
+  # source://mustermann//lib/mustermann/ast/translator.rb#70
   def error_class; end
 
   # helper method for raising an error for unexpandable values
@@ -299,7 +299,7 @@ end
 # source://mustermann//lib/mustermann/ast/expander.rb#0
 class Mustermann::AST::Expander::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # source://mustermann//lib/mustermann/ast/translator.rb#59
+    # source://mustermann//lib/mustermann/ast/translator.rb#62
     def translator; end
   end
 end
@@ -617,7 +617,7 @@ end
 # source://mustermann//lib/mustermann/ast/param_scanner.rb#0
 class Mustermann::AST::ParamScanner::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # source://mustermann//lib/mustermann/ast/translator.rb#59
+    # source://mustermann//lib/mustermann/ast/translator.rb#62
     def translator; end
   end
 end
@@ -961,7 +961,7 @@ end
 # source://mustermann//lib/mustermann/ast/template_generator.rb#0
 class Mustermann::AST::TemplateGenerator::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # source://mustermann//lib/mustermann/ast/translator.rb#59
+    # source://mustermann//lib/mustermann/ast/translator.rb#62
     def translator; end
   end
 end
@@ -1091,7 +1091,7 @@ end
 # source://mustermann//lib/mustermann/ast/transformer.rb#0
 class Mustermann::AST::Transformer::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # source://mustermann//lib/mustermann/ast/translator.rb#59
+    # source://mustermann//lib/mustermann/ast/translator.rb#62
     def translator; end
   end
 end
@@ -1114,20 +1114,20 @@ class Mustermann::AST::Translator
   # @raise [error_class]
   # @return decorator encapsulating translation
   #
-  # source://mustermann//lib/mustermann/ast/translator.rb#105
+  # source://mustermann//lib/mustermann/ast/translator.rb#108
   def decorator_for(node); end
 
-  # source://mustermann//lib/mustermann/ast/translator.rb#67
+  # source://mustermann//lib/mustermann/ast/translator.rb#70
   def error_class; end
 
   # @return [String] escaped character
   #
-  # source://mustermann//lib/mustermann/ast/translator.rb#121
+  # source://mustermann//lib/mustermann/ast/translator.rb#124
   def escape(char, parser: T.unsafe(nil), escape: T.unsafe(nil), also_escape: T.unsafe(nil)); end
 
   # Start the translation dance for a (sub)tree.
   #
-  # source://mustermann//lib/mustermann/ast/translator.rb#113
+  # source://mustermann//lib/mustermann/ast/translator.rb#116
   def translate(node, *args, **_arg2, &block); end
 
   class << self
@@ -1146,40 +1146,40 @@ class Mustermann::AST::Translator
     #   ast = Mustermann.new('/:name').to_ast
     #   translator.translate(ast) # => [:root, :separator, :capture]
     #
-    # source://mustermann//lib/mustermann/ast/translator.rb#95
+    # source://mustermann//lib/mustermann/ast/translator.rb#98
     def create(&block); end
 
     # maps types to translations
     #
-    # source://mustermann//lib/mustermann/ast/translator.rb#51
+    # source://mustermann//lib/mustermann/ast/translator.rb#54
     def dispatch_table; end
 
     # some magic sauce so {NodeTranslator}s know whom to talk to for {#register}
     #
-    # source://mustermann//lib/mustermann/ast/translator.rb#57
+    # source://mustermann//lib/mustermann/ast/translator.rb#60
     def inherited(subclass); end
 
     # DSL-ish method for specifying the exception class to use.
     #
-    # source://mustermann//lib/mustermann/ast/translator.rb#66
+    # source://mustermann//lib/mustermann/ast/translator.rb#69
     def raises(error); end
 
     # DSL method for defining single method translations.
     #
-    # source://mustermann//lib/mustermann/ast/translator.rb#72
+    # source://mustermann//lib/mustermann/ast/translator.rb#75
     def translate(*types, &block); end
   end
 end
 
 # Encapsulates a single node translation
 #
-# source://mustermann//lib/mustermann/ast/translator.rb#16
+# source://mustermann//lib/mustermann/ast/translator.rb#19
 class Mustermann::AST::Translator::NodeTranslator
   # @param node [Mustermann::AST::Node, Object]
   # @param translator [Mustermann::AST::Translator]
   # @return [NodeTranslator] a new instance of NodeTranslator
   #
-  # source://mustermann//lib/mustermann/ast/translator.rb#30
+  # source://mustermann//lib/mustermann/ast/translator.rb#33
   def initialize(node, translator); end
 
   # source://delegate/0.3.1/delegate.rb#402
@@ -1187,21 +1187,24 @@ class Mustermann::AST::Translator::NodeTranslator
 
   # shorthand for translating a nested object
   #
-  # source://mustermann//lib/mustermann/ast/translator.rb#40
+  # source://mustermann//lib/mustermann/ast/translator.rb#43
   def t(*args, **_arg1, &block); end
 
   # Returns the value of attribute translator.
   #
-  # source://mustermann//lib/mustermann/ast/translator.rb#36
+  # source://mustermann//lib/mustermann/ast/translator.rb#39
   def translator; end
 
   class << self
     # @param types [Array<Symbol, Class>] list of types to register for.
     #
-    # source://mustermann//lib/mustermann/ast/translator.rb#19
+    # source://mustermann//lib/mustermann/ast/translator.rb#22
     def register(*types); end
   end
 end
+
+# source://mustermann//lib/mustermann/ast/translator.rb#15
+Mustermann::AST::Translator::URI_PARSER = T.let(T.unsafe(nil), URI::RFC2396_Parser)
 
 # Checks the AST for certain validations, like correct capture names.
 #
@@ -1234,7 +1237,7 @@ end
 # source://mustermann//lib/mustermann/ast/validation.rb#0
 class Mustermann::AST::Validation::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # source://mustermann//lib/mustermann/ast/translator.rb#59
+    # source://mustermann//lib/mustermann/ast/translator.rb#62
     def translator; end
   end
 end
