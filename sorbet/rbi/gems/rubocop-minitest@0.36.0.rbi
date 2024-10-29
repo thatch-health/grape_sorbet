@@ -1271,7 +1271,7 @@ class RuboCop::Cop::Minitest::MultipleAssertions < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::DefNode
   include ::RuboCop::Cop::MinitestExplorationHelpers
 
-  # source://rubocop/1.65.1/lib/rubocop/cop/exclude_limit.rb#11
+  # source://rubocop/1.67.0/lib/rubocop/cop/exclude_limit.rb#11
   def max=(value); end
 
   # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#37
@@ -1288,10 +1288,10 @@ class RuboCop::Cop::Minitest::MultipleAssertions < ::RuboCop::Cop::Base
   # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#77
   def assertions_count_in_assignment(node); end
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#95
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#99
   def assertions_count_in_branches(branches); end
 
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#99
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#103
   def max_assertions; end
 end
 
@@ -2198,12 +2198,12 @@ class RuboCop::Cop::Minitest::SkipEnsure < ::RuboCop::Cop::Base
 
   # @return [Boolean]
   #
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/skip_ensure.rb#81
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/skip_ensure.rb#83
   def use_skip_in_rescue?(skip_method); end
 
   # @return [Boolean]
   #
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/skip_ensure.rb#85
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/skip_ensure.rb#87
   def valid_conditional_skip?(skip_method, ensure_node); end
 end
 

@@ -12,7 +12,7 @@
 # source://dry-types//lib/dry/types/constraints.rb#3
 module Dry
   class << self
-    # source://dry-core/1.0.1/lib/dry/core.rb#52
+    # source://dry-core/1.0.2/lib/dry/core.rb#52
     def Equalizer(*keys, **options); end
 
     # Export registered types as a module with constants
@@ -147,7 +147,7 @@ module Dry::Types
 
     # @api public
     #
-    # source://dry-core/1.0.1/lib/dry/core/deprecations.rb#202
+    # source://dry-core/1.0.2/lib/dry/core/deprecations.rb#202
     def module(*args, &block); end
 
     # Register a new built-in type
@@ -962,7 +962,7 @@ class Dry::Types::Compiler
   # source://dry-types//lib/dry/types/compiler.rb#52
   def visit_rule(node); end
 
-  # source://dry-core/1.0.1/lib/dry/core/deprecations.rb#168
+  # source://dry-core/1.0.2/lib/dry/core/deprecations.rb#168
   def visit_safe(*args, &block); end
 
   # @api private
@@ -1750,7 +1750,7 @@ class Dry::Types::Container
   include ::Dry::Core::Container::Mixin
   extend ::Dry::Core::Container::Configuration
 
-  # source://dry-core/1.0.1/lib/dry/core/container/mixin.rb#83
+  # source://dry-core/1.0.2/lib/dry/core/container/mixin.rb#83
   def config; end
 end
 
@@ -3893,7 +3893,7 @@ module Dry::Types::Type
   # source://dry-types//lib/dry/types/type.rb#43
   def call(input = T.unsafe(nil), &block); end
 
-  # source://dry-core/1.0.1/lib/dry/core/deprecations.rb#168
+  # source://dry-core/1.0.2/lib/dry/core/deprecations.rb#168
   def safe(*args, &block); end
 
   # Whether a value is a valid member of the type

@@ -8,7 +8,7 @@
 # source://dry-inflector//lib/dry/inflector.rb#3
 module Dry
   class << self
-    # source://dry-core/1.0.1/lib/dry/core.rb#52
+    # source://dry-core/1.0.2/lib/dry/core.rb#52
     def Equalizer(*keys, **options); end
 
     # source://dry-types/1.7.2/lib/dry/types.rb#253
