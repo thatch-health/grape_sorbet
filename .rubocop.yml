@@ -2,16 +2,18 @@
 inherit_gem:
   rubocop-shopify: rubocop.yml
 
-require:
+plugins:
   - rubocop-minitest
   - rubocop-performance
   - rubocop-rake
+
+require:
   - rubocop-sorbet
 
 AllCops:
   NewCops: enable
   SuggestExtensions: false
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 3.2
 
 Naming/ConstantName:
   Enabled: false

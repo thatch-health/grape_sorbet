@@ -842,6 +842,7 @@ Rake::EMPTY_TASK_ARGS = T.let(T.unsafe(nil), Rake::TaskArguments)
 # source://rake//lib/rake/early_time.rb#5
 class Rake::EarlyTime
   include ::Comparable
+  include ::Singleton::SingletonInstanceMethods
   include ::Singleton
   extend ::Singleton::SingletonClassMethods
 
@@ -1166,6 +1167,9 @@ class Rake::FileList
 
   # source://rake//lib/rake/file_list.rb#77
   def fetch(*args, &block); end
+
+  # source://rake//lib/rake/file_list.rb#77
+  def fetch_values(*args, &block); end
 
   # source://rake//lib/rake/file_list.rb#77
   def fifth(*args, &block); end
@@ -1988,6 +1992,7 @@ Rake::LATE = T.let(T.unsafe(nil), Rake::LateTime)
 # source://rake//lib/rake/late_time.rb#4
 class Rake::LateTime
   include ::Comparable
+  include ::Singleton::SingletonInstanceMethods
   include ::Singleton
   extend ::Singleton::SingletonClassMethods
 

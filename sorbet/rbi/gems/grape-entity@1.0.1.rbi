@@ -8,7 +8,7 @@
 # source://grape-entity//lib/grape_entity/entity.rb#5
 module Grape
   class << self
-    # source://grape/2.2.0/lib/grape.rb#61
+    # source://grape/2.3.0/lib/grape.rb#61
     def deprecator; end
   end
 end
