@@ -9,9 +9,6 @@ gemspec
 
 gem "rake", "~> 13.0"
 
-# For Ruby 3.1 compatibility
-gem "zeitwerk", "~> 2.6.18"
-
 group :development, :test do
   gem "irb"
 end

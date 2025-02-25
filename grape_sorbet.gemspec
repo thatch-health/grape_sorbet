@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
     "the Grape API framework in a Sorbet-typed Ruby project."
   spec.homepage = "https://github.com/thatch-health/grape_sorbet"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.1.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage

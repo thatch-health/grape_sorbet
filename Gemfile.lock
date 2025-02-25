@@ -207,7 +207,6 @@ DEPENDENCIES
   simplecov
   sorbet (~> 0.5.10736)
   tapioca (>= 0.16.0)
-  zeitwerk (~> 2.6.18)
 
 BUNDLED WITH
    2.6.5
