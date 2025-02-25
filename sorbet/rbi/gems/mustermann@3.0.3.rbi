@@ -1182,7 +1182,7 @@ class Mustermann::AST::Translator::NodeTranslator
   # source://mustermann//lib/mustermann/ast/translator.rb#33
   def initialize(node, translator); end
 
-  # source://delegate/0.3.1/delegate.rb#402
+  # source://delegate/0.4.0/delegate.rb#402
   def node; end
 
   # shorthand for translating a nested object

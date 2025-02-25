@@ -2,10 +2,12 @@
 inherit_gem:
   rubocop-shopify: rubocop.yml
 
-require:
+plugins:
   - rubocop-minitest
   - rubocop-performance
   - rubocop-rake
+
+require:
   - rubocop-sorbet
 
 AllCops:

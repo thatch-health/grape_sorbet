@@ -1,0 +1,14 @@
+# Files that are committed in the repository but that we don't want to search
+# through with ripgrep.
+#
+# ripgrep already ignores files matched by .gitignore.
+#
+# See https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md for more info.
+
+# Ignore build artifacts regardless of directory depth
+**/builds/
+
+# Tapioca-generated files
+sorbet/rbi/annotations/**
+sorbet/rbi/dsl/**
+sorbet/rbi/gems/**
