@@ -1,3 +1,7 @@
+## 0.0.13 (2025-02-25)
+
+- Bump dependencies and drop support for Ruby 3.1 (#19)
+
 ## 0.0.12 (2024-08-08)
 
 - Upgrade compiler for Tapioca 0.16 (#14)
