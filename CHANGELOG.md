@@ -1,3 +1,7 @@
+## 0.0.14 (2025-03-03)
+
+- Bump uri dependency to 1.0.3 (#20)
+
 ## 0.0.13 (2025-02-25)
 
 - Bump dependencies and drop support for Ruby 3.1 (#19)
