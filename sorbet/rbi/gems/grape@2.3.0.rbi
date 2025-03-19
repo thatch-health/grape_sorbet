@@ -3710,7 +3710,7 @@ class Grape::Router::BaseRoute
   # source://grape//lib/grape/router/base_route.rb#8
   def index; end
 
-  # source://activesupport/8.0.1/lib/active_support/delegation.rb#185
+  # source://activesupport/8.0.2/lib/active_support/delegation.rb#185
   def method_missing(method, *_arg1, **_arg2, &_arg3); end
 
   # Returns the value of attribute options.
@@ -3734,7 +3734,7 @@ class Grape::Router::BaseRoute
 
   private
 
-  # source://activesupport/8.0.1/lib/active_support/delegation.rb#177
+  # source://activesupport/8.0.2/lib/active_support/delegation.rb#177
   def respond_to_missing?(name, include_private = T.unsafe(nil)); end
 end
 
