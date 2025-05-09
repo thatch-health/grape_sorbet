@@ -5,6 +5,8 @@ gem:
   # - gem_name
   # doc: true
   # workers: 5
+  exclude:
+    - bundler-audit
 dsl:
   # Add your `dsl` command parameters here:
   #
