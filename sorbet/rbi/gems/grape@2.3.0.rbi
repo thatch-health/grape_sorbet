@@ -3587,7 +3587,7 @@ class Grape::Request < ::Rack::Request
   # source://grape//lib/grape/request.rb#14
   def params; end
 
-  # source://rack/3.1.12/lib/rack/request.rb#67
+  # source://rack/3.1.14/lib/rack/request.rb#67
   def rack_params; end
 
   private

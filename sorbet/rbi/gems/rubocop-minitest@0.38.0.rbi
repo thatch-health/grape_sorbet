@@ -869,12 +869,12 @@ class RuboCop::Cop::Minitest::DuplicateTestRun < ::RuboCop::Cop::Base
 
   # @return [Boolean]
   #
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/duplicate_test_run.rb#64
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/duplicate_test_run.rb#63
   def parent_class_has_test_methods?(class_node); end
 
   # @return [Boolean]
   #
-  # source://rubocop-minitest//lib/rubocop/cop/minitest/duplicate_test_run.rb#78
+  # source://rubocop-minitest//lib/rubocop/cop/minitest/duplicate_test_run.rb#77
   def test_methods?(class_node); end
 end
 
@@ -1271,7 +1271,7 @@ class RuboCop::Cop::Minitest::MultipleAssertions < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::DefNode
   include ::RuboCop::Cop::MinitestExplorationHelpers
 
-  # source://rubocop/1.74.0/lib/rubocop/cop/exclude_limit.rb#11
+  # source://rubocop/1.75.5/lib/rubocop/cop/exclude_limit.rb#11
   def max=(value); end
 
   # source://rubocop-minitest//lib/rubocop/cop/minitest/multiple_assertions.rb#37
