@@ -82,13 +82,21 @@ module Tapioca
           end
         end
 
+        # https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/callbacks.rb#L23-L66
         CALLBACKS_METHODS = T.let(
           [:before, :before_validation, :after_validation, :after, :finally].freeze,
           T::Array[Symbol],
         )
 
+        # https://github.com/ruby-grape/grape/blob/master/lib/grape.rb#L62-L70
         HTTP_VERB_METHODS = T.let(
           [:get, :post, :put, :patch, :delete, :head, :options].freeze,
+          T::Array[Symbol],
+        )
+
+        # https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L173-L198
+        NAMESPACE_METHODS = T.let(
+          [:namespace, :group, :resource, :resources, :segment].freeze,
           T::Array[Symbol],
         )
 
@@ -196,6 +204,19 @@ module Tapioca
 
         sig { void }
         def create_routing_methods
+          # https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L135-L163
+          routing_methods_module.create_method(
+            "route",
+            parameters: [
+              create_param("methods", type: "T.untyped"),
+              create_opt_param("paths", type: "T.untyped", default: "['/']"),
+              create_opt_param("route_options", type: "T::Hash[Symbol, T.untyped]", default: "{}"),
+              create_block_param("block", type: "T.nilable(T.proc.bind(#{EndpointClassName}).void)"),
+            ],
+            return_type: "void",
+          )
+
+          # https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
           HTTP_VERB_METHODS.each do |verb|
             routing_methods_module.create_method(
               verb.to_s,
@@ -207,6 +228,20 @@ module Tapioca
             )
           end
 
+          # https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L173-L193
+          NAMESPACE_METHODS.each do |namespace_method|
+            routing_methods_module.create_method(
+              namespace_method.to_s,
+              parameters: [
+                create_opt_param("space", type: "T.untyped", default: "nil"),
+                create_opt_param("options", type: "T::Hash[Symbol, T.untyped]", default: "{}"),
+                create_block_param("block", type: "T.nilable(T.proc.bind(T.class_of(#{APIInstanceClassName})).void)"),
+              ],
+              return_type: "void",
+            )
+          end
+
+          # https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L215-L232
           routing_methods_module.create_method(
             "route_param",
             parameters: [
