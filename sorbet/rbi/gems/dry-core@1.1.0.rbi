@@ -19,7 +19,7 @@ module Dry
     # source://dry-core//lib/dry/core.rb#52
     def Equalizer(*keys, **options); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#253
+    # source://dry-types/1.8.3/lib/dry/types.rb#253
     def Types(*namespaces, default: T.unsafe(nil), **aliases); end
   end
 end
@@ -1721,115 +1721,115 @@ module Dry::Types
   extend ::Dry::Core::Constants
 
   class << self
-    # source://dry-types/1.8.2/lib/dry/types/constraints.rb#13
+    # source://dry-types/1.8.3/lib/dry/types/constraints.rb#13
     def Rule(options); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#115
+    # source://dry-types/1.8.3/lib/dry/types.rb#115
     def [](name); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#163
+    # source://dry-types/1.8.3/lib/dry/types.rb#163
     def const_missing(const); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#82
+    # source://dry-types/1.8.3/lib/dry/types.rb#82
     def container; end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#197
+    # source://dry-types/1.8.3/lib/dry/types.rb#197
     def define_builder(method, &block); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#149
+    # source://dry-types/1.8.3/lib/dry/types.rb#149
     def identifier(klass); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#73
+    # source://dry-types/1.8.3/lib/dry/types.rb#73
     def included(*_arg0); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#33
+    # source://dry-types/1.8.3/lib/dry/types.rb#33
     def loader; end
 
     # source://dry-core//lib/dry/core/deprecations.rb#202
     def module(*args, &block); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#104
+    # source://dry-types/1.8.3/lib/dry/types.rb#104
     def register(name, type = T.unsafe(nil), &block); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#91
+    # source://dry-types/1.8.3/lib/dry/types.rb#91
     def registered?(class_or_identifier); end
 
-    # source://dry-types/1.8.2/lib/dry/types/constraints.rb#26
+    # source://dry-types/1.8.3/lib/dry/types/constraints.rb#26
     def rule_compiler; end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#158
+    # source://dry-types/1.8.3/lib/dry/types.rb#158
     def type_map; end
   end
 end
 
 class Dry::Types::Compiler
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#11
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#11
   def initialize(registry); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#15
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#15
   def call(ast); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#114
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#114
   def compile_fn(fn); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#9
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#9
   def registry; end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#17
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#17
   def visit(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#110
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#110
   def visit_any(meta); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#59
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#59
   def visit_array(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#22
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#22
   def visit_constrained(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#28
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#28
   def visit_constructor(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#100
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#100
   def visit_enum(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#65
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#65
   def visit_hash(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#80
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#80
   def visit_json_array(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#75
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#75
   def visit_json_hash(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#95
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#95
   def visit_key(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#34
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#34
   def visit_lax(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#105
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#105
   def visit_map(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#39
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#39
   def visit_nominal(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#90
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#90
   def visit_params_array(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#85
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#85
   def visit_params_hash(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#50
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#50
   def visit_rule(node); end
 
   # source://dry-core//lib/dry/core/deprecations.rb#168
   def visit_safe(*args, &block); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#70
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#70
   def visit_schema(node); end
 
-  # source://dry-types/1.8.2/lib/dry/types/compiler.rb#54
+  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#54
   def visit_sum(node); end
 end
 
@@ -1860,19 +1860,19 @@ Dry::Types::IDENTITY = T.let(T.unsafe(nil), Proc)
 Dry::Types::Self = T.let(T.unsafe(nil), Proc)
 
 module Dry::Types::Type
-  # source://dry-types/1.8.2/lib/dry/types/type.rb#18
+  # source://dry-types/1.8.3/lib/dry/types/type.rb#18
   def ===(input = T.unsafe(nil)); end
 
-  # source://dry-types/1.8.2/lib/dry/types/type.rb#43
+  # source://dry-types/1.8.3/lib/dry/types/type.rb#43
   def [](input = T.unsafe(nil), &_arg1); end
 
-  # source://dry-types/1.8.2/lib/dry/types/type.rb#43
+  # source://dry-types/1.8.3/lib/dry/types/type.rb#43
   def call(input = T.unsafe(nil), &_arg1); end
 
   # source://dry-core//lib/dry/core/deprecations.rb#168
   def safe(*args, &block); end
 
-  # source://dry-types/1.8.2/lib/dry/types/type.rb#18
+  # source://dry-types/1.8.3/lib/dry/types/type.rb#18
   def valid?(input = T.unsafe(nil)); end
 end
 

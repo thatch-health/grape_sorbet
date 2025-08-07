@@ -11,7 +11,7 @@ module Dry
     # source://dry-core/1.1.0/lib/dry/core.rb#52
     def Equalizer(*keys, **options); end
 
-    # source://dry-types/1.8.2/lib/dry/types.rb#253
+    # source://dry-types/1.8.3/lib/dry/types.rb#253
     def Types(*namespaces, default: T.unsafe(nil), **aliases); end
   end
 end
