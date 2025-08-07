@@ -8,8 +8,7 @@ module Tapioca
     module Compilers
       class GrapeEndpointsSpec < ::DslSpec
         describe "Tapioca::Dsl::Compilers::GrapeEndpoints" do
-          sig { void }
-          def before_setup
+          before(:all) do
             require "grape"
           end
 

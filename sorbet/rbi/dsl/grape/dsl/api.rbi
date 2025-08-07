@@ -6,7 +6,6 @@
 
 
 module Grape::DSL::API
-  mixes_in_class_methods ::Grape::Middleware::Auth::DSL::ClassMethods
   mixes_in_class_methods ::Grape::DSL::Configuration::ClassMethods
   mixes_in_class_methods ::Grape::DSL::Validations::ClassMethods
   mixes_in_class_methods ::Grape::DSL::Callbacks::ClassMethods

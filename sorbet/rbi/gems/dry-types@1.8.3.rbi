@@ -541,7 +541,7 @@ module Dry::Types::BuilderMethods
   # @param object [Object]
   # @return [Dry::Types::Type]
   #
-  # source://dry-types//lib/dry/types/builder_methods.rb#63
+  # source://dry-types//lib/dry/types/builder_methods.rb#70
   def Constant(object); end
 
   # Build a constructor type
@@ -553,7 +553,7 @@ module Dry::Types::BuilderMethods
   # @param block [#call, nil] Value constructor
   # @return [Dry::Types::Type]
   #
-  # source://dry-types//lib/dry/types/builder_methods.rb#73
+  # source://dry-types//lib/dry/types/builder_methods.rb#80
   def Constructor(klass, cons = T.unsafe(nil), &block); end
 
   # Build a hash schema
@@ -589,7 +589,7 @@ module Dry::Types::BuilderMethods
   # @param methods [Array<String, Symbol>] Method names
   # @return [Dry::Types::Contrained]
   #
-  # source://dry-types//lib/dry/types/builder_methods.rb#124
+  # source://dry-types//lib/dry/types/builder_methods.rb#131
   def Interface(*methods); end
 
   # Build a map type
@@ -602,7 +602,7 @@ module Dry::Types::BuilderMethods
   # @param value_type [Type] Value type
   # @return [Dry::Types::Map]
   #
-  # source://dry-types//lib/dry/types/builder_methods.rb#110
+  # source://dry-types//lib/dry/types/builder_methods.rb#117
   def Map(key_type, value_type); end
 
   # Build a nominal type
@@ -611,7 +611,7 @@ module Dry::Types::BuilderMethods
   # @param klass [Class]
   # @return [Dry::Types::Type]
   #
-  # source://dry-types//lib/dry/types/builder_methods.rb#90
+  # source://dry-types//lib/dry/types/builder_methods.rb#97
   def Nominal(klass); end
 
   # Build a type which values are instances of a given class
@@ -635,7 +635,7 @@ module Dry::Types::BuilderMethods
   # @param value [Object]
   # @return [Dry::Types::Type]
   #
-  # source://dry-types//lib/dry/types/builder_methods.rb#55
+  # source://dry-types//lib/dry/types/builder_methods.rb#62
   def Value(value); end
 
   # @api private
