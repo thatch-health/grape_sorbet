@@ -86,7 +86,7 @@ class Grape::API
     # source://grape//lib/grape/api.rb#24
     def instances=(_arg0); end
 
-    # source://activesupport/8.0.2/lib/active_support/delegation.rb#185
+    # source://activesupport/8.0.3/lib/active_support/delegation.rb#185
     def method_missing(method, *_arg1, **_arg2, &_arg3); end
 
     # The remountable class can have a configuration hash to provide some dynamic class-level variables.
@@ -105,7 +105,7 @@ class Grape::API
     # source://grape//lib/grape/api.rb#55
     def override_all_methods!; end
 
-    # source://activesupport/8.0.2/lib/active_support/delegation.rb#177
+    # source://activesupport/8.0.3/lib/active_support/delegation.rb#177
     def respond_to_missing?(name, include_private = T.unsafe(nil)); end
 
     private
@@ -3584,10 +3584,10 @@ class Grape::Request < ::Rack::Request
   # source://grape//lib/grape/request.rb#147
   def params; end
 
-  # source://rack/3.2.0/lib/rack/request.rb#298
+  # source://rack/3.2.1/lib/rack/request.rb#298
   def rack_cookies; end
 
-  # source://rack/3.2.0/lib/rack/request.rb#72
+  # source://rack/3.2.1/lib/rack/request.rb#72
   def rack_params; end
 
   private
@@ -3718,7 +3718,7 @@ class Grape::Router::BaseRoute
   # source://grape//lib/grape/router/base_route.rb#8
   def index; end
 
-  # source://activesupport/8.0.2/lib/active_support/delegation.rb#185
+  # source://activesupport/8.0.3/lib/active_support/delegation.rb#185
   def method_missing(method, *_arg1, **_arg2, &_arg3); end
 
   # Returns the value of attribute options.
@@ -3742,7 +3742,7 @@ class Grape::Router::BaseRoute
 
   private
 
-  # source://activesupport/8.0.2/lib/active_support/delegation.rb#177
+  # source://activesupport/8.0.3/lib/active_support/delegation.rb#177
   def respond_to_missing?(name, include_private = T.unsafe(nil)); end
 end
 
