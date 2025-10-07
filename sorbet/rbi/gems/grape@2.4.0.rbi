@@ -3584,10 +3584,10 @@ class Grape::Request < ::Rack::Request
   # source://grape//lib/grape/request.rb#147
   def params; end
 
-  # source://rack/3.2.1/lib/rack/request.rb#298
+  # source://rack/3.2.2/lib/rack/request.rb#298
   def rack_cookies; end
 
-  # source://rack/3.2.1/lib/rack/request.rb#72
+  # source://rack/3.2.2/lib/rack/request.rb#72
   def rack_params; end
 
   private
