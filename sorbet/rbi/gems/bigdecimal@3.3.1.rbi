@@ -19,7 +19,7 @@ class BigDecimal < ::Numeric
   #
   #  Related: BigDecimal#power.
   #
-  # source://bigdecimal//lib/bigdecimal.rb#66
+  # source://bigdecimal//lib/bigdecimal.rb#77
   def **(y); end
 
   # call-seq:
@@ -30,7 +30,7 @@ class BigDecimal < ::Numeric
   #
   # Also available as the operator **.
   #
-  # source://bigdecimal//lib/bigdecimal.rb#86
+  # source://bigdecimal//lib/bigdecimal.rb#97
   def power(y, prec = T.unsafe(nil)); end
 
   # Returns the square root of the value.
@@ -39,7 +39,7 @@ class BigDecimal < ::Numeric
   #
   # @raise [FloatDomainError]
   #
-  # source://bigdecimal//lib/bigdecimal.rb#200
+  # source://bigdecimal//lib/bigdecimal.rb#211
   def sqrt(prec); end
 
   # call-seq:
@@ -81,16 +81,14 @@ module BigDecimal::Internal
     # source://bigdecimal//lib/bigdecimal.rb#18
     def coerce_to_bigdecimal(x, prec, method_name); end
 
-    # source://bigdecimal//lib/bigdecimal.rb#39
+    # source://bigdecimal//lib/bigdecimal.rb#30
+    def coerce_validate_prec(prec, method_name, accept_zero: T.unsafe(nil)); end
+
+    # source://bigdecimal//lib/bigdecimal.rb#50
     def infinity_computation_result; end
 
-    # source://bigdecimal//lib/bigdecimal.rb#46
+    # source://bigdecimal//lib/bigdecimal.rb#57
     def nan_computation_result; end
-
-    # @raise [ArgumentError]
-    #
-    # source://bigdecimal//lib/bigdecimal.rb#30
-    def validate_prec(prec, method_name, accept_zero: T.unsafe(nil)); end
   end
 end
 
@@ -99,7 +97,7 @@ BigDecimal::VERSION = T.let(T.unsafe(nil), String)
 # Core BigMath methods for BigDecimal (log, exp) are defined here.
 # Other methods (sin, cos, atan) are defined in 'bigdecimal/math.rb'.
 #
-# source://bigdecimal//lib/bigdecimal.rb#226
+# source://bigdecimal//lib/bigdecimal.rb#237
 module BigMath
   class << self
     # call-seq:
@@ -112,7 +110,7 @@ module BigMath
     #
     # If +decimal+ is NaN, returns NaN.
     #
-    # source://bigdecimal//lib/bigdecimal.rb#317
+    # source://bigdecimal//lib/bigdecimal.rb#328
     def exp(x, prec); end
 
     # call-seq:
@@ -129,12 +127,12 @@ module BigMath
     #
     # @raise [Math::DomainError]
     #
-    # source://bigdecimal//lib/bigdecimal.rb#240
+    # source://bigdecimal//lib/bigdecimal.rb#251
     def log(x, prec); end
 
     private
 
-    # source://bigdecimal//lib/bigdecimal.rb#295
+    # source://bigdecimal//lib/bigdecimal.rb#306
     def _exp_taylor(x, prec); end
   end
 end
