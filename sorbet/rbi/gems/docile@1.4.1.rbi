@@ -7,7 +7,7 @@
 
 # Docile keeps your Ruby DSLs tame and well-behaved.
 #
-# source://docile//lib/docile/version.rb#3
+# pkg:gem/docile#lib/docile/version.rb:3
 module Docile
   extend ::Docile::Execution
 
@@ -37,13 +37,13 @@ module Docile
   #   end
   #   #=> [1, 3]
   # @note Use with an *imperative* DSL (commands modify the context object)
-  # @param dsl [Object] context object whose methods make up the DSL
   # @param args [Array] arguments to be passed to the block
   # @param block [Proc] the block of DSL commands to be executed against the
   #   `dsl` context object
+  # @param dsl [Object] context object whose methods make up the DSL
   # @return [Object] the `dsl` context object after executing the block
   #
-  # source://docile//lib/docile.rb#45
+  # pkg:gem/docile#lib/docile.rb:45
   def dsl_eval(dsl, *args, **_arg2, &block); end
 
   # Execute a block in the context of an immutable object whose methods,
@@ -55,28 +55,28 @@ module Docile
   #   2. Each command returns the next DSL context object
   #   3. The final return value is the value returned by the last command
   #
-  # @example Use a frozen String as a DSL
-  #   Docile.dsl_eval_immutable("I'm immutable!".freeze) do
-  #   reverse
-  #   upcase
-  #   end
-  #   #=> "!ELBATUMMI M'I"
   # @example Use a Float as a DSL
   #   Docile.dsl_eval_immutable(84.5) do
   #   fdiv(2)
   #   floor
   #   end
   #   #=> 42
+  # @example Use a frozen String as a DSL
+  #   Docile.dsl_eval_immutable("I'm immutable!".freeze) do
+  #   reverse
+  #   upcase
+  #   end
+  #   #=> "!ELBATUMMI M'I"
   # @note Use with a *functional* DSL (commands return successor
   #   context objects)
-  # @param dsl [Object] immutable context object whose methods make up the
-  #   initial DSL
   # @param args [Array] arguments to be passed to the block
   # @param block [Proc] the block of DSL commands to be executed against the
   #   `dsl` context object and successor return values
+  # @param dsl [Object] immutable context object whose methods make up the
+  #   initial DSL
   # @return [Object] the return value of the final command in the block
   #
-  # source://docile//lib/docile.rb#128
+  # pkg:gem/docile#lib/docile.rb:128
   def dsl_eval_immutable(dsl, *args, **_arg2, &block); end
 
   # Execute a block in the context of an object whose methods represent the
@@ -105,13 +105,13 @@ module Docile
   #   end
   #   #=> 2
   # @note Use with an *imperative* DSL (commands modify the context object)
-  # @param dsl [Object] context object whose methods make up the DSL
   # @param args [Array] arguments to be passed to the block
   # @param block [Proc] the block of DSL commands to be executed against the
   #   `dsl` context object
+  # @param dsl [Object] context object whose methods make up the DSL
   # @return [Object] the return value from executing the block
   #
-  # source://docile//lib/docile.rb#87
+  # pkg:gem/docile#lib/docile.rb:87
   def dsl_eval_with_block_return(dsl, *args, **_arg2, &block); end
 
   class << self
@@ -139,13 +139,13 @@ module Docile
     #   end
     #   #=> [1, 3]
     # @note Use with an *imperative* DSL (commands modify the context object)
-    # @param dsl [Object] context object whose methods make up the DSL
     # @param args [Array] arguments to be passed to the block
     # @param block [Proc] the block of DSL commands to be executed against the
     #   `dsl` context object
+    # @param dsl [Object] context object whose methods make up the DSL
     # @return [Object] the `dsl` context object after executing the block
     #
-    # source://docile//lib/docile.rb#45
+    # pkg:gem/docile#lib/docile.rb:51
     def dsl_eval(dsl, *args, **_arg2, &block); end
 
     # Execute a block in the context of an immutable object whose methods,
@@ -157,28 +157,28 @@ module Docile
     #   2. Each command returns the next DSL context object
     #   3. The final return value is the value returned by the last command
     #
-    # @example Use a frozen String as a DSL
-    #   Docile.dsl_eval_immutable("I'm immutable!".freeze) do
-    #   reverse
-    #   upcase
-    #   end
-    #   #=> "!ELBATUMMI M'I"
     # @example Use a Float as a DSL
     #   Docile.dsl_eval_immutable(84.5) do
     #   fdiv(2)
     #   floor
     #   end
     #   #=> 42
+    # @example Use a frozen String as a DSL
+    #   Docile.dsl_eval_immutable("I'm immutable!".freeze) do
+    #   reverse
+    #   upcase
+    #   end
+    #   #=> "!ELBATUMMI M'I"
     # @note Use with a *functional* DSL (commands return successor
     #   context objects)
-    # @param dsl [Object] immutable context object whose methods make up the
-    #   initial DSL
     # @param args [Array] arguments to be passed to the block
     # @param block [Proc] the block of DSL commands to be executed against the
     #   `dsl` context object and successor return values
+    # @param dsl [Object] immutable context object whose methods make up the
+    #   initial DSL
     # @return [Object] the return value of the final command in the block
     #
-    # source://docile//lib/docile.rb#128
+    # pkg:gem/docile#lib/docile.rb:133
     def dsl_eval_immutable(dsl, *args, **_arg2, &block); end
 
     # Execute a block in the context of an object whose methods represent the
@@ -207,13 +207,13 @@ module Docile
     #   end
     #   #=> 2
     # @note Use with an *imperative* DSL (commands modify the context object)
-    # @param dsl [Object] context object whose methods make up the DSL
     # @param args [Array] arguments to be passed to the block
     # @param block [Proc] the block of DSL commands to be executed against the
     #   `dsl` context object
+    # @param dsl [Object] context object whose methods make up the DSL
     # @return [Object] the return value from executing the block
     #
-    # source://docile//lib/docile.rb#87
+    # pkg:gem/docile#lib/docile.rb:94
     def dsl_eval_with_block_return(dsl, *args, **_arg2, &block); end
   end
 end
@@ -226,22 +226,22 @@ end
 #
 # @api private
 #
-# source://docile//lib/docile/backtrace_filter.rb#11
+# pkg:gem/docile#lib/docile/backtrace_filter.rb:11
 module Docile::BacktraceFilter
   # @api private
   #
-  # source://docile//lib/docile/backtrace_filter.rb#14
+  # pkg:gem/docile#lib/docile/backtrace_filter.rb:14
   def backtrace; end
 
   # @api private
   #
-  # source://docile//lib/docile/backtrace_filter.rb#19
+  # pkg:gem/docile#lib/docile/backtrace_filter.rb:19
   def backtrace_locations; end
 end
 
 # @api private
 #
-# source://docile//lib/docile/backtrace_filter.rb#12
+# pkg:gem/docile#lib/docile/backtrace_filter.rb:12
 Docile::BacktraceFilter::FILTER_PATTERN = T.let(T.unsafe(nil), Regexp)
 
 # Operates in the same manner as {FallbackContextProxy}, but replacing
@@ -254,14 +254,14 @@ Docile::BacktraceFilter::FILTER_PATTERN = T.let(T.unsafe(nil), Regexp)
 # @api private
 # @see Docile.dsl_eval_immutable
 #
-# source://docile//lib/docile/chaining_fallback_context_proxy.rb#17
+# pkg:gem/docile#lib/docile/chaining_fallback_context_proxy.rb:17
 class Docile::ChainingFallbackContextProxy < ::Docile::FallbackContextProxy
   # Proxy methods as in {FallbackContextProxy#method_missing}, replacing
   # `receiver` with the returned value.
   #
   # @api private
   #
-  # source://docile//lib/docile/chaining_fallback_context_proxy.rb#20
+  # pkg:gem/docile#lib/docile/chaining_fallback_context_proxy.rb:20
   def method_missing(method, *args, **_arg2, &block); end
 end
 
@@ -270,7 +270,7 @@ end
 #
 # @api private
 #
-# source://docile//lib/docile/execution.rb#8
+# pkg:gem/docile#lib/docile/execution.rb:8
 module Docile::Execution
   private
 
@@ -278,14 +278,14 @@ module Docile::Execution
   # commands in a DSL, using a specific proxy class.
   #
   # @api private
+  # @param args [Array] arguments to be passed to the block
+  # @param block [Proc] the block of DSL commands to be executed
   # @param dsl [Object] context object whose methods make up the
   #   (initial) DSL
   # @param proxy_type [FallbackContextProxy, ChainingFallbackContextProxy] which class to instantiate as proxy context
-  # @param args [Array] arguments to be passed to the block
-  # @param block [Proc] the block of DSL commands to be executed
   # @return [Object] the return value of the block
   #
-  # source://docile//lib/docile/execution.rb#19
+  # pkg:gem/docile#lib/docile/execution.rb:19
   def exec_in_proxy_context(dsl, proxy_type, *args, **_arg3, &block); end
 
   class << self
@@ -293,14 +293,14 @@ module Docile::Execution
     # commands in a DSL, using a specific proxy class.
     #
     # @api private
+    # @param args [Array] arguments to be passed to the block
+    # @param block [Proc] the block of DSL commands to be executed
     # @param dsl [Object] context object whose methods make up the
     #   (initial) DSL
     # @param proxy_type [FallbackContextProxy, ChainingFallbackContextProxy] which class to instantiate as proxy context
-    # @param args [Array] arguments to be passed to the block
-    # @param block [Proc] the block of DSL commands to be executed
     # @return [Object] the return value of the block
     #
-    # source://docile//lib/docile/execution.rb#19
+    # pkg:gem/docile#lib/docile/execution.rb:51
     def exec_in_proxy_context(dsl, proxy_type, *args, **_arg3, &block); end
   end
 end
@@ -318,23 +318,23 @@ end
 # @api private
 # @see Docile.dsl_eval
 #
-# source://docile//lib/docile/fallback_context_proxy.rb#20
+# pkg:gem/docile#lib/docile/fallback_context_proxy.rb:20
 class Docile::FallbackContextProxy
   # @api private
-  # @param receiver [Object] the primary proxy target to which all methods
-  #   initially will be forwarded
   # @param fallback [Object] the fallback proxy target to which any methods
   #   not handled by `receiver` will be forwarded
+  # @param receiver [Object] the primary proxy target to which all methods
+  #   initially will be forwarded
   # @return [FallbackContextProxy] a new instance of FallbackContextProxy
   #
-  # source://docile//lib/docile/fallback_context_proxy.rb#46
+  # pkg:gem/docile#lib/docile/fallback_context_proxy.rb:46
   def initialize(receiver, fallback); end
 
   # @api private
   # @return [Array<Symbol>] Instance variable names, excluding
   #   {NON_PROXIED_INSTANCE_VARIABLES}
   #
-  # source://docile//lib/docile/fallback_context_proxy.rb#85
+  # pkg:gem/docile#lib/docile/fallback_context_proxy.rb:85
   def instance_variables; end
 
   # Proxy all methods, excluding {NON_PROXIED_METHODS}, first to `receiver`
@@ -342,7 +342,7 @@ class Docile::FallbackContextProxy
   #
   # @api private
   #
-  # source://docile//lib/docile/fallback_context_proxy.rb#91
+  # pkg:gem/docile#lib/docile/fallback_context_proxy.rb:91
   def method_missing(method, *args, **_arg2, &block); end
 end
 
@@ -351,7 +351,7 @@ end
 #
 # @api private
 #
-# source://docile//lib/docile/fallback_context_proxy.rb#30
+# pkg:gem/docile#lib/docile/fallback_context_proxy.rb:30
 Docile::FallbackContextProxy::NON_FALLBACK_METHODS = T.let(T.unsafe(nil), Set)
 
 # The set of instance variables which are local to this object and hidden.
@@ -360,7 +360,7 @@ Docile::FallbackContextProxy::NON_FALLBACK_METHODS = T.let(T.unsafe(nil), Set)
 #
 # @api private
 #
-# source://docile//lib/docile/fallback_context_proxy.rb#35
+# pkg:gem/docile#lib/docile/fallback_context_proxy.rb:35
 Docile::FallbackContextProxy::NON_PROXIED_INSTANCE_VARIABLES = T.let(T.unsafe(nil), Set)
 
 # The set of methods which will **not** be proxied, but instead answered
@@ -368,10 +368,10 @@ Docile::FallbackContextProxy::NON_PROXIED_INSTANCE_VARIABLES = T.let(T.unsafe(ni
 #
 # @api private
 #
-# source://docile//lib/docile/fallback_context_proxy.rb#23
+# pkg:gem/docile#lib/docile/fallback_context_proxy.rb:23
 Docile::FallbackContextProxy::NON_PROXIED_METHODS = T.let(T.unsafe(nil), Set)
 
 # The current version of this library
 #
-# source://docile//lib/docile/version.rb#5
+# pkg:gem/docile#lib/docile/version.rb:5
 Docile::VERSION = T.let(T.unsafe(nil), String)
