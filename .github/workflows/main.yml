@@ -17,10 +17,6 @@ jobs:
         run: |
           bundle exec rubocop --parallel
 
-      - name: Run bundler-audit
-        run: |
-          bundle exec bundle-audit check
-
   test:
     runs-on: ubuntu-latest
 

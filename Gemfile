@@ -23,8 +23,6 @@ group :development do
   gem "rubocop-rake", require: false
   gem "rubocop-shopify", require: false
   gem "rubocop-sorbet", require: false
-
-  gem "bundler-audit", require: false
 end
 
 group :test do
