@@ -5,28 +5,8 @@
 # Please instead update this file by running `bin/tapioca gem mustermann-grape`.
 
 
-# source://mustermann-grape//lib/mustermann/grape.rb#6
-module Mustermann
-  class << self
-    # source://mustermann/3.0.4/lib/mustermann.rb#89
-    def [](name); end
-
-    # source://mustermann/3.0.4/lib/mustermann.rb#120
-    def extend_object(object); end
-
-    # source://mustermann/3.0.4/lib/mustermann.rb#62
-    def new(*input, type: T.unsafe(nil), operator: T.unsafe(nil), **options); end
-
-    # source://mustermann/3.0.4/lib/mustermann.rb#115
-    def normalized_type(type); end
-
-    # source://mustermann/3.0.4/lib/mustermann.rb#110
-    def register(name, type); end
-
-    # source://mustermann/3.0.4/lib/mustermann.rb#101
-    def try_require(path); end
-  end
-end
+# pkg:gem/mustermann-grape#lib/mustermann/grape.rb:6
+module Mustermann; end
 
 # Grape style pattern implementation.
 #
@@ -35,8 +15,8 @@ end
 # @see Mustermann::Pattern
 # @see file:README.md#grape Syntax description in the README
 #
-# source://mustermann-grape//lib/mustermann/grape.rb#14
+# pkg:gem/mustermann-grape#lib/mustermann/grape.rb:14
 class Mustermann::Grape < ::Mustermann::AST::Pattern; end
 
-# source://mustermann-grape//lib/mustermann/grape.rb#0
+# pkg:gem/mustermann-grape#lib/mustermann/grape.rb:18
 class Mustermann::Grape::Parser < ::Mustermann::AST::Parser; end

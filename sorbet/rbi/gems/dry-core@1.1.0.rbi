@@ -5,7 +5,7 @@
 # Please instead update this file by running `bin/tapioca gem dry-core`.
 
 
-# source://dry-core//lib/dry/core/constants.rb#5
+# pkg:gem/dry-core#lib/dry/core/constants.rb:5
 module Dry
   class << self
     # Build an equalizer module for the inclusion in other class
@@ -16,15 +16,12 @@ module Dry
     #
     # @api public
     #
-    # source://dry-core//lib/dry/core.rb#52
+    # pkg:gem/dry-core#lib/dry/core.rb:52
     def Equalizer(*keys, **options); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#253
-    def Types(*namespaces, default: T.unsafe(nil), **aliases); end
   end
 end
 
-# source://dry-core//lib/dry/core/constants.rb#6
+# pkg:gem/dry-core#lib/dry/core/constants.rb:6
 module Dry::Core
   include ::Dry::Core::Constants
 
@@ -37,10 +34,10 @@ module Dry::Core
     #
     # @api public
     #
-    # source://dry-core//lib/dry/core.rb#38
+    # pkg:gem/dry-core#lib/dry/core.rb:38
     def Equalizer(*keys, **options); end
 
-    # source://dry-core//lib/dry/core.rb#15
+    # pkg:gem/dry-core#lib/dry/core.rb:15
     def loader; end
   end
 end
@@ -49,26 +46,32 @@ end
 #
 # @since 0.8.0
 #
-# source://dry-core//lib/dry/core/basic_object.rb#9
+# pkg:gem/dry-core#lib/dry/core/basic_object.rb:9
 class Dry::Core::BasicObject < ::BasicObject
   # Returns the class for debugging purposes.
   #
   # @see http://ruby-doc.org/core/Object.html#method-i-class
   # @since 0.8.0
   #
-  # source://dry-core//lib/dry/core/basic_object.rb#32
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:32
   def class; end
 
-  # source://dry-core//lib/dry/core/basic_object.rb#44
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:44
   def inspect; end
 
   # @since 0.8.0
+  #
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:62
   def instance_of?(_arg0); end
 
   # @since 0.8.0
+  #
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:77
   def is_a?(_arg0); end
 
   # @since 0.8.0
+  #
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:92
   def kind_of?(_arg0); end
 
   # Alias for __id__
@@ -77,7 +80,7 @@ class Dry::Core::BasicObject < ::BasicObject
   # @see http://ruby-doc.org/core/Object.html#method-i-object_id
   # @since 0.8.0
   #
-  # source://dry-core//lib/dry/core/basic_object.rb#101
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:101
   def object_id; end
 
   # Interface for pp
@@ -87,7 +90,7 @@ class Dry::Core::BasicObject < ::BasicObject
   # @see https://ruby-doc.org/stdlib/libdoc/pp/rdoc/PP.html
   # @since 0.8.0
   #
-  # source://dry-core//lib/dry/core/basic_object.rb#113
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:113
   def pretty_print(printer); end
 
   # Returns true if responds to the given method.
@@ -96,7 +99,7 @@ class Dry::Core::BasicObject < ::BasicObject
   # @see http://ruby-doc.org/core/Object.html#method-i-respond_to-3F
   # @since 0.8.0
   #
-  # source://dry-core//lib/dry/core/basic_object.rb#124
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:124
   def respond_to?(method_name, include_all = T.unsafe(nil)); end
 
   private
@@ -104,7 +107,7 @@ class Dry::Core::BasicObject < ::BasicObject
   # @api private
   # @since 0.8.0
   #
-  # source://dry-core//lib/dry/core/basic_object.rb#140
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:140
   def __inspect; end
 
   # Must be overridden by descendants
@@ -113,7 +116,7 @@ class Dry::Core::BasicObject < ::BasicObject
   # @return [Boolean]
   # @since 0.8.0
   #
-  # source://dry-core//lib/dry/core/basic_object.rb#134
+  # pkg:gem/dry-core#lib/dry/core/basic_object.rb:134
   def respond_to_missing?(_method_name, _include_all); end
 
   class << self
@@ -127,7 +130,7 @@ class Dry::Core::BasicObject < ::BasicObject
     # @see https://ruby-doc.org/core/Module.html#method-i-const_missing
     # @since 0.8.0
     #
-    # source://dry-core//lib/dry/core/basic_object.rb#23
+    # pkg:gem/dry-core#lib/dry/core/basic_object.rb:23
     def const_missing(name); end
   end
 end
@@ -146,11 +149,11 @@ end
 #   end
 #   end
 #
-# source://dry-core//lib/dry/core/cache.rb#21
+# pkg:gem/dry-core#lib/dry/core/cache.rb:21
 module Dry::Core::Cache
   # @api private
   #
-  # source://dry-core//lib/dry/core/cache.rb#36
+  # pkg:gem/dry-core#lib/dry/core/cache.rb:36
   def cache; end
 
   # Caches a result of the block evaluation
@@ -164,19 +167,19 @@ module Dry::Core::Cache
   #   the same argument values)
   # @yield An arbitrary block
   #
-  # source://dry-core//lib/dry/core/cache.rb#51
+  # pkg:gem/dry-core#lib/dry/core/cache.rb:51
   def fetch_or_store(*args, &_arg1); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/cache.rb#30
+  # pkg:gem/dry-core#lib/dry/core/cache.rb:30
   def inherited(klass); end
 
   class << self
     # @api private
     # @private
     #
-    # source://dry-core//lib/dry/core/cache.rb#23
+    # pkg:gem/dry-core#lib/dry/core/cache.rb:23
     def extended(klass); end
   end
 end
@@ -185,7 +188,7 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/cache.rb#56
+# pkg:gem/dry-core#lib/dry/core/cache.rb:56
 module Dry::Core::Cache::Methods
   # Delegates call to the class-level method
   #
@@ -194,7 +197,7 @@ module Dry::Core::Cache::Methods
   # @return [Object] block's return value
   # @yield An arbitrary block
   #
-  # source://dry-core//lib/dry/core/cache.rb#63
+  # pkg:gem/dry-core#lib/dry/core/cache.rb:63
   def fetch_or_store(*_arg0, **_arg1, &_arg2); end
 end
 
@@ -202,7 +205,7 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/class_attributes.rb#10
+# pkg:gem/dry-core#lib/dry/core/class_attributes.rb:10
 module Dry::Core::ClassAttributes
   include ::Dry::Core::Constants
 
@@ -216,6 +219,27 @@ module Dry::Core::ClassAttributes
   #   defines :hello
   #
   #   hello 'world'
+  #   end
+  # @example with coercion using Proc
+  #
+  #   class Bar
+  #   extend Dry::Core::ClassAttributes
+  #
+  #   defines :one, coerce: proc { |value| value.to_s }
+  #   end
+  # @example with coercion using dry-types
+  #
+  #   class Bar
+  #   extend Dry::Core::ClassAttributes
+  #
+  #   defines :one, coerce: Dry::Types['coercible.string']
+  #   end
+  # @example with dry-types
+  #
+  #   class Foo
+  #   extend Dry::Core::ClassAttributes
+  #
+  #   defines :one, :two, type: Dry::Types['strict.int']
   #   end
   # @example with inheritance and type checking
   #
@@ -237,63 +261,42 @@ module Dry::Core::ClassAttributes
   #
   #   OtherClass.one # => 1
   #   OtherClass.two # => 3
-  # @example with dry-types
   #
-  #   class Foo
-  #   extend Dry::Core::ClassAttributes
-  #
-  #   defines :one, :two, type: Dry::Types['strict.int']
-  #   end
-  # @example with coercion using Proc
-  #
-  #   class Bar
-  #   extend Dry::Core::ClassAttributes
-  #
-  #   defines :one, coerce: proc { |value| value.to_s }
-  #   end
-  # @example with coercion using dry-types
-  #
-  #   class Bar
-  #   extend Dry::Core::ClassAttributes
-  #
-  #   defines :one, coerce: Dry::Types['coercible.string']
-  #   end
-  #
-  # source://dry-core//lib/dry/core/class_attributes.rb#68
+  # pkg:gem/dry-core#lib/dry/core/class_attributes.rb:68
   def defines(*args, type: T.unsafe(nil), coerce: T.unsafe(nil)); end
 end
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::EMPTY_ARRAY = T.let(T.unsafe(nil), Array)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::EMPTY_HASH = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::EMPTY_OPTS = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::EMPTY_SET = T.let(T.unsafe(nil), Set)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::EMPTY_STRING = T.let(T.unsafe(nil), String)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::IDENTITY = T.let(T.unsafe(nil), Proc)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::Self = T.let(T.unsafe(nil), Proc)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::ClassAttributes::Undefined = T.let(T.unsafe(nil), Object)
 
 # Class for generating more classes
 #
-# source://dry-core//lib/dry/core/class_builder.rb#6
+# pkg:gem/dry-core#lib/dry/core/class_builder.rb:6
 class Dry::Core::ClassBuilder
   # @return [ClassBuilder] a new instance of ClassBuilder
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#11
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:11
   def initialize(name:, parent: T.unsafe(nil), namespace: T.unsafe(nil)); end
 
   # Generate a class based on options
@@ -314,43 +317,43 @@ class Dry::Core::ClassBuilder
   # @return [Class]
   # @yield [klass]
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#35
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:35
   def call; end
 
   # Returns the value of attribute name.
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#9
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:9
   def name; end
 
   # Returns the value of attribute namespace.
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#9
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:9
   def namespace; end
 
   # Returns the value of attribute parent.
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#9
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:9
   def parent; end
 
   private
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#50
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:50
   def create_anonymous; end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#81
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:81
   def create_base(namespace, name, parent); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/class_builder.rb#64
+  # pkg:gem/dry-core#lib/dry/core/class_builder.rb:64
   def create_named; end
 end
 
-# source://dry-core//lib/dry/core/class_builder.rb#7
+# pkg:gem/dry-core#lib/dry/core/class_builder.rb:7
 class Dry::Core::ClassBuilder::ParentClassMismatch < ::TypeError; end
 
 # A list of constants you can use to avoid memory allocations or identity checks.
@@ -364,13 +367,13 @@ class Dry::Core::ClassBuilder::ParentClassMismatch < ::TypeError; end
 #   end
 #   end
 #
-# source://dry-core//lib/dry/core/constants.rb#18
+# pkg:gem/dry-core#lib/dry/core/constants.rb:18
 module Dry::Core::Constants
   class << self
     # @api public
     # @private
     #
-    # source://dry-core//lib/dry/core/constants.rb#108
+    # pkg:gem/dry-core#lib/dry/core/constants.rb:108
     def included(base); end
   end
 end
@@ -379,45 +382,45 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/constants.rb#20
+# pkg:gem/dry-core#lib/dry/core/constants.rb:20
 Dry::Core::Constants::EMPTY_ARRAY = T.let(T.unsafe(nil), Array)
 
 # An empty hash
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/constants.rb#22
+# pkg:gem/dry-core#lib/dry/core/constants.rb:22
 Dry::Core::Constants::EMPTY_HASH = T.let(T.unsafe(nil), Hash)
 
 # An empty list of options
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/constants.rb#24
+# pkg:gem/dry-core#lib/dry/core/constants.rb:24
 Dry::Core::Constants::EMPTY_OPTS = T.let(T.unsafe(nil), Hash)
 
 # An empty set
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/constants.rb#26
+# pkg:gem/dry-core#lib/dry/core/constants.rb:26
 Dry::Core::Constants::EMPTY_SET = T.let(T.unsafe(nil), Set)
 
 # An empty string
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/constants.rb#28
+# pkg:gem/dry-core#lib/dry/core/constants.rb:28
 Dry::Core::Constants::EMPTY_STRING = T.let(T.unsafe(nil), String)
 
 # Identity function
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/constants.rb#30
+# pkg:gem/dry-core#lib/dry/core/constants.rb:30
 Dry::Core::Constants::IDENTITY = T.let(T.unsafe(nil), Proc)
 
-# source://dry-core//lib/dry/core/constants.rb#45
+# pkg:gem/dry-core#lib/dry/core/constants.rb:45
 Dry::Core::Constants::Self = T.let(T.unsafe(nil), Proc)
 
 # A special value you can use as a default to know if no arguments
@@ -433,7 +436,7 @@ Dry::Core::Constants::Self = T.let(T.unsafe(nil), Proc)
 #   end
 #   end
 #
-# source://dry-core//lib/dry/core/constants.rb#43
+# pkg:gem/dry-core#lib/dry/core/constants.rb:43
 Dry::Core::Constants::Undefined = T.let(T.unsafe(nil), Object)
 
 # Thread-safe object registry
@@ -454,139 +457,139 @@ Dry::Core::Constants::Undefined = T.let(T.unsafe(nil), Object)
 #   container.resolve(:item2)
 #   => #<Proc:0x007f33b169e998@(irb):10 (lambda)>
 #
-# source://dry-core//lib/dry/core/container.rb#23
+# pkg:gem/dry-core#lib/dry/core/container.rb:23
 class Dry::Core::Container
   include ::Dry::Core::Container::Mixin::Initializer
   include ::Dry::Core::Constants
   include ::Dry::Core::Container::Mixin
   extend ::Dry::Core::Container::Configuration
 
-  # source://dry-core//lib/dry/core/container/mixin.rb#83
+  # pkg:gem/dry-core#lib/dry/core/container.rb:24
   def config; end
 end
 
 # @api public
 #
-# source://dry-core//lib/dry/core/container/config.rb#7
+# pkg:gem/dry-core#lib/dry/core/container/config.rb:7
 class Dry::Core::Container::Config
   # @api private
   # @return [Config] a new instance of Config
   #
-  # source://dry-core//lib/dry/core/container/config.rb#22
+  # pkg:gem/dry-core#lib/dry/core/container/config.rb:22
   def initialize(namespace_separator: T.unsafe(nil), resolver: T.unsafe(nil), registry: T.unsafe(nil)); end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/config.rb#13
+  # pkg:gem/dry-core#lib/dry/core/container/config.rb:13
   def namespace_separator; end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/config.rb#13
+  # pkg:gem/dry-core#lib/dry/core/container/config.rb:13
   def namespace_separator=(_arg0); end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/config.rb#19
+  # pkg:gem/dry-core#lib/dry/core/container/config.rb:19
   def registry; end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/config.rb#19
+  # pkg:gem/dry-core#lib/dry/core/container/config.rb:19
   def registry=(_arg0); end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/config.rb#16
+  # pkg:gem/dry-core#lib/dry/core/container/config.rb:16
   def resolver; end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/config.rb#16
+  # pkg:gem/dry-core#lib/dry/core/container/config.rb:16
   def resolver=(_arg0); end
 end
 
 # @api public
 #
-# source://dry-core//lib/dry/core/container/config.rb#8
+# pkg:gem/dry-core#lib/dry/core/container/config.rb:8
 Dry::Core::Container::Config::DEFAULT_NAMESPACE_SEPARATOR = T.let(T.unsafe(nil), String)
 
 # @api public
 #
-# source://dry-core//lib/dry/core/container/config.rb#10
+# pkg:gem/dry-core#lib/dry/core/container/config.rb:10
 Dry::Core::Container::Config::DEFAULT_REGISTRY = T.let(T.unsafe(nil), Dry::Core::Container::Registry)
 
 # @api public
 #
-# source://dry-core//lib/dry/core/container/config.rb#9
+# pkg:gem/dry-core#lib/dry/core/container/config.rb:9
 Dry::Core::Container::Config::DEFAULT_RESOLVER = T.let(T.unsafe(nil), Dry::Core::Container::Resolver)
 
 # @api public
 #
-# source://dry-core//lib/dry/core/container/configuration.rb#7
+# pkg:gem/dry-core#lib/dry/core/container/configuration.rb:7
 module Dry::Core::Container::Configuration
-  # source://dry-core//lib/dry/core/container/configuration.rb#25
+  # pkg:gem/dry-core#lib/dry/core/container/configuration.rb:25
   def config; end
 
   # @api private
   # @yield [config]
   #
-  # source://dry-core//lib/dry/core/container/configuration.rb#31
+  # pkg:gem/dry-core#lib/dry/core/container/configuration.rb:31
   def configure; end
 end
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::EMPTY_ARRAY = T.let(T.unsafe(nil), Array)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::EMPTY_HASH = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::EMPTY_OPTS = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::EMPTY_SET = T.let(T.unsafe(nil), Set)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::EMPTY_STRING = T.let(T.unsafe(nil), String)
 
 # @api public
 #
-# source://dry-core//lib/dry/core/container/mixin.rb#12
+# pkg:gem/dry-core#lib/dry/core/container/mixin.rb:12
 class Dry::Core::Container::Error < ::StandardError; end
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::IDENTITY = T.let(T.unsafe(nil), Proc)
 
 # Base class to abstract Memoizable and Callable implementations
 #
 # @api abstract
 #
-# source://dry-core//lib/dry/core/container/item.rb#10
+# pkg:gem/dry-core#lib/dry/core/container/item.rb:10
 class Dry::Core::Container::Item
   # @api abstract
   # @return [Item] a new instance of Item
   #
-  # source://dry-core//lib/dry/core/container/item.rb#20
+  # pkg:gem/dry-core#lib/dry/core/container/item.rb:20
   def initialize(item, options = T.unsafe(nil)); end
 
   # @api abstract
   # @raise [::NotImplementedError]
   #
-  # source://dry-core//lib/dry/core/container/item.rb#29
+  # pkg:gem/dry-core#lib/dry/core/container/item.rb:29
   def call; end
 
   # @api abstract
   # @private
   # @return [Boolean]
   #
-  # source://dry-core//lib/dry/core/container/item.rb#39
+  # pkg:gem/dry-core#lib/dry/core/container/item.rb:39
   def callable?; end
 
   # @api abstract
   # @return [Mixed] the item to be solved later
   #
-  # source://dry-core//lib/dry/core/container/item.rb#14
+  # pkg:gem/dry-core#lib/dry/core/container/item.rb:14
   def item; end
 
   # Build a new item with transformation applied
@@ -594,20 +597,20 @@ class Dry::Core::Container::Item
   # @api abstract
   # @private
   #
-  # source://dry-core//lib/dry/core/container/item.rb#46
+  # pkg:gem/dry-core#lib/dry/core/container/item.rb:46
   def map(func); end
 
   # @api abstract
   # @return [Hash] the options to memoize, call or no.
   #
-  # source://dry-core//lib/dry/core/container/item.rb#17
+  # pkg:gem/dry-core#lib/dry/core/container/item.rb:17
   def options; end
 
   # @api abstract
   # @private
   # @return [Boolean]
   #
-  # source://dry-core//lib/dry/core/container/item.rb#34
+  # pkg:gem/dry-core#lib/dry/core/container/item.rb:34
   def value?; end
 end
 
@@ -615,14 +618,14 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/container/item/callable.rb#11
+# pkg:gem/dry-core#lib/dry/core/container/item/callable.rb:11
 class Dry::Core::Container::Item::Callable < ::Dry::Core::Container::Item
   # Returns the result of item call or item
   #
   # @api public
   # @return [Mixed]
   #
-  # source://dry-core//lib/dry/core/container/item/callable.rb#15
+  # pkg:gem/dry-core#lib/dry/core/container/item/callable.rb:15
   def call; end
 end
 
@@ -630,7 +633,7 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/container/item/factory.rb#10
+# pkg:gem/dry-core#lib/dry/core/container/item/factory.rb:10
 class Dry::Core::Container::Item::Factory
   # Creates an Item Memoizable or Callable
   #
@@ -640,7 +643,7 @@ class Dry::Core::Container::Item::Factory
   # @raise [Dry::Core::Container::Error]
   # @return [Dry::Core::Container::Item::Base]
   #
-  # source://dry-core//lib/dry/core/container/item/factory.rb#18
+  # pkg:gem/dry-core#lib/dry/core/container/item/factory.rb:18
   def call(item, options = T.unsafe(nil)); end
 end
 
@@ -648,7 +651,7 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/container/item/memoizable.rb#11
+# pkg:gem/dry-core#lib/dry/core/container/item/memoizable.rb:11
 class Dry::Core::Container::Item::Memoizable < ::Dry::Core::Container::Item
   # Returns a new Memoizable instance
   #
@@ -658,7 +661,7 @@ class Dry::Core::Container::Item::Memoizable < ::Dry::Core::Container::Item
   # @raise [Dry::Core::Container::Error]
   # @return [Dry::Core::Container::Item::Base]
   #
-  # source://dry-core//lib/dry/core/container/item/memoizable.rb#23
+  # pkg:gem/dry-core#lib/dry/core/container/item/memoizable.rb:23
   def initialize(item, options = T.unsafe(nil)); end
 
   # Returns the result of item call using a syncronized mutex
@@ -666,13 +669,13 @@ class Dry::Core::Container::Item::Memoizable < ::Dry::Core::Container::Item
   # @api public
   # @return [Dry::Core::Container::Item::Base]
   #
-  # source://dry-core//lib/dry/core/container/item/memoizable.rb#33
+  # pkg:gem/dry-core#lib/dry/core/container/item/memoizable.rb:33
   def call; end
 
   # @api public
   # @return [Mutex] the stored mutex
   #
-  # source://dry-core//lib/dry/core/container/item/memoizable.rb#13
+  # pkg:gem/dry-core#lib/dry/core/container/item/memoizable.rb:13
   def memoize_mutex; end
 
   private
@@ -681,20 +684,20 @@ class Dry::Core::Container::Item::Memoizable < ::Dry::Core::Container::Item
   # @private
   # @raise [::Dry::Core::Container::Error]
   #
-  # source://dry-core//lib/dry/core/container/item/memoizable.rb#42
+  # pkg:gem/dry-core#lib/dry/core/container/item/memoizable.rb:42
   def raise_not_supported_error; end
 end
 
 # @api abstract
 #
-# source://dry-core//lib/dry/core/container/item.rb#11
+# pkg:gem/dry-core#lib/dry/core/container/item.rb:11
 Dry::Core::Container::Item::NO_OPTIONS = T.let(T.unsafe(nil), Hash)
 
 # Error raised when key is not defined in the registry
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/container/mixin.rb#17
+# pkg:gem/dry-core#lib/dry/core/container/mixin.rb:17
 class Dry::Core::Container::KeyError < ::KeyError; end
 
 # Mixin to expose Inversion of Control (IoC) container behaviour
@@ -720,7 +723,7 @@ class Dry::Core::Container::KeyError < ::KeyError; end
 #   container.resolve(:item)
 #   => 'item'
 #
-# source://dry-core//lib/dry/core/container/mixin.rb#47
+# pkg:gem/dry-core#lib/dry/core/container/mixin.rb:47
 module Dry::Core::Container::Mixin
   mixes_in_class_methods ::Dry::Core::Container::Configuration
 
@@ -731,18 +734,18 @@ module Dry::Core::Container::Mixin
   # @return [Mixed]
   # @see Dry::Core::Container::Mixin#resolve
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#144
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:144
   def [](key); end
 
   # @api public
   # @private no, really
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#288
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:288
   def _container; end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#300
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:300
   def clone; end
 
   # Decorates an item from the container with specified decorator
@@ -750,12 +753,12 @@ module Dry::Core::Container::Mixin
   # @api public
   # @return [Dry::Core::Container::Mixin] self
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#227
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:227
   def decorate(key, with: T.unsafe(nil), &block); end
 
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#293
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:293
   def dup; end
 
   # Calls block once for each key/value pair in the container, passing the key and
@@ -769,7 +772,7 @@ module Dry::Core::Container::Mixin
   #   very helpful. This is a step toward doing that.
   # @return [Enumerator]
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#218
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:218
   def each(&_arg0); end
 
   # Calls block once for each key in container, passing the key as a parameter.
@@ -779,21 +782,21 @@ module Dry::Core::Container::Mixin
   # @api public
   # @return [Dry::Core::Container::Mixin] self
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#201
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:201
   def each_key(&_arg0); end
 
   # Enable stubbing functionality into the current container
   #
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/stub.rb#51
+  # pkg:gem/dry-core#lib/dry/core/container/stub.rb:51
   def enable_stubs!; end
 
   # Freeze the container. Nothing can be registered after freezing
   #
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#281
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:281
   def freeze; end
 
   # Import a namespace
@@ -802,7 +805,7 @@ module Dry::Core::Container::Mixin
   # @param namespace [Dry::Core::Container::Namespace] The namespace to import
   # @return [Dry::Core::Container::Mixin] self
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#272
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:272
   def import(namespace); end
 
   # Check whether an item is registered under the given key
@@ -811,7 +814,7 @@ module Dry::Core::Container::Mixin
   # @param key [Mixed] The key you wish to check for registration with
   # @return [Bool]
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#181
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:181
   def key?(key); end
 
   # An array of registered names for the container
@@ -819,17 +822,17 @@ module Dry::Core::Container::Mixin
   # @api public
   # @return [Array<String>]
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#190
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:190
   def keys; end
 
   # Merge in the items of the other container
   #
   # @api public
-  # @param other [Dry::Core::Container] The other container to merge in
   # @param namespace [Symbol, nil] Namespace to prefix other container items with, defaults to nil
+  # @param other [Dry::Core::Container] The other container to merge in
   # @return [Dry::Core::Container::Mixin] self
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#158
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:158
   def merge(other, namespace: T.unsafe(nil), &block); end
 
   # Evaluate block and register items in namespace
@@ -838,20 +841,20 @@ module Dry::Core::Container::Mixin
   # @param namespace [Mixed] The namespace to register items in
   # @return [Dry::Core::Container::Mixin] self
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#253
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:253
   def namespace(namespace, &_arg1); end
 
   # Register an item with the container to be resolved later
   #
   # @api public
-  # @param key [Mixed] The key to register the container item with (used to resolve)
   # @param contents [Mixed] The item to register with the container (if no block given)
+  # @param key [Mixed] The key to register the container item with (used to resolve)
   # @param options [Hash] Options to pass to the registry when registering the item
   # @return [Dry::Core::Container::Mixin] self
   # @yield If a block is given, contents will be ignored and the block
   #   will be registered instead
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#104
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:104
   def register(key, contents = T.unsafe(nil), options = T.unsafe(nil), &block); end
 
   # Resolve an item from the container
@@ -862,7 +865,7 @@ module Dry::Core::Container::Mixin
   # @yield Fallback block to call when a key is missing. Its result will be returned
   # @yieldparam key [Mixed] Missing key
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#131
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:131
   def resolve(key, &_arg1); end
 
   class << self
@@ -870,14 +873,14 @@ module Dry::Core::Container::Mixin
     # @private
     # @private
     #
-    # source://dry-core//lib/dry/core/container/mixin.rb#53
+    # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:53
     def extended(base); end
 
     # @api public
     # @private
     # @private
     #
-    # source://dry-core//lib/dry/core/container/mixin.rb#78
+    # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:78
     def included(base); end
   end
 end
@@ -885,17 +888,17 @@ end
 # @api public
 # @private
 #
-# source://dry-core//lib/dry/core/container/mixin.rb#70
+# pkg:gem/dry-core#lib/dry/core/container/mixin.rb:70
 module Dry::Core::Container::Mixin::Initializer
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/mixin.rb#71
+  # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:71
   def initialize(*_arg0, **_arg1, &_arg2); end
 end
 
 # @api public
 #
-# source://dry-core//lib/dry/core/container/mixin.rb#48
+# pkg:gem/dry-core#lib/dry/core/container/mixin.rb:48
 Dry::Core::Container::Mixin::PREFIX_NAMESPACE = T.let(T.unsafe(nil), Proc)
 
 # Create a namespace to be imported
@@ -914,7 +917,7 @@ Dry::Core::Container::Mixin::PREFIX_NAMESPACE = T.let(T.unsafe(nil), Proc)
 #   container.resolve('name.item')
 #   => 'item'
 #
-# source://dry-core//lib/dry/core/container/namespace.rb#23
+# pkg:gem/dry-core#lib/dry/core/container/namespace.rb:23
 class Dry::Core::Container::Namespace
   # Create a new namespace
   #
@@ -923,25 +926,25 @@ class Dry::Core::Container::Namespace
   # @return [Dry::Core::Container::Namespace]
   # @yield The block to evaluate when the namespace is imported
   #
-  # source://dry-core//lib/dry/core/container/namespace.rb#40
+  # pkg:gem/dry-core#lib/dry/core/container/namespace.rb:40
   def initialize(name, &block); end
 
   # @api public
   # @return [Proc] The block to be executed when the namespace is imported
   #
-  # source://dry-core//lib/dry/core/container/namespace.rb#28
+  # pkg:gem/dry-core#lib/dry/core/container/namespace.rb:28
   def block; end
 
   # @api public
   # @return [Mixed] The namespace (name)
   #
-  # source://dry-core//lib/dry/core/container/namespace.rb#25
+  # pkg:gem/dry-core#lib/dry/core/container/namespace.rb:25
   def name; end
 end
 
 # @api private
 #
-# source://dry-core//lib/dry/core/container/namespace_dsl.rb#9
+# pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:9
 class Dry::Core::Container::NamespaceDSL < ::SimpleDelegator
   # DSL for defining namespaces
   #
@@ -952,34 +955,34 @@ class Dry::Core::Container::NamespaceDSL < ::SimpleDelegator
   # @return [Mixed]
   # @yield The block to evaluate to define the namespace
   #
-  # source://dry-core//lib/dry/core/container/namespace_dsl.rb#24
+  # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:24
   def initialize(container, namespace, namespace_separator, &block); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/container/namespace_dsl.rb#45
+  # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:45
   def import(namespace); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/container/namespace_dsl.rb#41
+  # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:41
   def namespace(namespace, &_arg1); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/container/namespace_dsl.rb#37
+  # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:37
   def register(key, *_arg1, **_arg2, &_arg3); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/container/namespace_dsl.rb#51
+  # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:51
   def resolve(key); end
 
   private
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/container/namespace_dsl.rb#57
+  # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:57
   def namespaced(key); end
 end
 
@@ -987,32 +990,32 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/container/registry.rb#9
+# pkg:gem/dry-core#lib/dry/core/container/registry.rb:9
 class Dry::Core::Container::Registry
   # @api public
   # @private
   # @return [Registry] a new instance of Registry
   #
-  # source://dry-core//lib/dry/core/container/registry.rb#11
+  # pkg:gem/dry-core#lib/dry/core/container/registry.rb:11
   def initialize; end
 
   # Register an item with the container to be resolved later
   #
   # @api public
   # @option options
+  # @param container [Concurrent::Hash] The container
+  # @param item [Mixed] The item to register with the container
   # @param key [Mixed] The key to register the container item with (used to resolve)
   # @param options [Hash]
-  # @param item [Mixed] The item to register with the container
-  # @param container [Concurrent::Hash] The container
   # @raise [Dry::Core::Container::KeyError] If an item is already registered with the given key
   # @return [Mixed]
   #
-  # source://dry-core//lib/dry/core/container/registry.rb#33
+  # pkg:gem/dry-core#lib/dry/core/container/registry.rb:33
   def call(container, key, item, options); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/container/registry.rb#46
+  # pkg:gem/dry-core#lib/dry/core/container/registry.rb:46
   def factory; end
 end
 
@@ -1020,7 +1023,7 @@ end
 #
 # @api public
 #
-# source://dry-core//lib/dry/core/container/resolver.rb#9
+# pkg:gem/dry-core#lib/dry/core/container/resolver.rb:9
 class Dry::Core::Container::Resolver
   # Resolve an item from the container
   #
@@ -1032,7 +1035,7 @@ class Dry::Core::Container::Resolver
   # @yield Fallback block to call when a key is missing. Its result will be returned
   # @yieldparam key [Mixed] Missing key
   #
-  # source://dry-core//lib/dry/core/container/resolver.rb#27
+  # pkg:gem/dry-core#lib/dry/core/container/resolver.rb:27
   def call(container, key); end
 
   # Calls block once for each key in container, passing the key and
@@ -1046,7 +1049,7 @@ class Dry::Core::Container::Resolver
   #   registered would be very helpful. This is a step toward doing that.
   # @return Key, Value
   #
-  # source://dry-core//lib/dry/core/container/resolver.rb#84
+  # pkg:gem/dry-core#lib/dry/core/container/resolver.rb:84
   def each(container, &_arg1); end
 
   # Calls block once for each key in container, passing the key as a parameter.
@@ -1056,7 +1059,7 @@ class Dry::Core::Container::Resolver
   # @api public
   # @return Hash
   #
-  # source://dry-core//lib/dry/core/container/resolver.rb#69
+  # pkg:gem/dry-core#lib/dry/core/container/resolver.rb:69
   def each_key(container, &_arg1); end
 
   # Check whether an items is registered under the given key
@@ -1066,7 +1069,7 @@ class Dry::Core::Container::Resolver
   # @param key [Mixed] The key you wish to check for registration with
   # @return [Bool]
   #
-  # source://dry-core//lib/dry/core/container/resolver.rb#49
+  # pkg:gem/dry-core#lib/dry/core/container/resolver.rb:49
   def key?(container, key); end
 
   # An array of registered names for the container
@@ -1074,46 +1077,46 @@ class Dry::Core::Container::Resolver
   # @api public
   # @return [Array]
   #
-  # source://dry-core//lib/dry/core/container/resolver.rb#58
+  # pkg:gem/dry-core#lib/dry/core/container/resolver.rb:58
   def keys(container); end
 end
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::Self = T.let(T.unsafe(nil), Proc)
 
-# source://dry-core//lib/dry/core/container/stub.rb#6
+# pkg:gem/dry-core#lib/dry/core/container/stub.rb:6
 module Dry::Core::Container::Stub
   # Stubs have already been enabled turning this into a noop
   #
-  # source://dry-core//lib/dry/core/container/stub.rb#37
+  # pkg:gem/dry-core#lib/dry/core/container/stub.rb:37
   def enable_stubs!; end
 
   # Overrides resolve to look into stubbed keys first
   #
   # @api public
   #
-  # source://dry-core//lib/dry/core/container/stub.rb#10
+  # pkg:gem/dry-core#lib/dry/core/container/stub.rb:10
   def resolve(key); end
 
   # Add a stub to the container
   #
-  # source://dry-core//lib/dry/core/container/stub.rb#15
+  # pkg:gem/dry-core#lib/dry/core/container/stub.rb:15
   def stub(key, value, &block); end
 
   # Remove stubbed keys from the container
   #
-  # source://dry-core//lib/dry/core/container/stub.rb#31
+  # pkg:gem/dry-core#lib/dry/core/container/stub.rb:31
   def unstub(*keys); end
 
   private
 
   # Stubs container
   #
-  # source://dry-core//lib/dry/core/container/stub.rb#44
+  # pkg:gem/dry-core#lib/dry/core/container/stub.rb:44
   def _stubs; end
 end
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Container::Undefined = T.let(T.unsafe(nil), Object)
 
 # An extension for issuing warnings on using deprecated methods.
@@ -1137,31 +1140,31 @@ Dry::Core::Container::Undefined = T.let(T.unsafe(nil), Object)
 #   Dry::Core::Deprecations.announce("Foo", "use bar instead")
 #   Dry::Core::Deprecations.warn("Baz is going to be removed soon")
 #
-# source://dry-core//lib/dry/core/deprecations.rb#29
+# pkg:gem/dry-core#lib/dry/core/deprecations.rb:29
 module Dry::Core::Deprecations
   class << self
     # @api public
     #
-    # source://dry-core//lib/dry/core/deprecations.rb#115
+    # pkg:gem/dry-core#lib/dry/core/deprecations.rb:115
     def [](tag); end
 
     # Wraps arguments with a standard message format and prints a warning
     #
     # @api public
-    # @param name [Object] what is deprecated
     # @param msg [String] additional message usually containing upgrade instructions
+    # @param name [Object] what is deprecated
     #
-    # source://dry-core//lib/dry/core/deprecations.rb#51
+    # pkg:gem/dry-core#lib/dry/core/deprecations.rb:51
     def announce(name, msg, tag: T.unsafe(nil), uplevel: T.unsafe(nil)); end
 
     # @api private
     #
-    # source://dry-core//lib/dry/core/deprecations.rb#68
+    # pkg:gem/dry-core#lib/dry/core/deprecations.rb:68
     def deprecated_name_message(old, new = T.unsafe(nil), msg = T.unsafe(nil)); end
 
     # @api private
     #
-    # source://dry-core//lib/dry/core/deprecations.rb#60
+    # pkg:gem/dry-core#lib/dry/core/deprecations.rb:60
     def deprecation_message(name, msg); end
 
     # Returns the logger used for printing warnings.
@@ -1171,7 +1174,7 @@ module Dry::Core::Deprecations
     # @param output [IO] output stream
     # @return [Logger]
     #
-    # source://dry-core//lib/dry/core/deprecations.rb#85
+    # pkg:gem/dry-core#lib/dry/core/deprecations.rb:85
     def logger(output = T.unsafe(nil)); end
 
     # Sets a custom logger. This is a global setting.
@@ -1181,56 +1184,56 @@ module Dry::Core::Deprecations
     # @overload set_logger!
     # @overload set_logger!
     #
-    # source://dry-core//lib/dry/core/deprecations.rb#105
+    # pkg:gem/dry-core#lib/dry/core/deprecations.rb:105
     def set_logger!(output = T.unsafe(nil)); end
 
     # Prints a warning
     #
     # @api public
+    # @param Caller [Integer] frame to add to the message
     # @param msg [String] Warning string
     # @param tag [String] Tag to help identify the source of the warning.
     #   Defaults to "deprecated"
-    # @param Caller [Integer] frame to add to the message
     #
-    # source://dry-core//lib/dry/core/deprecations.rb#39
+    # pkg:gem/dry-core#lib/dry/core/deprecations.rb:39
     def warn(msg, tag: T.unsafe(nil), uplevel: T.unsafe(nil)); end
   end
 end
 
 # @api public
 #
-# source://dry-core//lib/dry/core/deprecations.rb#133
+# pkg:gem/dry-core#lib/dry/core/deprecations.rb:133
 module Dry::Core::Deprecations::Interface
   # Mark instance method as deprecated
   #
   # @api public
   # @option [String]
-  # @param old_name [Symbol] deprecated method
-  # @param new_name [Symbol] replacement (not required)
   # @param [String] [Hash] a customizable set of options
+  # @param new_name [Symbol] replacement (not required)
+  # @param old_name [Symbol] deprecated method
   #
-  # source://dry-core//lib/dry/core/deprecations.rb#157
+  # pkg:gem/dry-core#lib/dry/core/deprecations.rb:157
   def deprecate(old_name, new_name = T.unsafe(nil), message: T.unsafe(nil)); end
 
   # Mark class-level method as deprecated
   #
   # @api public
   # @option [String]
-  # @param old_name [Symbol] deprecated method
-  # @param new_name [Symbol] replacement (not required)
   # @param [String] [Hash] a customizable set of options
+  # @param new_name [Symbol] replacement (not required)
+  # @param old_name [Symbol] deprecated method
   #
-  # source://dry-core//lib/dry/core/deprecations.rb#190
+  # pkg:gem/dry-core#lib/dry/core/deprecations.rb:190
   def deprecate_class_method(old_name, new_name = T.unsafe(nil), message: T.unsafe(nil)); end
 
   # Mark a constant as deprecated
   #
   # @api public
   # @option [String]
-  # @param constant_name [Symbol] constant name to be deprecated
   # @param [String] [Hash] a customizable set of options
+  # @param constant_name [Symbol] constant name to be deprecated
   #
-  # source://dry-core//lib/dry/core/deprecations.rb#212
+  # pkg:gem/dry-core#lib/dry/core/deprecations.rb:212
   def deprecate_constant(constant_name, message: T.unsafe(nil)); end
 
   # Sets/gets deprecation tag
@@ -1239,7 +1242,7 @@ module Dry::Core::Deprecations::Interface
   # @option [String,Symbol]
   # @param [String,Symbol] [Hash] a customizable set of options
   #
-  # source://dry-core//lib/dry/core/deprecations.rb#137
+  # pkg:gem/dry-core#lib/dry/core/deprecations.rb:137
   def deprecation_tag(tag = T.unsafe(nil)); end
 
   # Issue a tagged warning message
@@ -1247,28 +1250,28 @@ module Dry::Core::Deprecations::Interface
   # @api public
   # @param msg [String] warning message
   #
-  # source://dry-core//lib/dry/core/deprecations.rb#148
+  # pkg:gem/dry-core#lib/dry/core/deprecations.rb:148
   def warn(msg); end
 end
 
 # @api public
 #
-# source://dry-core//lib/dry/core/deprecations.rb#30
+# pkg:gem/dry-core#lib/dry/core/deprecations.rb:30
 Dry::Core::Deprecations::STACK = T.let(T.unsafe(nil), Proc)
 
 # @api private
 #
-# source://dry-core//lib/dry/core/deprecations.rb#121
+# pkg:gem/dry-core#lib/dry/core/deprecations.rb:121
 class Dry::Core::Deprecations::Tagged < ::Module
   # @api private
   # @return [Tagged] a new instance of Tagged
   #
-  # source://dry-core//lib/dry/core/deprecations.rb#122
+  # pkg:gem/dry-core#lib/dry/core/deprecations.rb:122
   def initialize(tag); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/deprecations.rb#127
+  # pkg:gem/dry-core#lib/dry/core/deprecations.rb:127
   def extended(base); end
 end
 
@@ -1294,7 +1297,7 @@ end
 #   A.descendants # => [C]
 #   B.descendants # => []
 #
-# source://dry-core//lib/dry/core/descendants_tracker.rb#29
+# pkg:gem/dry-core#lib/dry/core/descendants_tracker.rb:29
 module Dry::Core::DescendantsTracker
   # Return the descendants of this class
   #
@@ -1303,27 +1306,27 @@ module Dry::Core::DescendantsTracker
   #   descendants = Parent.descendants
   # @return [Array<Class>]
   #
-  # source://dry-core//lib/dry/core/descendants_tracker.rb#54
+  # pkg:gem/dry-core#lib/dry/core/descendants_tracker.rb:54
   def descendants; end
 
   protected
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/descendants_tracker.rb#59
+  # pkg:gem/dry-core#lib/dry/core/descendants_tracker.rb:59
   def add_descendant(descendant); end
 
   private
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/descendants_tracker.rb#70
+  # pkg:gem/dry-core#lib/dry/core/descendants_tracker.rb:70
   def inherited(descendant); end
 
   class << self
     # @api private
     #
-    # source://dry-core//lib/dry/core/descendants_tracker.rb#32
+    # pkg:gem/dry-core#lib/dry/core/descendants_tracker.rb:32
     def setup(target); end
 
     private
@@ -1331,29 +1334,29 @@ module Dry::Core::DescendantsTracker
     # @api private
     # @private
     #
-    # source://dry-core//lib/dry/core/descendants_tracker.rb#39
+    # pkg:gem/dry-core#lib/dry/core/descendants_tracker.rb:39
     def extended(base); end
   end
 end
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::EMPTY_ARRAY = T.let(T.unsafe(nil), Array)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::EMPTY_HASH = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::EMPTY_OPTS = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::EMPTY_SET = T.let(T.unsafe(nil), Set)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::EMPTY_STRING = T.let(T.unsafe(nil), String)
 
 # Define equality, equivalence and inspection methods
 #
-# source://dry-core//lib/dry/core/equalizer.rb#6
+# pkg:gem/dry-core#lib/dry/core/equalizer.rb:6
 class Dry::Core::Equalizer < ::Module
   # Initialize an Equalizer with the given keys
   #
@@ -1367,7 +1370,7 @@ class Dry::Core::Equalizer < ::Module
   # @param options [Hash]
   # @return [undefined]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#20
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:20
   def initialize(*keys, **options); end
 
   private
@@ -1377,7 +1380,7 @@ class Dry::Core::Equalizer < ::Module
   # @api private
   # @return [undefined]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#61
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:61
   def define_cmp_method; end
 
   # Define a #hash method based on the instance's values identified by #keys
@@ -1385,7 +1388,7 @@ class Dry::Core::Equalizer < ::Module
   # @api private
   # @return [undefined]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#76
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:76
   def define_hash_method(immutable:); end
 
   # Define an inspect method that reports the values of the instance's keys
@@ -1393,17 +1396,17 @@ class Dry::Core::Equalizer < ::Module
   # @api private
   # @return [undefined]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#98
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:98
   def define_inspect_method; end
 
   # Define the equalizer methods based on #keys
   #
   # @api private
-  # @param inspect [Boolean] whether to define #inspect method
   # @param immutable [Boolean] whether to memoize #hash method
+  # @param inspect [Boolean] whether to define #inspect method
   # @return [undefined]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#50
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:50
   def define_methods(inspect: T.unsafe(nil), immutable: T.unsafe(nil)); end
 
   # Hook called when module is included
@@ -1412,13 +1415,13 @@ class Dry::Core::Equalizer < ::Module
   # @param descendant [Module] the module or class including Equalizer
   # @return [self]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#37
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:37
   def included(descendant); end
 end
 
 # The comparison methods
 #
-# source://dry-core//lib/dry/core/equalizer.rb#108
+# pkg:gem/dry-core#lib/dry/core/equalizer.rb:108
 module Dry::Core::Equalizer::Methods
   # Compare the object with other object for equivalency
   #
@@ -1428,7 +1431,7 @@ module Dry::Core::Equalizer::Methods
   # @param other [Object] the other object to compare with
   # @return [Boolean]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#135
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:135
   def ==(other); end
 
   # Compare the object with other object for equality
@@ -1439,7 +1442,7 @@ module Dry::Core::Equalizer::Methods
   # @param other [Object] the other object to compare with
   # @return [Boolean]
   #
-  # source://dry-core//lib/dry/core/equalizer.rb#120
+  # pkg:gem/dry-core#lib/dry/core/equalizer.rb:120
   def eql?(other); end
 end
 
@@ -1459,21 +1462,21 @@ end
 #   Foo.load_extensions(:bar)
 #   Foo.new.bar # => :bar
 #
-# source://dry-core//lib/dry/core/extensions.rb#23
+# pkg:gem/dry-core#lib/dry/core/extensions.rb:23
 module Dry::Core::Extensions
   # Whether an extension is available
   #
   # @param name [Symbol] extension name
   # @return [Boolean] Extension availability
   #
-  # source://dry-core//lib/dry/core/extensions.rb#43
+  # pkg:gem/dry-core#lib/dry/core/extensions.rb:43
   def available_extension?(name); end
 
   # Enables specified extensions. Already enabled extensions remain untouched
   #
   # @param extensions [Array<Symbol>] list of extension names
   #
-  # source://dry-core//lib/dry/core/extensions.rb#50
+  # pkg:gem/dry-core#lib/dry/core/extensions.rb:50
   def load_extensions(*extensions); end
 
   # Register an extension
@@ -1481,24 +1484,24 @@ module Dry::Core::Extensions
   # @param name [Symbol] extension name
   # @yield extension block. This block guaranteed not to be called more than once
   #
-  # source://dry-core//lib/dry/core/extensions.rb#35
+  # pkg:gem/dry-core#lib/dry/core/extensions.rb:35
   def register_extension(name, &block); end
 
   class << self
     # @api private
     # @private
     #
-    # source://dry-core//lib/dry/core/extensions.rb#25
+    # pkg:gem/dry-core#lib/dry/core/extensions.rb:25
     def extended(obj); end
   end
 end
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::IDENTITY = T.let(T.unsafe(nil), Proc)
 
 # Helper module providing thin interface around an inflection backend.
 #
-# source://dry-core//lib/dry/core/inflector.rb#6
+# pkg:gem/dry-core#lib/dry/core/inflector.rb:6
 module Dry::Core::Inflector
   class << self
     # Transform string to camel case
@@ -1508,7 +1511,7 @@ module Dry::Core::Inflector
     # @param input [String] input string
     # @return Transformed string
     #
-    # source://dry-core//lib/dry/core/inflector.rb#72
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:72
     def camelize(input); end
 
     # Transform a file path to a constant name
@@ -1518,7 +1521,7 @@ module Dry::Core::Inflector
     # @param input [String] input string
     # @return Constant name
     #
-    # source://dry-core//lib/dry/core/inflector.rb#138
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:138
     def classify(input); end
 
     # Get a constant value by its name
@@ -1528,7 +1531,7 @@ module Dry::Core::Inflector
     # @param input [String] input constant name
     # @return Constant value
     #
-    # source://dry-core//lib/dry/core/inflector.rb#127
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:127
     def constantize(input); end
 
     # Remove namespaces from a constant name
@@ -1538,21 +1541,21 @@ module Dry::Core::Inflector
     # @param input [String] input string
     # @return Unnested constant name
     #
-    # source://dry-core//lib/dry/core/inflector.rb#116
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:116
     def demodulize(input); end
 
     # Set up first available backend
     #
     # @api private
     #
-    # source://dry-core//lib/dry/core/inflector.rb#37
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:37
     def detect_backend; end
 
     # Inflector accessor. Lazily initializes a backend
     #
     # @api private
     #
-    # source://dry-core//lib/dry/core/inflector.rb#61
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:61
     def inflector; end
 
     # Get a plural form of a word
@@ -1562,21 +1565,21 @@ module Dry::Core::Inflector
     # @param input [String] input string
     # @return Transformed string
     #
-    # source://dry-core//lib/dry/core/inflector.rb#105
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:105
     def pluralize(input); end
 
     # Try to activate a backend
     #
     # @api private
     #
-    # source://dry-core//lib/dry/core/inflector.rb#26
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:26
     def realize_backend(path, backend_factory); end
 
     # Set preferred backend
     #
     # @param name [Symbol] backend name (:activesupport or :inflecto)
     #
-    # source://dry-core//lib/dry/core/inflector.rb#50
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:50
     def select_backend(name = T.unsafe(nil)); end
 
     # Get a singlular form of a word
@@ -1586,7 +1589,7 @@ module Dry::Core::Inflector
     # @param input [String] input string
     # @return Transformed string
     #
-    # source://dry-core//lib/dry/core/inflector.rb#94
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:94
     def singularize(input); end
 
     # Transform string to snake case
@@ -1596,285 +1599,156 @@ module Dry::Core::Inflector
     # @param input [String] input string
     # @return Transformed string
     #
-    # source://dry-core//lib/dry/core/inflector.rb#83
+    # pkg:gem/dry-core#lib/dry/core/inflector.rb:83
     def underscore(input); end
   end
 end
 
 # List of supported backends
 #
-# source://dry-core//lib/dry/core/inflector.rb#8
+# pkg:gem/dry-core#lib/dry/core/inflector.rb:8
 Dry::Core::Inflector::BACKENDS = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/errors.rb#5
+# pkg:gem/dry-core#lib/dry/core/errors.rb:5
 class Dry::Core::InvalidClassAttributeValueError < ::StandardError
   # @return [InvalidClassAttributeValueError] a new instance of InvalidClassAttributeValueError
   #
-  # source://dry-core//lib/dry/core/errors.rb#6
+  # pkg:gem/dry-core#lib/dry/core/errors.rb:6
   def initialize(name, value); end
 end
 
-# source://dry-core//lib/dry/core/memoizable.rb#5
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:5
 module Dry::Core::Memoizable
   mixes_in_class_methods ::Dry::Core::Memoizable::ClassInterface::Object
 
   class << self
     # @private
     #
-    # source://dry-core//lib/dry/core/memoizable.rb#44
+    # pkg:gem/dry-core#lib/dry/core/memoizable.rb:44
     def included(klass); end
   end
 end
 
-# source://dry-core//lib/dry/core/memoizable.rb#9
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:9
 module Dry::Core::Memoizable::ClassInterface; end
 
-# source://dry-core//lib/dry/core/memoizable.rb#10
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:10
 module Dry::Core::Memoizable::ClassInterface::Base
-  # source://dry-core//lib/dry/core/memoizable.rb#15
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:15
   def inherited(base); end
 
-  # source://dry-core//lib/dry/core/memoizable.rb#11
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:11
   def memoize(*names); end
 end
 
-# source://dry-core//lib/dry/core/memoizable.rb#23
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:23
 module Dry::Core::Memoizable::ClassInterface::BasicObject
   include ::Dry::Core::Memoizable::ClassInterface::Base
 
-  # source://dry-core//lib/dry/core/memoizable.rb#26
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:26
   def new(*_arg0, **_arg1); end
 end
 
-# source://dry-core//lib/dry/core/memoizable.rb#33
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:33
 module Dry::Core::Memoizable::ClassInterface::Object
   include ::Dry::Core::Memoizable::ClassInterface::Base
 
-  # source://dry-core//lib/dry/core/memoizable.rb#36
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:36
   def new(*_arg0, **_arg1); end
 end
 
-# source://dry-core//lib/dry/core/memoizable.rb#6
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:6
 Dry::Core::Memoizable::MEMOIZED_HASH = T.let(T.unsafe(nil), Hash)
 
 # @api private
 #
-# source://dry-core//lib/dry/core/memoizable.rb#55
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:55
 class Dry::Core::Memoizable::Memoizer < ::Module
   # @api private
   # @return [Memoizer] a new instance of Memoizer
   #
-  # source://dry-core//lib/dry/core/memoizable.rb#63
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:63
   def initialize(klass, names); end
 
   private
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/memoizable.rb#149
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:149
   def declaration(definition, lookup); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/memoizable.rb#76
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:76
   def define_memoizable(method:); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/memoizable.rb#181
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:181
   def make_bind_name(idx); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/memoizable.rb#186
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:186
   def map_bind_type(type, name, original_params, defined_types); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/memoizable.rb#172
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:172
   def name_from_param(name); end
 
   # @api private
   #
-  # source://dry-core//lib/dry/core/memoizable.rb#218
+  # pkg:gem/dry-core#lib/dry/core/memoizable.rb:218
   def param(name, type); end
 end
 
 # @api private
 #
-# source://dry-core//lib/dry/core/memoizable.rb#56
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:56
 Dry::Core::Memoizable::Memoizer::KERNEL = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/memoizable.rb#7
+# pkg:gem/dry-core#lib/dry/core/memoizable.rb:7
 Dry::Core::Memoizable::PARAM_PLACEHOLDERS = T.let(T.unsafe(nil), Array)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Self = T.let(T.unsafe(nil), Proc)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Core::Undefined = T.let(T.unsafe(nil), Object)
 
-# source://dry-core//lib/dry/core/version.rb#5
+# pkg:gem/dry-core#lib/dry/core/version.rb:5
 Dry::Core::VERSION = T.let(T.unsafe(nil), String)
 
 module Dry::Types
   extend ::Dry::Core::Constants
-
-  class << self
-    # source://dry-types/1.8.3/lib/dry/types/constraints.rb#13
-    def Rule(options); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#115
-    def [](name); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#163
-    def const_missing(const); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#82
-    def container; end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#197
-    def define_builder(method, &block); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#149
-    def identifier(klass); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#73
-    def included(*_arg0); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#33
-    def loader; end
-
-    # source://dry-core//lib/dry/core/deprecations.rb#202
-    def module(*args, &block); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#104
-    def register(name, type = T.unsafe(nil), &block); end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#91
-    def registered?(class_or_identifier); end
-
-    # source://dry-types/1.8.3/lib/dry/types/constraints.rb#26
-    def rule_compiler; end
-
-    # source://dry-types/1.8.3/lib/dry/types.rb#158
-    def type_map; end
-  end
 end
 
-class Dry::Types::Compiler
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#11
-  def initialize(registry); end
+class Dry::Types::Compiler; end
+class Dry::Types::Container; end
 
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#15
-  def call(ast); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#114
-  def compile_fn(fn); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#9
-  def registry; end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#17
-  def visit(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#110
-  def visit_any(meta); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#59
-  def visit_array(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#22
-  def visit_constrained(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#28
-  def visit_constructor(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#100
-  def visit_enum(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#65
-  def visit_hash(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#80
-  def visit_json_array(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#75
-  def visit_json_hash(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#95
-  def visit_key(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#34
-  def visit_lax(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#105
-  def visit_map(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#39
-  def visit_nominal(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#90
-  def visit_params_array(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#85
-  def visit_params_hash(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#50
-  def visit_rule(node); end
-
-  # source://dry-core//lib/dry/core/deprecations.rb#168
-  def visit_safe(*args, &block); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#70
-  def visit_schema(node); end
-
-  # source://dry-types/1.8.3/lib/dry/types/compiler.rb#54
-  def visit_sum(node); end
-end
-
-class Dry::Types::Container
-  # source://dry-core//lib/dry/core/container/mixin.rb#83
-  def config; end
-end
-
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::EMPTY_ARRAY = T.let(T.unsafe(nil), Array)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::EMPTY_HASH = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::EMPTY_OPTS = T.let(T.unsafe(nil), Hash)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::EMPTY_SET = T.let(T.unsafe(nil), Set)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::EMPTY_STRING = T.let(T.unsafe(nil), String)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::IDENTITY = T.let(T.unsafe(nil), Proc)
 
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::Self = T.let(T.unsafe(nil), Proc)
 
-module Dry::Types::Type
-  # source://dry-types/1.8.3/lib/dry/types/type.rb#18
-  def ===(input = T.unsafe(nil)); end
+module Dry::Types::Type; end
 
-  # source://dry-types/1.8.3/lib/dry/types/type.rb#43
-  def [](input = T.unsafe(nil), &_arg1); end
-
-  # source://dry-types/1.8.3/lib/dry/types/type.rb#43
-  def call(input = T.unsafe(nil), &_arg1); end
-
-  # source://dry-core//lib/dry/core/deprecations.rb#168
-  def safe(*args, &block); end
-
-  # source://dry-types/1.8.3/lib/dry/types/type.rb#18
-  def valid?(input = T.unsafe(nil)); end
-end
-
-# source://dry-core//lib/dry/core/constants.rb#112
+# pkg:gem/dry-core#lib/dry/core/constants.rb:112
 Dry::Types::Undefined = T.let(T.unsafe(nil), Object)
