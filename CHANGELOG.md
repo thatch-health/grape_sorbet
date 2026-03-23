@@ -1,3 +1,8 @@
+## 0.0.15 (2026-03-23)
+
+- Bump Sorbet dependency to 0.6 (#32)
+- Bump Tapioca dependency to 0.18 (#32)
+
 ## 0.0.14 (2025-03-03)
 
 - Bump uri dependency to 1.0.3 (#20)
