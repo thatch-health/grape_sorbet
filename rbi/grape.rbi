@@ -56,9 +56,6 @@ module Grape
       sig { params(status: T.nilable(T.any(Integer, Symbol))).returns(Integer) }
       def status(status = nil); end
 
-      sig { returns(Grape::Cookies) }
-      def cookies; end
-
       sig { returns(Grape::Router::Route) }
       def route; end
     end
@@ -80,7 +77,7 @@ module Grape
 
     module Routing
       module ClassMethods
-        # @shim: https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/dsl/routing.rb#L148-L154
+        # @shim: https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
         sig do
           params(
             args: T.untyped,
@@ -89,7 +86,7 @@ module Grape
         end
         def delete(*args, &block); end
 
-        # @shim: https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/dsl/routing.rb#L148-L154
+        # @shim: https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
         sig do
           params(
             args: T.untyped,
@@ -98,7 +95,35 @@ module Grape
         end
         def get(*args, &block); end
 
-        # @shim: https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/dsl/routing.rb#L148-L154
+        # alias for `namespace`
+        sig do
+          params(
+            space: T.nilable(T.any(Symbol, String)),
+            options: T.nilable(T::Hash[Symbol, T.untyped]),
+            block: T.nilable(T.proc.bind(T.class_of(Grape::API::Instance)).void),
+          ).void
+        end
+        def group(space = T.unsafe(nil), options = T.unsafe(nil), &block); end
+
+        # @shim: https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
+        sig do
+          params(
+            args: T.untyped,
+            block: T.nilable(T.proc.bind(Grape::Endpoint).void),
+          ).void
+        end
+        def head(*args, &block); end
+
+        sig do
+          params(
+            space: T.nilable(T.any(Symbol, String)),
+            options: T.nilable(T::Hash[Symbol, T.untyped]),
+            block: T.nilable(T.proc.bind(T.class_of(Grape::API::Instance)).void),
+          ).void
+        end
+        def namespace(space = T.unsafe(nil), options = T.unsafe(nil), &block); end
+
+        # @shim: https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
         sig do
           params(
             args: T.untyped,
@@ -107,7 +132,7 @@ module Grape
         end
         def options(*args, &block); end
 
-        # @shim: https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/dsl/routing.rb#L148-L154
+        # @shim: https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
         sig do
           params(
             args: T.untyped,
@@ -116,7 +141,7 @@ module Grape
         end
         def patch(*args, &block); end
 
-        # @shim: https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/dsl/routing.rb#L148-L154
+        # @shim: https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
         sig do
           params(
             args: T.untyped,
@@ -125,7 +150,7 @@ module Grape
         end
         def post(*args, &block); end
 
-        # @shim: https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/dsl/routing.rb#L148-L154
+        # @shim: https://github.com/ruby-grape/grape/blob/v2.4.0/lib/grape/dsl/routing.rb#L165-L171
         sig do
           params(
             args: T.untyped,
@@ -133,6 +158,26 @@ module Grape
           ).void
         end
         def put(*args, &block); end
+
+        # alias for `namespace`
+        sig do
+          params(
+            space: T.nilable(T.any(Symbol, String)),
+            options: T.nilable(T::Hash[Symbol, T.untyped]),
+            block: T.nilable(T.proc.bind(T.class_of(Grape::API::Instance)).void),
+          ).void
+        end
+        def resource(space = T.unsafe(nil), options = T.unsafe(nil), &block); end
+
+        # alias for `namespace`
+        sig do
+          params(
+            space: T.nilable(T.any(Symbol, String)),
+            options: T.nilable(T::Hash[Symbol, T.untyped]),
+            block: T.nilable(T.proc.bind(T.class_of(Grape::API::Instance)).void),
+          ).void
+        end
+        def resources(space = T.unsafe(nil), options = T.unsafe(nil), &block); end
 
         sig do
           params(
@@ -152,6 +197,16 @@ module Grape
           ).void
         end
         def route_param(param, options = T.unsafe(nil), &block); end
+
+        # alias for `namespace`
+        sig do
+          params(
+            space: T.nilable(T.any(Symbol, String)),
+            options: T.nilable(T::Hash[Symbol, T.untyped]),
+            block: T.nilable(T.proc.bind(T.class_of(Grape::API::Instance)).void),
+          ).void
+        end
+        def segment(space = T.unsafe(nil), options = T.unsafe(nil), &block); end
       end
     end
 
@@ -164,7 +219,79 @@ module Grape
   end
 
   class Endpoint
+    # delegated to Grape::Request#cookies
+    sig { params(args: T.untyped, _arg1: T.untyped, block: T.untyped).returns(Grape::Cookies) }
+    def cookies(*args, **_arg1, &block); end
+
+    sig { returns(T::Hash[String, T.untyped]) }
+    def env; end
+
+    # delegated to Grape::Request#headers
+    sig { params(args: T.untyped, _arg1: T.untyped, block: T.untyped).returns(Rack::Headers) }
+    def headers(*args, **_arg1, &block); end
+
+    # delegated to Grape::Request#params
+    sig { params(args: T.untyped, _arg1: T.untyped, block: T.untyped).returns(T::Hash[String, T.untyped]) }
+    def params(*args, **_arg1, &block); end
+
     sig { returns(Grape::Request) }
     def request; end
+  end
+
+  module Middleware
+    class Base
+      sig { returns(T.nilable(Rack::Response)) }
+      def after; end
+
+      sig { void }
+      def before; end
+
+      sig { returns(String) }
+      def content_type; end
+
+      sig { params(format: Symbol).returns(T.nilable(String)) }
+      def content_type_for(format); end
+
+      sig { returns(T::Hash[Symbol, String]) }
+      def content_types; end
+
+      sig { returns(Grape::Endpoint) }
+      def context; end
+
+      sig { returns(T::Hash[String, T.untyped]) }
+      def env; end
+
+      sig { returns(T::Hash[String, Symbol]) }
+      def mime_types; end
+
+      sig { returns(T::Hash[String, T.nilable(String)]) }
+      def query_params; end
+
+      sig { returns(Rack::Request) }
+      def rack_request; end
+
+      sig { returns(Rack::Response) }
+      def response; end
+
+      sig { returns(T::Hash[Symbol, T.untyped]) }
+      def options; end
+    end
+  end
+
+  class Request
+    sig { returns(Grape::Cookies) }
+    def cookies; end
+
+    sig { returns(Rack::Headers) }
+    def headers; end
+
+    sig { returns(T::Hash[T.any(String, Symbol), T.untyped]) }
+    def params; end
+
+    sig { returns(T::Hash[String, String]) }
+    def rack_cookies; end
+
+    sig { returns(T::Hash[String, T.nilable(String)]) }
+    def rack_params; end
   end
 end
