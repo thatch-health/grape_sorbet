@@ -109,6 +109,13 @@ RuboCop::Cop::Minitest::AssertEmpty::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arr
 # Enforces the test to use `assert_empty`
 # instead of using `assert_equal([], object)` or `assert_equal({}, object)`.
 #
+# NOTE: Using `assert_empty` makes it impossible to indicate that the expected value is
+# the literal `[]` or `{}`. Since this removes the ability to express the difference
+# between those literals, it is disabled by default in consideration of that drawback.
+# Since the role of replacing the originally intended `assert([], empty_list)` with
+# `assert_equal([], empty_list)` is handled by `Minitest/AssertWithExpectedArgumentTest`,
+# this cop may be removed in the future.
+#
 # @example
 #   # bad
 #   assert_equal([], object)
@@ -117,23 +124,23 @@ RuboCop::Cop::Minitest::AssertEmpty::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arr
 #   # good
 #   assert_empty(object)
 #
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:17
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:24
 class RuboCop::Cop::Minitest::AssertEmptyLiteral < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::RangeHelp
   include ::RuboCop::Cop::ArgumentRangeHelper
   extend ::RuboCop::Cop::AutoCorrector
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:24
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:31
   def assert_equal_with_empty_literal(param0 = T.unsafe(nil)); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:28
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:35
   def on_send(node); end
 end
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:21
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:28
 RuboCop::Cop::Minitest::AssertEmptyLiteral::MSG = T.let(T.unsafe(nil), String)
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:22
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_empty_literal.rb:29
 RuboCop::Cop::Minitest::AssertEmptyLiteral::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 
 # Enforces the use of `assert_equal(expected, actual)`
@@ -758,31 +765,33 @@ RuboCop::Cop::Minitest::AssertTruthy::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Ar
 # @example
 #   # bad
 #   assert(3, my_list.length)
+#   assert([], empty_list)
 #   assert(expected, actual)
 #
 #   # good
 #   assert_equal(3, my_list.length)
+#   assert_equal([], empty_list)
 #   assert_equal(expected, actual)
 #   assert(foo, 'message')
 #   assert(foo, message)
 #   assert(foo, msg)
 #
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:28
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:30
 class RuboCop::Cop::Minitest::AssertWithExpectedArgument < ::RuboCop::Cop::Base
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:33
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:35
   def assert_with_two_arguments?(param0 = T.unsafe(nil)); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:37
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:39
   def on_send(node); end
 end
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:31
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:33
 RuboCop::Cop::Minitest::AssertWithExpectedArgument::MESSAGE_VARIABLES = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:29
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:31
 RuboCop::Cop::Minitest::AssertWithExpectedArgument::MSG = T.let(T.unsafe(nil), String)
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:30
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_with_expected_argument.rb:32
 RuboCop::Cop::Minitest::AssertWithExpectedArgument::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 
 # Checks for usage of assertions in lifecycle hooks.
@@ -2147,11 +2156,12 @@ end
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/return_in_test_method.rb:25
 RuboCop::Cop::Minitest::ReturnInTestMethod::MSG = T.let(T.unsafe(nil), String)
 
-# Checks that `ensure` call even if `skip`. It is unexpected that `ensure` will be called when skipping test.
-# If conditional `skip` is used, it checks that `ensure` is also called conditionally.
+# Checks that code in an `ensure` block does not run when the test is skipped.
+# If `skip` is conditional, the `ensure` block must also be conditional,
+# using the negation of the skip condition so that it runs only when the test runs.
 #
-# On the other hand, it accepts `skip` used in `rescue` because `ensure` may be teardown process to `begin`
-# setup process.
+# On the other hand, `skip` used inside a `rescue` clause is accepted,
+# because the `ensure` block may serve as teardown for resources created in the `begin` setup.
 #
 # @example
 #
@@ -2190,7 +2200,7 @@ RuboCop::Cop::Minitest::ReturnInTestMethod::MSG = T.let(T.unsafe(nil), String)
 #
 #   assert do_something
 #   ensure
-#   if condition
+#   unless condition
 #   do_teardown
 #   end
 #   end
@@ -2205,28 +2215,28 @@ RuboCop::Cop::Minitest::ReturnInTestMethod::MSG = T.let(T.unsafe(nil), String)
 #   do_teardown
 #   end
 #
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:64
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:65
 class RuboCop::Cop::Minitest::SkipEnsure < ::RuboCop::Cop::Base
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:67
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:68
   def on_ensure(node); end
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:77
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:78
   def find_skip(node); end
 
   # @return [Boolean]
   #
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:83
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:84
   def use_skip_in_rescue?(skip_method); end
 
   # @return [Boolean]
   #
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:87
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:88
   def valid_conditional_skip?(skip_method, ensure_node); end
 end
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:65
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:66
 RuboCop::Cop::Minitest::SkipEnsure::MSG = T.let(T.unsafe(nil), String)
 
 # Checks for skipped tests missing the skipping reason.
