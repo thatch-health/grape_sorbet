@@ -67,7 +67,7 @@ module GrapeSorbet
       raise "entity_name has not been set for #{self}, call `#{self}.entity_name = \"...\"` to set it"
     end
 
-    sig { params(method_name: T.any(String, Symbol), include_all: T.untyped).returns(T::Boolean) }
+    sig { params(method_name: T.any(String, Symbol), include_all: T::Boolean).returns(T::Boolean) }
     def respond_to?(method_name, include_all = false)
       # grape-swagger checks if the model class responds to `:entity_name`, so we need to return false if
       # `@entity_name` is nil (meaning `entity_name=` was never called).

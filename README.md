@@ -5,6 +5,9 @@
 
 grape_sorbet is a gem that provides hand written signatures and a Tapioca DSL compiler that makes it more pleasant to use the [Grape](https://github.com/ruby-grape/grape) API framework in Ruby projects that use the [Sorbet](https://sorbet.org/) typechecker.
 
+## Requirements
+
+As of 0.1.0, grape_sorbet targets Grape >= 3.0.
 
 ## Installation
 
