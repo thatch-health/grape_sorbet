@@ -201,19 +201,19 @@ class Reline::ANSI < ::Reline::IO
 
   # @return [Boolean]
   #
-  # pkg:gem/reline#lib/reline/io/ansi.rb:222
+  # pkg:gem/reline#lib/reline/io/ansi.rb:211
   def both_tty?; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:234
+  # pkg:gem/reline#lib/reline/io/ansi.rb:223
   def buffered_output; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:282
+  # pkg:gem/reline#lib/reline/io/ansi.rb:271
   def clear_screen; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:217
+  # pkg:gem/reline#lib/reline/io/ansi.rb:206
   def cursor_pos; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:316
+  # pkg:gem/reline#lib/reline/io/ansi.rb:304
   def deprep(otio); end
 
   # @return [Boolean]
@@ -224,10 +224,10 @@ class Reline::ANSI < ::Reline::IO
   # pkg:gem/reline#lib/reline/io/ansi.rb:30
   def encoding; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:270
+  # pkg:gem/reline#lib/reline/io/ansi.rb:259
   def erase_after_cursor; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:181
+  # pkg:gem/reline#lib/reline/io/ansi.rb:170
   def get_screen_size; end
 
   # if the usage expects to wait indefinitely, use Float::INFINITY for timeout_second
@@ -235,7 +235,7 @@ class Reline::ANSI < ::Reline::IO
   # pkg:gem/reline#lib/reline/io/ansi.rb:151
   def getc(timeout_second); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:262
+  # pkg:gem/reline#lib/reline/io/ansi.rb:251
   def hide_cursor; end
 
   # @return [Boolean]
@@ -253,13 +253,13 @@ class Reline::ANSI < ::Reline::IO
   # pkg:gem/reline#lib/reline/io/ansi.rb:20
   def input=(_arg0); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:242
+  # pkg:gem/reline#lib/reline/io/ansi.rb:231
   def move_cursor_column(x); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:254
+  # pkg:gem/reline#lib/reline/io/ansi.rb:243
   def move_cursor_down(x); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:246
+  # pkg:gem/reline#lib/reline/io/ansi.rb:235
   def move_cursor_up(x); end
 
   # Sets the attribute output
@@ -269,22 +269,19 @@ class Reline::ANSI < ::Reline::IO
   # pkg:gem/reline#lib/reline/io/ansi.rb:20
   def output=(_arg0); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:309
+  # pkg:gem/reline#lib/reline/io/ansi.rb:298
   def prep; end
 
   # pkg:gem/reline#lib/reline/io/ansi.rb:139
   def read_bracketed_paste; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:302
+  # pkg:gem/reline#lib/reline/io/ansi.rb:291
   def read_single_char(timeout_second); end
-
-  # pkg:gem/reline#lib/reline/io/ansi.rb:170
-  def retrieve_keybuffer; end
 
   # This only works when the cursor is at the bottom of the scroll range
   # For more details, see https://github.com/ruby/reline/pull/577#issuecomment-1646679623
   #
-  # pkg:gem/reline#lib/reline/io/ansi.rb:276
+  # pkg:gem/reline#lib/reline/io/ansi.rb:265
   def scroll_down(x); end
 
   # pkg:gem/reline#lib/reline/io/ansi.rb:56
@@ -299,13 +296,13 @@ class Reline::ANSI < ::Reline::IO
   # pkg:gem/reline#lib/reline/io/ansi.rb:87
   def set_default_key_bindings_comprehensive_list(config); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:191
+  # pkg:gem/reline#lib/reline/io/ansi.rb:180
   def set_screen_size(rows, columns); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:287
+  # pkg:gem/reline#lib/reline/io/ansi.rb:276
   def set_winch_handler(&handler); end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:266
+  # pkg:gem/reline#lib/reline/io/ansi.rb:255
   def show_cursor; end
 
   # pkg:gem/reline#lib/reline/io/ansi.rb:166
@@ -314,12 +311,12 @@ class Reline::ANSI < ::Reline::IO
   # pkg:gem/reline#lib/reline/io/ansi.rb:108
   def with_raw_input; end
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:226
+  # pkg:gem/reline#lib/reline/io/ansi.rb:215
   def write(string); end
 
   private
 
-  # pkg:gem/reline#lib/reline/io/ansi.rb:198
+  # pkg:gem/reline#lib/reline/io/ansi.rb:187
   def cursor_pos_internal(timeout:); end
 end
 
@@ -2104,7 +2101,7 @@ class Reline::LineEditor
   def forward_word(key); end
 
   # pkg:gem/reline#lib/reline/line_editor.rb:1437
-  def generate_searcher(search_key); end
+  def generate_searcher(direction); end
 
   # pkg:gem/reline#lib/reline/line_editor.rb:185
   def handle_interrupted; end
@@ -2123,8 +2120,8 @@ class Reline::LineEditor
   # pkg:gem/reline#lib/reline/line_editor.rb:943
   def inclusive?(method_obj); end
 
-  # pkg:gem/reline#lib/reline/line_editor.rb:1516
-  def incremental_search_history(key); end
+  # pkg:gem/reline#lib/reline/line_editor.rb:1514
+  def incremental_search_history(direction); end
 
   # pkg:gem/reline#lib/reline/line_editor.rb:277
   def insert_new_line(cursor_line, next_line); end

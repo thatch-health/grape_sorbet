@@ -3186,6 +3186,12 @@ class Concurrent::Collection::RubyNonConcurrentPriorityQueue
   end
 end
 
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/collection/timeout_queue.rb:15
+class Concurrent::Collection::TimeoutQueue < ::Thread::Queue; end
+
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/collection/timeout_queue.rb:5
+Concurrent::Collection::TimeoutQueueImplementation = Thread::Queue
+
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/concern/dereferenceable.rb:2
 module Concurrent::Concern; end
 
@@ -4225,7 +4231,7 @@ end
 # @see http://docs.oracle.com/javase/tutorial/essential/concurrency/pools.html Java Tutorials: Thread Pools
 # @see https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDaemon-boolean-
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/fixed_thread_pool.rb:201
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/fixed_thread_pool.rb:199
 class Concurrent::FixedThreadPool < ::Concurrent::ThreadPoolExecutor
   # Create a new thread pool.
   #
@@ -4237,7 +4243,7 @@ class Concurrent::FixedThreadPool < ::Concurrent::ThreadPoolExecutor
   # @return [FixedThreadPool] a new instance of FixedThreadPool
   # @see http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executors.html#newFixedThreadPool-int-
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/fixed_thread_pool.rb:215
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/fixed_thread_pool.rb:213
   def initialize(num_threads, opts = T.unsafe(nil)); end
 end
 
@@ -4858,7 +4864,7 @@ end
 # Either {FiberLocalVar} or {ThreadLocalVar} depending on whether Mutex (and Monitor)
 # are held, respectively, per Fiber or per Thread.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/atomic/lock_local_var.rb:21
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/atomic/lock_local_var.rb:22
 Concurrent::LockLocalVar = Concurrent::FiberLocalVar
 
 # An `MVar` is a synchronized single element container. They are empty or
@@ -4867,7 +4873,7 @@ Concurrent::LockLocalVar = Concurrent::FiberLocalVar
 # queue of length one, or a special kind of mutable variable.
 #
 # On top of the fundamental `#put` and `#take` operations, we also provide a
-# `#mutate` that is atomic with respect to operations on the same instance.
+# `#modify` that is atomic with respect to operations on the same instance.
 # These operations all support timeouts.
 #
 # We also support non-blocking operations `#try_put!` and `#try_take!`, a
@@ -4929,12 +4935,12 @@ class Concurrent::MVar < ::Concurrent::Synchronization::Object
   def full?; end
 
   # Atomically `take`, yield the value to a block for transformation, and then
-  # `put` the transformed value. Returns the transformed value. A timeout can
+  # `put` the transformed value. Returns the pre-transform value. A timeout can
   # be set to limit the time spent blocked, in which case it returns `TIMEOUT`
   # if the time is exceeded.
   #
   # @raise [ArgumentError]
-  # @return [Object] the transformed value, or `TIMEOUT`
+  # @return [Object] the pre-transform value, or `TIMEOUT`
   #
   # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/mvar.rb:123
   def modify(timeout = T.unsafe(nil)); end
@@ -6276,7 +6282,7 @@ end
 # c2 = p.then(-> reason { raise 'Boom!' })
 #
 # c1.wait.state  #=> :fulfilled
-# c1.value       #=> 45
+# c1.value       #=> 42
 # c2.wait.state  #=> :rejected
 # c2.reason      #=> #<RuntimeError: Boom!>
 # ```
@@ -8955,11 +8961,13 @@ class Concurrent::RubyExecutorService < ::Concurrent::AbstractExecutorService
   def stopped_event; end
 end
 
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_single_thread_executor.rb:8
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_single_thread_executor.rb:9
 class Concurrent::RubySingleThreadExecutor < ::Concurrent::RubyThreadPoolExecutor
+  include ::Concurrent::SerialExecutorService
+
   # @return [RubySingleThreadExecutor] a new instance of RubySingleThreadExecutor
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_single_thread_executor.rb:11
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_single_thread_executor.rb:13
   def initialize(opts = T.unsafe(nil)); end
 end
 
@@ -9014,60 +9022,60 @@ end
 # @see http://docs.oracle.com/javase/tutorial/essential/concurrency/pools.html Java Tutorials: Thread Pools
 # @see https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDaemon-boolean-
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:12
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:13
 class Concurrent::RubyThreadPoolExecutor < ::Concurrent::RubyExecutorService
   # @return [RubyThreadPoolExecutor] a new instance of RubyThreadPoolExecutor
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:45
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:47
   def initialize(opts = T.unsafe(nil)); end
 
   # The number of threads that are actively executing tasks.
   #
   # @return [Integer] The number of threads that are actively executing tasks.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:65
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:67
   def active_count; end
 
   # Does the task queue have a maximum size?
   #
   # @return [Boolean] True if the task queue has a maximum size else false.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:72
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:74
   def can_overflow?; end
 
   # The number of tasks that have been completed by the pool since construction.
   #
   # @return [Integer] The number of tasks that have been completed by the pool since construction.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:60
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:62
   def completed_task_count; end
 
   # The number of seconds that a thread may be idle before being reclaimed.
   #
   # @return [Integer] The number of seconds that a thread may be idle before being reclaimed.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:36
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:38
   def idletime; end
 
   # The largest number of threads that have been created in the pool since construction.
   #
   # @return [Integer] The largest number of threads that have been created in the pool since construction.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:50
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:52
   def largest_length; end
 
   # The number of threads currently in the pool.
   #
   # @return [Integer] The number of threads currently in the pool.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:77
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:79
   def length; end
 
   # The maximum number of threads that may be created in the pool.
   #
   # @return [Integer] The maximum number of threads that may be created in the pool.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:30
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:32
   def max_length; end
 
   # The maximum number of tasks that may be waiting in the work queue at any one time.
@@ -9078,14 +9086,14 @@ class Concurrent::RubyThreadPoolExecutor < ::Concurrent::RubyExecutorService
   #   When the queue size reaches `max_queue` subsequent tasks will be rejected in
   #   accordance with the configured `fallback_policy`.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:39
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:41
   def max_queue; end
 
   # The minimum number of threads that may be retained in the pool.
   #
   # @return [Integer] The minimum number of threads that may be retained in the pool.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:33
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:35
   def min_length; end
 
   # Prune the thread pool of unneeded threads
@@ -9093,22 +9101,27 @@ class Concurrent::RubyThreadPoolExecutor < ::Concurrent::RubyExecutorService
   # What is being pruned is controlled by the min_threads and idletime
   # parameters passed at pool creation time
   #
-  # This is a no-op on some pool implementation (e.g. the Java one).  The Ruby
-  # pool will auto-prune each time a new job is posted. You will need to call
-  # this method explicitly in case your application post jobs in bursts (a
-  # lot of jobs and then nothing for long periods)
+  # This is a no-op on all pool implementations as they prune themselves
+  # automatically, and has been deprecated.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:118
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:139
   def prune_pool; end
+
+  # removes the worker if it can be pruned
+  #
+  # @return [true, false] if the worker was pruned
+  #
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:104
+  def prune_worker(worker); end
 
   # The number of tasks in the queue awaiting execution.
   #
   # @return [Integer] The number of tasks in the queue awaiting execution.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:82
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:84
   def queue_length; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:103
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:124
   def ready_worker(worker, last_message); end
 
   # Number of tasks that may be enqueued before reaching `max_queue` and rejecting
@@ -9117,30 +9130,30 @@ class Concurrent::RubyThreadPoolExecutor < ::Concurrent::RubyExecutorService
   # @return [Integer] Number of tasks that may be enqueued before reaching `max_queue` and rejecting
   #   new tasks. A value of -1 indicates that the queue may grow without bound.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:87
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:89
   def remaining_capacity; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:98
-  def remove_busy_worker(worker); end
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:116
+  def remove_worker(worker); end
 
   # The number of tasks that have been scheduled for execution on the pool since construction.
   #
   # @return [Integer] The number of tasks that have been scheduled for execution on the pool since construction.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:55
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:57
   def scheduled_task_count; end
 
   # Whether or not a value of 0 for :max_queue option means the queue must perform direct hand-off or rather unbounded queue.
   #
   # @return [true, false]
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:42
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:44
   def synchronous; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:108
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:129
   def worker_died(worker); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:113
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:134
   def worker_task_completed; end
 
   private
@@ -9149,114 +9162,118 @@ class Concurrent::RubyThreadPoolExecutor < ::Concurrent::RubyExecutorService
   #
   # @return [nil, Worker] nil of max capacity is reached
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:241
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:257
   def ns_add_busy_worker; end
 
   # tries to assign task to a worker, tries to get one from @ready or to create new one
   #
   # @return [true, false] if task is assigned to a worker
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:201
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:217
   def ns_assign_worker(*args, &task); end
 
   # tries to enqueue task
   #
   # @return [true, false] if enqueued
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:219
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:235
   def ns_enqueue(*args, &task); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:160
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:178
   def ns_execute(*args, &task); end
 
   # @raise [ArgumentError]
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:125
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:146
   def ns_initialize(opts); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:189
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:205
   def ns_kill_execution; end
 
   # @return [Boolean]
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:155
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:173
   def ns_limited_queue?; end
 
-  # try oldest worker if it is idle for enough time, it's returned back at the start
+  # @return [Integer] number of excess idle workers which can be removed without
+  #   going below min_length, or all workers if not running
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:280
-  def ns_prune_pool; end
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:305
+  def ns_prunable_capacity; end
 
   # handle ready worker, giving it new job or assigning back to @ready
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:253
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:269
   def ns_ready_worker(worker, last_message, success = T.unsafe(nil)); end
 
-  # removes a worker which is not in not tracked in @ready
+  # removes a worker which is not tracked in @ready
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:271
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:287
   def ns_remove_busy_worker(worker); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:296
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:294
+  def ns_remove_ready_worker(worker); end
+
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:314
   def ns_reset_if_forked; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:174
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:190
   def ns_shutdown_execution; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:231
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:247
   def ns_worker_died(worker); end
 end
 
 # Default maximum number of threads that will be created in the pool.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:15
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:17
 Concurrent::RubyThreadPoolExecutor::DEFAULT_MAX_POOL_SIZE = T.let(T.unsafe(nil), Integer)
 
 # Default maximum number of tasks that may be added to the task queue.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:21
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:23
 Concurrent::RubyThreadPoolExecutor::DEFAULT_MAX_QUEUE_SIZE = T.let(T.unsafe(nil), Integer)
 
 # Default minimum number of threads that will be retained in the pool.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:18
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:20
 Concurrent::RubyThreadPoolExecutor::DEFAULT_MIN_POOL_SIZE = T.let(T.unsafe(nil), Integer)
 
 # Default value of the :synchronous option.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:27
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:29
 Concurrent::RubyThreadPoolExecutor::DEFAULT_SYNCHRONOUS = T.let(T.unsafe(nil), FalseClass)
 
 # Default maximum number of seconds a thread in the pool may remain idle
 # before being reclaimed.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:24
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:26
 Concurrent::RubyThreadPoolExecutor::DEFAULT_THREAD_IDLETIMEOUT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:310
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:328
 class Concurrent::RubyThreadPoolExecutor::Worker
   include ::Concurrent::Concern::Logging
 
   # @return [Worker] a new instance of Worker
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:313
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:331
   def initialize(pool, id); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:324
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:342
   def <<(message); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:332
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:350
   def kill; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:328
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:346
   def stop; end
 
   private
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:338
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:356
   def create_worker(queue, pool, idletime); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:358
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/ruby_thread_pool_executor.rb:381
   def run_task(pool, task, args); end
 end
 
@@ -11058,25 +11075,25 @@ class Concurrent::TimerSet < ::Concurrent::RubyExecutorService
 
   private
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:66
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:67
   def <<(task); end
 
   # Initialize the object.
   #
   # @param opts [Hash] the options to create the object with.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:74
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:75
   def ns_initialize(opts); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:94
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:95
   def ns_post_task(task); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:129
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:132
   def ns_reset_if_forked; end
 
   # `ExecutorService` callback called during shutdown.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:122
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:123
   def ns_shutdown_execution; end
 
   # Post the task to the internal queue.
@@ -11085,7 +11102,7 @@ class Concurrent::TimerSet < ::Concurrent::RubyExecutorService
   #   only. It is not intended to be used directly. Post a task
   #   by using the `SchedulesTask#execute` method.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:89
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:90
   def post_task(task); end
 
   # Run a loop and execute tasks in the scheduled order and at the approximate
@@ -11093,7 +11110,7 @@ class Concurrent::TimerSet < ::Concurrent::RubyExecutorService
   # garbage collection can occur. If there are no ready tasks it will sleep
   # for up to 60 seconds waiting for the next scheduled task.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:143
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:146
   def process_tasks; end
 
   # Remove the given task from the queue.
@@ -11102,7 +11119,7 @@ class Concurrent::TimerSet < ::Concurrent::RubyExecutorService
   #   only. It is not intended to be used directly. Cancel a task
   #   by using the `ScheduledTask#cancel` method.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:115
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/executor/timer_set.rb:116
   def remove_task(task); end
 end
 
@@ -11251,7 +11268,7 @@ end
 # @see http://docs.oracle.com/javase/7/docs/api/java/util/TimerTask.html
 # @see http://ruby-doc.org/stdlib-2.0/libdoc/observer/rdoc/Observable.html
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:165
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:166
 class Concurrent::TimerTask < ::Concurrent::RubyExecutorService
   include ::Concurrent::Concern::Dereferenceable
   include ::Concurrent::Concern::Observable
@@ -11271,7 +11288,7 @@ class Concurrent::TimerTask < ::Concurrent::RubyExecutorService
   #   refer to the execution context of the block rather than the running
   #   `TimerTask`.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:209
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:210
   def initialize(opts = T.unsafe(nil), &task); end
 
   # Execute a previously created `TimerTask`.
@@ -11286,69 +11303,69 @@ class Concurrent::TimerTask < ::Concurrent::RubyExecutorService
   #   task.running? #=> true
   # @return [TimerTask] a reference to `self`
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:235
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:236
   def execute; end
 
   # @return [Fixnum] Number of seconds after the task completes before the
   #   task is performed again.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:259
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:261
   def execution_interval; end
 
   # @return [Fixnum] Number of seconds after the task completes before the
   #   task is performed again.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:266
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:268
   def execution_interval=(value); end
 
   # @return [Symbol] method to calculate the interval between executions
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:276
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:278
   def interval_type; end
 
   # Is the executor running?
   #
   # @return [Boolean] `true` when running, `false` when shutting down or shutdown
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:218
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:219
   def running?; end
 
   # @return [Fixnum] Number of seconds the task can run before it is
   #   considered to have failed.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:281
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:283
   def timeout_interval; end
 
   # @return [Fixnum] Number of seconds the task can run before it is
   #   considered to have failed.
   #
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:288
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:290
   def timeout_interval=(value); end
 
   private
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:292
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:294
   def <<(task); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:352
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:357
   def calculate_next_interval(start_time); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:336
-  def execute_task(completion); end
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:339
+  def execute_task(completion, age_when_scheduled); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:296
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:298
   def ns_initialize(opts, &task); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:324
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:327
   def ns_kill_execution; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:318
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:321
   def ns_shutdown_execution; end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:292
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:294
   def post(*args, &task); end
 
-  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:330
+  # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:333
   def schedule_next_task(interval = T.unsafe(nil)); end
 
   class << self
@@ -11370,31 +11387,31 @@ class Concurrent::TimerTask < ::Concurrent::RubyExecutorService
     #   refer to the execution context of the block rather than the running
     #   `TimerTask`.
     #
-    # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:252
+    # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:254
     def execute(opts = T.unsafe(nil), &task); end
   end
 end
 
 # Default `:interval_type`
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:181
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:182
 Concurrent::TimerTask::DEFAULT_INTERVAL_TYPE = T.let(T.unsafe(nil), Symbol)
 
 # Default `:execution_interval` in seconds.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:170
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:171
 Concurrent::TimerTask::EXECUTION_INTERVAL = T.let(T.unsafe(nil), Integer)
 
 # Maintain the interval between the end of one execution and the start of the next execution.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:173
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:174
 Concurrent::TimerTask::FIXED_DELAY = T.let(T.unsafe(nil), Symbol)
 
 # Maintain the interval between the start of one execution and the start of the next.
 # If execution time exceeds the interval, the next execution will start immediately
 # after the previous execution finishes. Executions will not run concurrently.
 #
-# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:178
+# pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/timer_task.rb:179
 Concurrent::TimerTask::FIXED_RATE = T.let(T.unsafe(nil), Symbol)
 
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/tvar.rb:153

@@ -40,6 +40,14 @@ class Thor
   # pkg:gem/thor#lib/thor.rb:663
   def help(command = T.unsafe(nil), subcommand = T.unsafe(nil)); end
 
+  # pkg:gem/thor#lib/thor.rb:678
+  def tree; end
+
+  private
+
+  # pkg:gem/thor#lib/thor.rb:684
+  def build_command_tree(klass, indent); end
+
   class << self
     # Adds and declares option group for required at least one of options in the
     # block of arguments. You can declare options as the outside of the block.
@@ -134,7 +142,7 @@ class Thor
     # pkg:gem/thor#lib/thor.rb:28
     def default_task(meth = T.unsafe(nil)); end
 
-    # pkg:gem/thor#lib/thor/base.rb:26
+    # pkg:gem/thor#lib/thor/base.rb:27
     def deprecation_warning(message); end
 
     # Defines the usage and the description of the next command.
@@ -977,8 +985,49 @@ module Thor::Actions
   # pkg:gem/thor#lib/thor/actions/file_manipulation.rb:216
   def inject_into_class(path, klass, *args, &block); end
 
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:34
+  # Injects the given content into a file. Different from gsub_file, this
+  # method is reversible.
+  #
+  # ==== Parameters
+  # destination<String>:: Relative path to the destination root
+  # data<String>:: Data to add to the file. Can be given as a block.
+  # config<Hash>:: give :verbose => false to not log the status and the flag
+  #                for injection (:after or :before) or :force => true for
+  #                insert two or more times the same content.
+  #
+  # ==== Examples
+  #
+  #   insert_into_file "config/environment.rb", "config.gem :thor", :after => "Rails::Initializer.run do |config|\n"
+  #
+  #   insert_into_file "config/environment.rb", :after => "Rails::Initializer.run do |config|\n" do
+  #     gems = ask "Which gems would you like to add?"
+  #     gems.split(" ").map{ |gem| "  config.gem :#{gem}" }.join("\n")
+  #   end
+  #
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:64
   def inject_into_file(destination, *args, &block); end
+
+  # Injects the given content into a file, raising an error if the contents of
+  # the file are not changed. Different from gsub_file, this method is reversible.
+  #
+  # ==== Parameters
+  # destination<String>:: Relative path to the destination root
+  # data<String>:: Data to add to the file. Can be given as a block.
+  # config<Hash>:: give :verbose => false to not log the status and the flag
+  #                for injection (:after or :before) or :force => true for
+  #                insert two or more times the same content.
+  #
+  # ==== Examples
+  #
+  #   insert_into_file "config/environment.rb", "config.gem :thor", :after => "Rails::Initializer.run do |config|\n"
+  #
+  #   insert_into_file "config/environment.rb", :after => "Rails::Initializer.run do |config|\n" do
+  #     gems = ask "Which gems would you like to add?"
+  #     gems.split(" ").map{ |gem| "  config.gem :#{gem}" }.join("\n")
+  #   end
+  #
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:35
+  def inject_into_file!(destination, *args, &block); end
 
   # Injects text right after the module definition. Since it depends on
   # insert_into_file, it's reversible.
@@ -1000,8 +1049,49 @@ module Thor::Actions
   # pkg:gem/thor#lib/thor/actions/file_manipulation.rb:239
   def inject_into_module(path, module_name, *args, &block); end
 
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:26
+  # Injects the given content into a file. Different from gsub_file, this
+  # method is reversible.
+  #
+  # ==== Parameters
+  # destination<String>:: Relative path to the destination root
+  # data<String>:: Data to add to the file. Can be given as a block.
+  # config<Hash>:: give :verbose => false to not log the status and the flag
+  #                for injection (:after or :before) or :force => true for
+  #                insert two or more times the same content.
+  #
+  # ==== Examples
+  #
+  #   insert_into_file "config/environment.rb", "config.gem :thor", :after => "Rails::Initializer.run do |config|\n"
+  #
+  #   insert_into_file "config/environment.rb", :after => "Rails::Initializer.run do |config|\n" do
+  #     gems = ask "Which gems would you like to add?"
+  #     gems.split(" ").map{ |gem| "  config.gem :#{gem}" }.join("\n")
+  #   end
+  #
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:56
   def insert_into_file(destination, *args, &block); end
+
+  # Injects the given content into a file, raising an error if the contents of
+  # the file are not changed. Different from gsub_file, this method is reversible.
+  #
+  # ==== Parameters
+  # destination<String>:: Relative path to the destination root
+  # data<String>:: Data to add to the file. Can be given as a block.
+  # config<Hash>:: give :verbose => false to not log the status and the flag
+  #                for injection (:after or :before) or :force => true for
+  #                insert two or more times the same content.
+  #
+  # ==== Examples
+  #
+  #   insert_into_file "config/environment.rb", "config.gem :thor", :after => "Rails::Initializer.run do |config|\n"
+  #
+  #   insert_into_file "config/environment.rb", :after => "Rails::Initializer.run do |config|\n" do
+  #     gems = ask "Which gems would you like to add?"
+  #     gems.split(" ").map{ |gem| "  config.gem :#{gem}" }.join("\n")
+  #   end
+  #
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:26
+  def insert_into_file!(destination, *args, &block); end
 
   # Do something in the root or on a provided subfolder. If a relative path
   # is given it's referenced from the current root. The full path is yielded
@@ -1484,73 +1574,54 @@ class Thor::Actions::EmptyDirectory
   def say_status(status, color); end
 end
 
-# pkg:gem/thor#lib/thor/actions/inject_into_file.rb:36
+# pkg:gem/thor#lib/thor/actions/inject_into_file.rb:66
 class Thor::Actions::InjectIntoFile < ::Thor::Actions::EmptyDirectory
   # @return [InjectIntoFile] a new instance of InjectIntoFile
   #
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:39
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:69
   def initialize(base, destination, data, config); end
 
   # Returns the value of attribute behavior.
   #
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:37
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:67
   def behavior; end
 
   # Returns the value of attribute flag.
   #
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:37
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:67
   def flag; end
 
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:52
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:83
   def invoke!; end
 
   # Returns the value of attribute replacement.
   #
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:37
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:67
   def replacement; end
 
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:74
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:107
   def revoke!; end
 
   protected
 
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:110
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:143
   def content; end
 
   # Adds the content to the file.
   #
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:120
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:153
   def replace!(regexp, string, force); end
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:114
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:147
   def replacement_present?; end
 
-  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:90
+  # pkg:gem/thor#lib/thor/actions/inject_into_file.rb:123
   def say_status(behavior, warning: T.unsafe(nil), color: T.unsafe(nil)); end
 end
 
-# Injects the given content into a file. Different from gsub_file, this
-# method is reversible.
-#
-# ==== Parameters
-# destination<String>:: Relative path to the destination root
-# data<String>:: Data to add to the file. Can be given as a block.
-# config<Hash>:: give :verbose => false to not log the status and the flag
-#                for injection (:after or :before) or :force => true for
-#                insert two or more times the same content.
-#
-# ==== Examples
-#
-#   insert_into_file "config/environment.rb", "config.gem :thor", :after => "Rails::Initializer.run do |config|\n"
-#
-#   insert_into_file "config/environment.rb", :after => "Rails::Initializer.run do |config|\n" do
-#     gems = ask "Which gems would you like to add?"
-#     gems.split(" ").map{ |gem| "  config.gem :#{gem}" }.join("\n")
-#   end
-#
-# pkg:gem/thor#lib/thor/actions/inject_into_file.rb:24
+# pkg:gem/thor#lib/thor/actions/inject_into_file.rb:5
 Thor::Actions::WARNINGS = T.let(T.unsafe(nil), Hash)
 
 # pkg:gem/thor#lib/thor/error.rb:57
@@ -1779,53 +1850,53 @@ module Thor::Base
   #
   # config<Hash>:: Configuration for this Thor class.
   #
-  # pkg:gem/thor#lib/thor/base.rb:53
+  # pkg:gem/thor#lib/thor/base.rb:54
   def initialize(args = T.unsafe(nil), local_options = T.unsafe(nil), config = T.unsafe(nil)); end
 
   # Returns the value of attribute args.
   #
-  # pkg:gem/thor#lib/thor/base.rb:35
+  # pkg:gem/thor#lib/thor/base.rb:36
   def args; end
 
   # Sets the attribute args
   #
   # @param value the value to set the attribute args to.
   #
-  # pkg:gem/thor#lib/thor/base.rb:35
+  # pkg:gem/thor#lib/thor/base.rb:36
   def args=(_arg0); end
 
   # Returns the value of attribute options.
   #
-  # pkg:gem/thor#lib/thor/base.rb:35
+  # pkg:gem/thor#lib/thor/base.rb:36
   def options; end
 
   # Sets the attribute options
   #
   # @param value the value to set the attribute options to.
   #
-  # pkg:gem/thor#lib/thor/base.rb:35
+  # pkg:gem/thor#lib/thor/base.rb:36
   def options=(_arg0); end
 
   # Returns the value of attribute parent_options.
   #
-  # pkg:gem/thor#lib/thor/base.rb:35
+  # pkg:gem/thor#lib/thor/base.rb:36
   def parent_options; end
 
   # Sets the attribute parent_options
   #
   # @param value the value to set the attribute parent_options to.
   #
-  # pkg:gem/thor#lib/thor/base.rb:35
+  # pkg:gem/thor#lib/thor/base.rb:36
   def parent_options=(_arg0); end
 
   class << self
-    # pkg:gem/thor#lib/thor/base.rb:116
+    # pkg:gem/thor#lib/thor/base.rb:117
     def included(base); end
 
     # Whenever a class inherits from Thor or Thor::Group, we should track the
     # class and the file on Thor::Base. This is the method responsible for it.
     #
-    # pkg:gem/thor#lib/thor/base.rb:144
+    # pkg:gem/thor#lib/thor/base.rb:145
     def register_klass_file(klass); end
 
     # Returns the shell used in all Thor classes. If you are in a Unix platform
@@ -1846,7 +1917,7 @@ module Thor::Base
     # ==== Returns
     # Hash[path<String> => Class]
     #
-    # pkg:gem/thor#lib/thor/base.rb:137
+    # pkg:gem/thor#lib/thor/base.rb:138
     def subclass_files; end
 
     # Returns the classes that inherits from Thor or Thor::Group.
@@ -1854,12 +1925,12 @@ module Thor::Base
     # ==== Returns
     # Array[Class]
     #
-    # pkg:gem/thor#lib/thor/base.rb:128
+    # pkg:gem/thor#lib/thor/base.rb:129
     def subclasses; end
   end
 end
 
-# pkg:gem/thor#lib/thor/base.rb:153
+# pkg:gem/thor#lib/thor/base.rb:154
 module Thor::Base::ClassMethods
   # Returns the commands for this Thor class and all subclasses.
   #
@@ -1867,7 +1938,7 @@ module Thor::Base::ClassMethods
   # Hash:: An ordered hash with commands names as keys and Thor::Command
   #        objects as values.
   #
-  # pkg:gem/thor#lib/thor/base.rb:482
+  # pkg:gem/thor#lib/thor/base.rb:483
   def all_commands; end
 
   # Returns the commands for this Thor class and all subclasses.
@@ -1876,13 +1947,13 @@ module Thor::Base::ClassMethods
   # Hash:: An ordered hash with commands names as keys and Thor::Command
   #        objects as values.
   #
-  # pkg:gem/thor#lib/thor/base.rb:486
+  # pkg:gem/thor#lib/thor/base.rb:487
   def all_tasks; end
 
   # If you want to use defaults that don't match the type of an option,
   # either specify `check_default_type: false` or call `allow_incompatible_default_type!`
   #
-  # pkg:gem/thor#lib/thor/base.rb:189
+  # pkg:gem/thor#lib/thor/base.rb:190
   def allow_incompatible_default_type!; end
 
   # Adds an argument to the class and creates an attr_accessor for it.
@@ -1920,7 +1991,7 @@ module Thor::Base::ClassMethods
   # ==== Errors
   # ArgumentError:: Raised if you supply a required argument after a non required one.
   #
-  # pkg:gem/thor#lib/thor/base.rb:261
+  # pkg:gem/thor#lib/thor/base.rb:262
   def argument(name, options = T.unsafe(nil)); end
 
   # Returns this class arguments, looking up in the ancestors chain.
@@ -1928,40 +1999,40 @@ module Thor::Base::ClassMethods
   # ==== Returns
   # Array[Thor::Argument]
   #
-  # pkg:gem/thor#lib/thor/base.rb:293
+  # pkg:gem/thor#lib/thor/base.rb:294
   def arguments; end
 
-  # pkg:gem/thor#lib/thor/base.rb:162
+  # pkg:gem/thor#lib/thor/base.rb:163
   def attr_accessor(*_arg0); end
 
-  # pkg:gem/thor#lib/thor/base.rb:154
+  # pkg:gem/thor#lib/thor/base.rb:155
   def attr_reader(*_arg0); end
 
-  # pkg:gem/thor#lib/thor/base.rb:158
+  # pkg:gem/thor#lib/thor/base.rb:159
   def attr_writer(*_arg0); end
 
-  # pkg:gem/thor#lib/thor/base.rb:193
+  # pkg:gem/thor#lib/thor/base.rb:194
   def check_default_type; end
 
   # If you want to raise an error when the default value of an option does not match
   # the type call check_default_type!
   # This will be the default; for compatibility a deprecation warning is issued if necessary.
   #
-  # pkg:gem/thor#lib/thor/base.rb:183
+  # pkg:gem/thor#lib/thor/base.rb:184
   def check_default_type!; end
 
-  # pkg:gem/thor#lib/thor/base.rb:172
+  # pkg:gem/thor#lib/thor/base.rb:173
   def check_unknown_options; end
 
   # If you want to raise an error for unknown options, call check_unknown_options!
   # This is disabled by default to allow dynamic invocations.
   #
-  # pkg:gem/thor#lib/thor/base.rb:168
+  # pkg:gem/thor#lib/thor/base.rb:169
   def check_unknown_options!; end
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/base.rb:176
+  # pkg:gem/thor#lib/thor/base.rb:177
   def check_unknown_options?(config); end
 
   # Adds and declares option group for required at least one of options in the
@@ -1994,7 +2065,7 @@ module Thor::Base::ClassMethods
   #
   # Then it is required either only one of "--one" or "--two".
   #
-  # pkg:gem/thor#lib/thor/base.rb:392
+  # pkg:gem/thor#lib/thor/base.rb:393
   def class_at_least_one(*args, &block); end
 
   # Returns this class at least one of required options array set, looking up in the ancestors chain.
@@ -2002,7 +2073,7 @@ module Thor::Base::ClassMethods
   # ==== Returns
   # Array[Array[Thor::Option.name]]
   #
-  # pkg:gem/thor#lib/thor/base.rb:411
+  # pkg:gem/thor#lib/thor/base.rb:412
   def class_at_least_one_option_names; end
 
   # Adds and declares option group for exclusive options in the
@@ -2027,7 +2098,7 @@ module Thor::Base::ClassMethods
   # If you give "--one" and "--two" at the same time ExclusiveArgumentsError
   # will be raised.
   #
-  # pkg:gem/thor#lib/thor/base.rb:357
+  # pkg:gem/thor#lib/thor/base.rb:358
   def class_exclusive(*args, &block); end
 
   # Returns this class exclusive options array set, looking up in the ancestors chain.
@@ -2035,7 +2106,7 @@ module Thor::Base::ClassMethods
   # ==== Returns
   # Array[Array[Thor::Option.name]]
   #
-  # pkg:gem/thor#lib/thor/base.rb:402
+  # pkg:gem/thor#lib/thor/base.rb:403
   def class_exclusive_option_names; end
 
   # Adds an option to the set of class options
@@ -2054,7 +2125,7 @@ module Thor::Base::ClassMethods
   # :banner::   -- String to show on usage notes.
   # :hide::     -- If you want to hide this option from the help.
   #
-  # pkg:gem/thor#lib/thor/base.rb:328
+  # pkg:gem/thor#lib/thor/base.rb:329
   def class_option(name, options = T.unsafe(nil)); end
 
   # Adds a bunch of options to the set of class options.
@@ -2066,7 +2137,7 @@ module Thor::Base::ClassMethods
   # ==== Parameters
   # Hash[Symbol => Object]
   #
-  # pkg:gem/thor#lib/thor/base.rb:306
+  # pkg:gem/thor#lib/thor/base.rb:307
   def class_options(options = T.unsafe(nil)); end
 
   # Returns the commands for this Thor class.
@@ -2075,7 +2146,7 @@ module Thor::Base::ClassMethods
   # Hash:: An ordered hash with commands names as keys and Thor::Command
   #        objects as values.
   #
-  # pkg:gem/thor#lib/thor/base.rb:471
+  # pkg:gem/thor#lib/thor/base.rb:472
   def commands; end
 
   # If true, option set will not suspend the execution of the command when
@@ -2083,14 +2154,14 @@ module Thor::Base::ClassMethods
   #
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/base.rb:207
+  # pkg:gem/thor#lib/thor/base.rb:208
   def disable_required_check?(command_name); end
 
   # A flag that makes the process exit with status 1 if any error happens.
   #
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/base.rb:628
+  # pkg:gem/thor#lib/thor/base.rb:629
   def exit_on_failure?; end
 
   # Defines the group. This is used when thor list is invoked so you can specify
@@ -2099,22 +2170,22 @@ module Thor::Base::ClassMethods
   # ==== Parameters
   # name<String|Symbol>
   #
-  # pkg:gem/thor#lib/thor/base.rb:457
+  # pkg:gem/thor#lib/thor/base.rb:458
   def group(name = T.unsafe(nil)); end
 
   # @raise [InvocationError]
   #
-  # pkg:gem/thor#lib/thor/base.rb:618
+  # pkg:gem/thor#lib/thor/base.rb:619
   def handle_argument_error(command, error, args, arity); end
 
   # @raise [UndefinedCommandError]
   #
-  # pkg:gem/thor#lib/thor/base.rb:613
+  # pkg:gem/thor#lib/thor/base.rb:614
   def handle_no_command_error(command, has_namespace = T.unsafe(nil)); end
 
   # @raise [UndefinedCommandError]
   #
-  # pkg:gem/thor#lib/thor/base.rb:616
+  # pkg:gem/thor#lib/thor/base.rb:617
   def handle_no_task_error(command, has_namespace = T.unsafe(nil)); end
 
   # Sets the namespace for the Thor or Thor::Group class. By default the
@@ -2139,7 +2210,7 @@ module Thor::Base::ClassMethods
   #
   #   thor :my_command
   #
-  # pkg:gem/thor#lib/thor/base.rb:566
+  # pkg:gem/thor#lib/thor/base.rb:567
   def namespace(name = T.unsafe(nil)); end
 
   # All methods defined inside the given block are not added as commands.
@@ -2161,15 +2232,15 @@ module Thor::Base::ClassMethods
   #     remove_command :this_is_not_a_command
   #   end
   #
-  # pkg:gem/thor#lib/thor/base.rb:530
+  # pkg:gem/thor#lib/thor/base.rb:531
   def no_commands(&block); end
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/base.rb:540
+  # pkg:gem/thor#lib/thor/base.rb:541
   def no_commands?; end
 
-  # pkg:gem/thor#lib/thor/base.rb:536
+  # pkg:gem/thor#lib/thor/base.rb:537
   def no_commands_context; end
 
   # All methods defined inside the given block are not added as commands.
@@ -2191,7 +2262,7 @@ module Thor::Base::ClassMethods
   #     remove_command :this_is_not_a_command
   #   end
   #
-  # pkg:gem/thor#lib/thor/base.rb:534
+  # pkg:gem/thor#lib/thor/base.rb:535
   def no_tasks(&block); end
 
   # Allows to use private methods from parent in child classes as commands.
@@ -2204,7 +2275,7 @@ module Thor::Base::ClassMethods
   #   public_command :foo
   #   public_command :foo, :bar, :baz
   #
-  # pkg:gem/thor#lib/thor/base.rb:606
+  # pkg:gem/thor#lib/thor/base.rb:607
   def public_command(*names); end
 
   # Allows to use private methods from parent in child classes as commands.
@@ -2217,7 +2288,7 @@ module Thor::Base::ClassMethods
   #   public_command :foo
   #   public_command :foo, :bar, :baz
   #
-  # pkg:gem/thor#lib/thor/base.rb:611
+  # pkg:gem/thor#lib/thor/base.rb:612
   def public_task(*names); end
 
   # Removes a previous defined argument. If :undefine is given, undefine
@@ -2231,7 +2302,7 @@ module Thor::Base::ClassMethods
   #   remove_argument :foo
   #   remove_argument :foo, :bar, :baz, :undefine => true
   #
-  # pkg:gem/thor#lib/thor/base.rb:426
+  # pkg:gem/thor#lib/thor/base.rb:427
   def remove_argument(*names); end
 
   # Removes a previous defined class option.
@@ -2244,7 +2315,7 @@ module Thor::Base::ClassMethods
   #   remove_class_option :foo
   #   remove_class_option :foo, :bar, :baz
   #
-  # pkg:gem/thor#lib/thor/base.rb:445
+  # pkg:gem/thor#lib/thor/base.rb:446
   def remove_class_option(*names); end
 
   # Removes a given command from this Thor class. This is usually done if you
@@ -2259,7 +2330,7 @@ module Thor::Base::ClassMethods
   # options<Hash>:: You can give :undefine => true if you want commands the method
   #                 to be undefined from the class as well.
   #
-  # pkg:gem/thor#lib/thor/base.rb:500
+  # pkg:gem/thor#lib/thor/base.rb:501
   def remove_command(*names); end
 
   # Removes a given command from this Thor class. This is usually done if you
@@ -2274,7 +2345,7 @@ module Thor::Base::ClassMethods
   # options<Hash>:: You can give :undefine => true if you want commands the method
   #                 to be undefined from the class as well.
   #
-  # pkg:gem/thor#lib/thor/base.rb:509
+  # pkg:gem/thor#lib/thor/base.rb:510
   def remove_task(*names); end
 
   # Parses the command and options from the given args, instantiate the class
@@ -2285,7 +2356,7 @@ module Thor::Base::ClassMethods
   #   script = MyScript.new(args, options, config)
   #   script.invoke(:command, first_arg, second_arg, third_arg)
   #
-  # pkg:gem/thor#lib/thor/base.rb:582
+  # pkg:gem/thor#lib/thor/base.rb:583
   def start(given_args = T.unsafe(nil), config = T.unsafe(nil)); end
 
   # If true, option parsing is suspended as soon as an unknown option or a
@@ -2294,22 +2365,22 @@ module Thor::Base::ClassMethods
   #
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/base.rb:201
+  # pkg:gem/thor#lib/thor/base.rb:202
   def stop_on_unknown_option?(command_name); end
 
-  # pkg:gem/thor#lib/thor/base.rb:218
+  # pkg:gem/thor#lib/thor/base.rb:219
   def strict_args_position; end
 
   # If you want only strict string args (useful when cascading thor classes),
   # call strict_args_position! This is disabled by default to allow dynamic
   # invocations.
   #
-  # pkg:gem/thor#lib/thor/base.rb:214
+  # pkg:gem/thor#lib/thor/base.rb:215
   def strict_args_position!; end
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/base.rb:222
+  # pkg:gem/thor#lib/thor/base.rb:223
   def strict_args_position?(config); end
 
   # Returns the commands for this Thor class.
@@ -2318,7 +2389,7 @@ module Thor::Base::ClassMethods
   # Hash:: An ordered hash with commands names as keys and Thor::Command
   #        objects as values.
   #
-  # pkg:gem/thor#lib/thor/base.rb:474
+  # pkg:gem/thor#lib/thor/base.rb:475
   def tasks; end
 
   protected
@@ -2326,12 +2397,12 @@ module Thor::Base::ClassMethods
   # SIGNATURE: Sets the baseclass. This is where the superclass lookup
   # finishes.
   #
-  # pkg:gem/thor#lib/thor/base.rb:777
+  # pkg:gem/thor#lib/thor/base.rb:778
   def baseclass; end
 
   # The basename of the program invoking the thor class.
   #
-  # pkg:gem/thor#lib/thor/base.rb:771
+  # pkg:gem/thor#lib/thor/base.rb:772
   def basename; end
 
   # Build an option and adds it to the given scope.
@@ -2341,7 +2412,7 @@ module Thor::Base::ClassMethods
   # options<Hash>:: Described in both class_option and method_option.
   # scope<Hash>:: Options hash that is being built up
   #
-  # pkg:gem/thor#lib/thor/base.rb:688
+  # pkg:gem/thor#lib/thor/base.rb:689
   def build_option(name, options, scope); end
 
   # Receives a hash of options, parse them and add to the scope. This is a
@@ -2352,99 +2423,99 @@ module Thor::Base::ClassMethods
   # ==== Parameters
   # Hash[Symbol => Object]
   #
-  # pkg:gem/thor#lib/thor/base.rb:699
+  # pkg:gem/thor#lib/thor/base.rb:700
   def build_options(options, scope); end
 
   # Get target(method_options or class_options) options
   # of before and after by block evaluation.
   #
-  # pkg:gem/thor#lib/thor/base.rb:808
+  # pkg:gem/thor#lib/thor/base.rb:809
   def built_option_names(target, opt = T.unsafe(nil), &block); end
 
   # Prints the class options per group. If an option does not belong to
   # any group, it's printed as Class option.
   #
-  # pkg:gem/thor#lib/thor/base.rb:638
+  # pkg:gem/thor#lib/thor/base.rb:639
   def class_options_help(shell, groups = T.unsafe(nil)); end
 
   # Get command scope member by name.
   #
-  # pkg:gem/thor#lib/thor/base.rb:816
+  # pkg:gem/thor#lib/thor/base.rb:817
   def command_scope_member(name, options = T.unsafe(nil)); end
 
   # SIGNATURE: Creates a new command if valid_command? is true. This method is
   # called when a new method is added to the class.
   #
-  # pkg:gem/thor#lib/thor/base.rb:782
+  # pkg:gem/thor#lib/thor/base.rb:783
   def create_command(meth); end
 
   # SIGNATURE: Creates a new command if valid_command? is true. This method is
   # called when a new method is added to the class.
   #
-  # pkg:gem/thor#lib/thor/base.rb:784
+  # pkg:gem/thor#lib/thor/base.rb:785
   def create_task(meth); end
 
   # SIGNATURE: The hook invoked by start.
   #
   # @raise [NotImplementedError]
   #
-  # pkg:gem/thor#lib/thor/base.rb:792
+  # pkg:gem/thor#lib/thor/base.rb:793
   def dispatch(command, given_args, given_opts, config); end
 
   # Finds a command with the given name. If the command belongs to the current
   # class, just return it, otherwise dup it and add the fresh copy to the
   # current command hash.
   #
-  # pkg:gem/thor#lib/thor/base.rb:708
+  # pkg:gem/thor#lib/thor/base.rb:709
   def find_and_refresh_command(name); end
 
   # Finds a command with the given name. If the command belongs to the current
   # class, just return it, otherwise dup it and add the fresh copy to the
   # current command hash.
   #
-  # pkg:gem/thor#lib/thor/base.rb:717
+  # pkg:gem/thor#lib/thor/base.rb:718
   def find_and_refresh_task(name); end
 
   # Retrieves a value from superclass. If it reaches the baseclass,
   # returns default.
   #
-  # pkg:gem/thor#lib/thor/base.rb:749
+  # pkg:gem/thor#lib/thor/base.rb:750
   def from_superclass(method, default = T.unsafe(nil)); end
 
   # Every time someone inherits from a Thor class, register the klass
   # and file into baseclass.
   #
-  # pkg:gem/thor#lib/thor/base.rb:721
+  # pkg:gem/thor#lib/thor/base.rb:722
   def inherited(klass); end
 
   # SIGNATURE: Defines behavior when the initialize method is added to the
   # class.
   #
-  # pkg:gem/thor#lib/thor/base.rb:788
+  # pkg:gem/thor#lib/thor/base.rb:789
   def initialize_added; end
 
   # Raises an error if the word given is a Thor reserved word.
   #
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/base.rb:677
+  # pkg:gem/thor#lib/thor/base.rb:678
   def is_thor_reserved_word?(word, type); end
 
   # Fire this callback whenever a method is added. Added methods are
   # tracked as commands by invoking the create_command method.
   #
-  # pkg:gem/thor#lib/thor/base.rb:729
+  # pkg:gem/thor#lib/thor/base.rb:730
   def method_added(meth); end
 
   # Receives a set of options and print them.
   #
-  # pkg:gem/thor#lib/thor/base.rb:656
+  # pkg:gem/thor#lib/thor/base.rb:657
   def print_options(shell, options, group_name = T.unsafe(nil)); end
 
   # Register a relation of options for target(method_option/class_option)
   # by args and block.
   #
-  # pkg:gem/thor#lib/thor/base.rb:798
+  # pkg:gem/thor#lib/thor/base.rb:799
   def register_options_relation_for(target, relation, *args, &block); end
 end
 
@@ -2828,7 +2899,7 @@ class Thor::Group
   end
 end
 
-# Shortcuts for help.
+# Shortcuts for help and tree commands.
 #
 # pkg:gem/thor#lib/thor/base.rb:17
 Thor::HELP_MAPPINGS = T.let(T.unsafe(nil), Array)
@@ -3695,19 +3766,22 @@ class Thor::Shell::Basic
 
   protected
 
-  # pkg:gem/thor#lib/thor/shell/basic.rb:362
+  # pkg:gem/thor#lib/thor/shell/basic.rb:360
   def answer_match(possibilities, answer, case_insensitive); end
 
-  # pkg:gem/thor#lib/thor/shell/basic.rb:349
+  # pkg:gem/thor#lib/thor/shell/basic.rb:347
   def ask_filtered(statement, color, options); end
 
-  # pkg:gem/thor#lib/thor/shell/basic.rb:332
+  # pkg:gem/thor#lib/thor/shell/basic.rb:330
   def ask_simply(statement, color, options); end
 
   # @return [Boolean]
   #
   # pkg:gem/thor#lib/thor/shell/basic.rb:269
   def can_display_colors?; end
+
+  # pkg:gem/thor#lib/thor/shell/basic.rb:384
+  def diff_tool; end
 
   # pkg:gem/thor#lib/thor/shell/basic.rb:296
   def file_collision_help(block_given); end
@@ -3720,10 +3794,10 @@ class Thor::Shell::Basic
   # pkg:gem/thor#lib/thor/shell/basic.rb:273
   def lookup_color(color); end
 
-  # pkg:gem/thor#lib/thor/shell/basic.rb:370
+  # pkg:gem/thor#lib/thor/shell/basic.rb:368
   def merge(destination, content); end
 
-  # pkg:gem/thor#lib/thor/shell/basic.rb:379
+  # pkg:gem/thor#lib/thor/shell/basic.rb:377
   def merge_tool; end
 
   # pkg:gem/thor#lib/thor/shell/basic.rb:264
@@ -3731,7 +3805,7 @@ class Thor::Shell::Basic
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/shell/basic.rb:324
+  # pkg:gem/thor#lib/thor/shell/basic.rb:322
   def quiet?; end
 
   # pkg:gem/thor#lib/thor/shell/basic.rb:313
@@ -3745,14 +3819,14 @@ class Thor::Shell::Basic
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/shell/basic.rb:328
+  # pkg:gem/thor#lib/thor/shell/basic.rb:326
   def unix?; end
 end
 
 # Inherit from Thor::Shell::Basic and add set_color behavior. Check
 # Thor::Shell::Basic to see all available methods.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:9
+# pkg:gem/thor#lib/thor/shell/color.rb:11
 class Thor::Shell::Color < ::Thor::Shell::Basic
   include ::LCSDiff
 
@@ -3788,115 +3862,115 @@ class Thor::Shell::Color < ::Thor::Shell::Basic
   #   :on_cyan
   #   :on_white
   #
-  # pkg:gem/thor#lib/thor/shell/color.rb:82
+  # pkg:gem/thor#lib/thor/shell/color.rb:84
   def set_color(string, *colors); end
 
   protected
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/shell/color.rb:110
+  # pkg:gem/thor#lib/thor/shell/color.rb:112
   def are_colors_disabled?; end
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/shell/color.rb:106
+  # pkg:gem/thor#lib/thor/shell/color.rb:108
   def are_colors_supported?; end
 
   # @return [Boolean]
   #
-  # pkg:gem/thor#lib/thor/shell/color.rb:102
+  # pkg:gem/thor#lib/thor/shell/color.rb:104
   def can_display_colors?; end
 end
 
 # Set the terminal's foreground ANSI color to black.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:18
+# pkg:gem/thor#lib/thor/shell/color.rb:20
 Thor::Shell::Color::BLACK = T.let(T.unsafe(nil), String)
 
 # Set the terminal's foreground ANSI color to blue.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:26
+# pkg:gem/thor#lib/thor/shell/color.rb:28
 Thor::Shell::Color::BLUE = T.let(T.unsafe(nil), String)
 
 # The start of an ANSI bold sequence.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:15
+# pkg:gem/thor#lib/thor/shell/color.rb:17
 Thor::Shell::Color::BOLD = T.let(T.unsafe(nil), String)
 
 # Embed in a String to clear all previous ANSI sequences.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:13
+# pkg:gem/thor#lib/thor/shell/color.rb:15
 Thor::Shell::Color::CLEAR = T.let(T.unsafe(nil), String)
 
 # Set the terminal's foreground ANSI color to cyan.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:30
+# pkg:gem/thor#lib/thor/shell/color.rb:32
 Thor::Shell::Color::CYAN = T.let(T.unsafe(nil), String)
 
 # Set the terminal's foreground ANSI color to green.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:22
+# pkg:gem/thor#lib/thor/shell/color.rb:24
 Thor::Shell::Color::GREEN = T.let(T.unsafe(nil), String)
 
 # Set the terminal's foreground ANSI color to magenta.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:28
+# pkg:gem/thor#lib/thor/shell/color.rb:30
 Thor::Shell::Color::MAGENTA = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to black.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:35
+# pkg:gem/thor#lib/thor/shell/color.rb:37
 Thor::Shell::Color::ON_BLACK = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to blue.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:43
+# pkg:gem/thor#lib/thor/shell/color.rb:45
 Thor::Shell::Color::ON_BLUE = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to cyan.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:47
+# pkg:gem/thor#lib/thor/shell/color.rb:49
 Thor::Shell::Color::ON_CYAN = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to green.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:39
+# pkg:gem/thor#lib/thor/shell/color.rb:41
 Thor::Shell::Color::ON_GREEN = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to magenta.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:45
+# pkg:gem/thor#lib/thor/shell/color.rb:47
 Thor::Shell::Color::ON_MAGENTA = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to red.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:37
+# pkg:gem/thor#lib/thor/shell/color.rb:39
 Thor::Shell::Color::ON_RED = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to white.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:49
+# pkg:gem/thor#lib/thor/shell/color.rb:51
 Thor::Shell::Color::ON_WHITE = T.let(T.unsafe(nil), String)
 
 # Set the terminal's background ANSI color to yellow.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:41
+# pkg:gem/thor#lib/thor/shell/color.rb:43
 Thor::Shell::Color::ON_YELLOW = T.let(T.unsafe(nil), String)
 
 # Set the terminal's foreground ANSI color to red.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:20
+# pkg:gem/thor#lib/thor/shell/color.rb:22
 Thor::Shell::Color::RED = T.let(T.unsafe(nil), String)
 
 # Set the terminal's foreground ANSI color to white.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:32
+# pkg:gem/thor#lib/thor/shell/color.rb:34
 Thor::Shell::Color::WHITE = T.let(T.unsafe(nil), String)
 
 # Set the terminal's foreground ANSI color to yellow.
 #
-# pkg:gem/thor#lib/thor/shell/color.rb:24
+# pkg:gem/thor#lib/thor/shell/color.rb:26
 Thor::Shell::Color::YELLOW = T.let(T.unsafe(nil), String)
 
 # pkg:gem/thor#lib/thor/shell/column_printer.rb:5
@@ -4109,13 +4183,16 @@ class Thor::Shell::WrappedPrinter < ::Thor::Shell::ColumnPrinter
   def print(message); end
 end
 
-# pkg:gem/thor#lib/thor/base.rb:23
+# pkg:gem/thor#lib/thor/base.rb:24
 Thor::TEMPLATE_EXTNAME = T.let(T.unsafe(nil), String)
 
 # Thor methods that should not be overwritten by the user.
 #
-# pkg:gem/thor#lib/thor/base.rb:20
+# pkg:gem/thor#lib/thor/base.rb:21
 Thor::THOR_RESERVED_WORDS = T.let(T.unsafe(nil), Array)
+
+# pkg:gem/thor#lib/thor/base.rb:18
+Thor::TREE_MAPPINGS = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/thor#lib/thor/command.rb:126
 Thor::Task = Thor::Command

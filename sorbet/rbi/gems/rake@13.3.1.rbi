@@ -3114,7 +3114,7 @@ class Rake::ThreadPool
 
   # for testing only
   #
-  # pkg:gem/rake#lib/rake/thread_pool.rb:158
+  # pkg:gem/rake#lib/rake/thread_pool.rb:152
   def __queue__; end
 
   # processes one item on the queue. Returns true if there was an
@@ -3124,12 +3124,9 @@ class Rake::ThreadPool
   def process_queue_item; end
 
   # pkg:gem/rake#lib/rake/thread_pool.rb:111
-  def safe_thread_count; end
-
-  # pkg:gem/rake#lib/rake/thread_pool.rb:117
   def start_thread; end
 
-  # pkg:gem/rake#lib/rake/thread_pool.rb:145
+  # pkg:gem/rake#lib/rake/thread_pool.rb:139
   def stat(event, data = T.unsafe(nil)); end
 end
 

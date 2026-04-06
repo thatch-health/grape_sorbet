@@ -1201,19 +1201,21 @@ ActiveSupport::Cache::FileStore::GITKEEP_FILES = T.let(T.unsafe(nil), Array)
 #
 # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:28
 class ActiveSupport::Cache::MemoryStore < ::ActiveSupport::Cache::Store
+  include ::ActiveSupport::Cache::Strategy::LocalCache
+
   # @return [MemoryStore] a new instance of MemoryStore
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:73
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:75
   def initialize(options = T.unsafe(nil)); end
 
   # Preemptively iterates through all stored keys and removes the ones which have expired.
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:101
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:103
   def cleanup(options = T.unsafe(nil)); end
 
   # Delete all data stored in a given cache store.
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:93
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:95
   def clear(options = T.unsafe(nil)); end
 
   # Decrement a cached integer value. Returns the updated value.
@@ -1227,12 +1229,12 @@ class ActiveSupport::Cache::MemoryStore < ::ActiveSupport::Cache::Store
   #   cache.write("baz", 5)
   #   cache.decrement("baz") # => 4
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:166
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:168
   def decrement(name, amount = T.unsafe(nil), **options); end
 
   # Deletes cache entries if the cache key matches a given pattern.
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:173
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:175
   def delete_matched(matcher, options = T.unsafe(nil)); end
 
   # Increment a cached integer value. Returns the updated value.
@@ -1247,49 +1249,49 @@ class ActiveSupport::Cache::MemoryStore < ::ActiveSupport::Cache::Store
   #   cache.write("baz", 5)
   #   cache.increment("baz") # => 6
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:149
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:151
   def increment(name, amount = T.unsafe(nil), **options); end
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:185
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:187
   def inspect; end
 
   # To ensure entries fit within the specified memory prune the cache by removing the least
   # recently accessed entries.
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:114
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:116
   def prune(target_size, max_time = T.unsafe(nil)); end
 
   # Returns true if the cache is currently being pruned.
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:133
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:135
   def pruning?; end
 
   # Synchronize calls to the cache. This should be called wherever the underlying cache implementation
   # is not thread safe.
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:191
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:193
   def synchronize(&block); end
 
   private
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:198
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:200
   def cached_size(key, payload); end
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:231
-  def delete_entry(key, **options); end
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:233
+  def delete_entry(key, **_arg1); end
 
   # Modifies the amount of an integer value that is stored in the cache.
   # If the key is not found it is created and set to +amount+.
   #
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:241
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:243
   def modify_value(name, amount, **options); end
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:202
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:204
   def read_entry(key, **options); end
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:214
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:216
   def write_entry(key, entry, **options); end
 
   class << self
@@ -1297,37 +1299,37 @@ class ActiveSupport::Cache::MemoryStore < ::ActiveSupport::Cache::Store
     #
     # @return [Boolean]
     #
-    # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:88
+    # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:90
     def supports_cache_versioning?; end
   end
 end
 
-# pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:29
+# pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:31
 module ActiveSupport::Cache::MemoryStore::DupCoder
   extend ::ActiveSupport::Cache::MemoryStore::DupCoder
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:32
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:34
   def dump(entry); end
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:40
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:42
   def dump_compressed(entry, threshold); end
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:45
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:47
   def load(entry); end
 
   private
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:56
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:58
   def dump_value(value); end
 
-  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:64
+  # pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:66
   def load_value(string); end
 end
 
-# pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:54
+# pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:56
 ActiveSupport::Cache::MemoryStore::DupCoder::MARSHAL_SIGNATURE = T.let(T.unsafe(nil), String)
 
-# pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:196
+# pkg:gem/activesupport#lib/active_support/cache/memory_store.rb:198
 ActiveSupport::Cache::MemoryStore::PER_ENTRY_OVERHEAD = T.let(T.unsafe(nil), Integer)
 
 # = Null \Cache \Store
@@ -6208,7 +6210,7 @@ ActiveSupport::EventContext::FIBER_KEY = T.let(T.unsafe(nil), Symbol)
 #   #    name: "user_created",
 #   #    payload: { id: 123 },
 #   #    tags: {},
-#   #    context: { request_id: "abcd123", user_agent: TestAgent" },
+#   #    context: { request_id: "abcd123", user_agent: "TestAgent" },
 #   #    timestamp: 1738964843208679035,
 #   #    source_location: { filepath: "path/to/file.rb", lineno: 123, label: "UserService#create" }
 #   #  }
@@ -6502,48 +6504,51 @@ end
 # pkg:gem/activesupport#lib/active_support/execution_context.rb:4
 module ActiveSupport::ExecutionContext
   class << self
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:69
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:76
     def []=(key, value); end
 
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:40
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:47
     def after_change(&block); end
 
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:96
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:103
     def clear; end
 
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:100
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:111
     def current_attributes_instances; end
+
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:107
+    def flush; end
 
     # Returns the value of attribute nestable.
     #
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:38
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:45
     def nestable; end
 
     # Sets the attribute nestable
     #
     # @param value the value to set the attribute nestable to.
     #
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:38
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:45
     def nestable=(_arg0); end
 
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:87
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:94
     def pop; end
 
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:78
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:85
     def push; end
 
     # Updates the execution context. If a block is given, it resets the provided keys to their
     # previous value once the block exits.
     #
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:46
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:53
     def set(**options); end
 
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:74
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:81
     def to_h; end
 
     private
 
-    # pkg:gem/activesupport#lib/active_support/execution_context.rb:105
+    # pkg:gem/activesupport#lib/active_support/execution_context.rb:116
     def record; end
   end
 end
@@ -6559,6 +6564,9 @@ class ActiveSupport::ExecutionContext::Record
   #
   # pkg:gem/activesupport#lib/active_support/execution_context.rb:6
   def current_attributes_instances; end
+
+  # pkg:gem/activesupport#lib/active_support/execution_context.rb:27
+  def flush; end
 
   # pkg:gem/activesupport#lib/active_support/execution_context.rb:21
   def pop; end
@@ -7529,7 +7537,7 @@ module ActiveSupport::Inflector
   # The capitalization of the first word can be turned off by setting the
   # +:capitalize+ option to false (default is true).
   #
-  # The trailing '_id' can be kept and capitalized by setting the
+  # The trailing '_id' can be kept by setting the
   # optional parameter +keep_id_suffix+ to true (default is false).
   #
   #   humanize('employee_salary')                  # => "Employee salary"
@@ -7554,7 +7562,7 @@ module ActiveSupport::Inflector
   #     inflect.uncountable 'rails'
   #   end
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:281
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:283
   def inflections(locale = T.unsafe(nil)); end
 
   # Returns the suffix that should be added to a number to denote the position
@@ -7834,7 +7842,7 @@ ActiveSupport::Inflector::ALLOWED_ENCODINGS_FOR_TRANSLITERATE = T.let(T.unsafe(n
 class ActiveSupport::Inflector::Inflections
   # @return [Inflections] a new instance of Inflections
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:96
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:97
   def initialize; end
 
   # Specifies a new acronym. An acronym must be specified as it will appear
@@ -7887,18 +7895,18 @@ class ActiveSupport::Inflector::Inflections
   #   underscore 'McDonald' # => 'mcdonald'
   #   camelize 'mcdonald'   # => 'McDonald'
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:158
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:159
   def acronym(word); end
 
   # Returns the value of attribute acronyms.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:92
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:93
   def acronyms; end
 
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:94
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:95
   def acronyms_camelize_regex; end
 
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:94
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:95
   def acronyms_underscore_regex; end
 
   # Clears the loaded inflections within a given scope (default is
@@ -7909,7 +7917,7 @@ class ActiveSupport::Inflector::Inflections
   #   clear :all
   #   clear :plurals
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:247
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:248
   def clear(scope = T.unsafe(nil)); end
 
   # Specifies a humanized form of a string by a regular expression rule or
@@ -7921,12 +7929,12 @@ class ActiveSupport::Inflector::Inflections
   #   human /_cnt$/i, '\1_count'
   #   human 'legacy_col_person_name', 'Name'
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:236
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:237
   def human(rule, replacement); end
 
   # Returns the value of attribute humans.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:92
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:93
   def humans; end
 
   # Specifies a new irregular that applies to both pluralization and
@@ -7937,7 +7945,7 @@ class ActiveSupport::Inflector::Inflections
   #   irregular 'cactus', 'cacti'
   #   irregular 'person', 'people'
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:190
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:191
   def irregular(singular, plural); end
 
   # Specifies a new pluralization rule and its replacement. The rule can
@@ -7945,12 +7953,12 @@ class ActiveSupport::Inflector::Inflections
   # always be a string that may include references to the matched data from
   # the rule.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:167
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:168
   def plural(rule, replacement); end
 
   # Returns the value of attribute plurals.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:92
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:93
   def plurals; end
 
   # Specifies a new singularization rule and its replacement. The rule can
@@ -7958,12 +7966,12 @@ class ActiveSupport::Inflector::Inflections
   # always be a string that may include references to the matched data from
   # the rule.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:177
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:178
   def singular(rule, replacement); end
 
   # Returns the value of attribute singulars.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:92
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:93
   def singulars; end
 
   # Specifies words that are uncountable and should not be inflected.
@@ -7972,22 +7980,22 @@ class ActiveSupport::Inflector::Inflections
   #   uncountable 'money', 'information'
   #   uncountable %w( money information rice )
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:224
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:225
   def uncountable(*words); end
 
   # Returns the value of attribute uncountables.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:92
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:93
   def uncountables; end
 
   private
 
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:266
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:267
   def define_acronym_regex_patterns; end
 
   # Private, for the test suite.
   #
-  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:102
+  # pkg:gem/activesupport#lib/active_support/inflector/inflections.rb:103
   def initialize_dup(orig); end
 
   class << self
@@ -8148,7 +8156,7 @@ module ActiveSupport::IsolatedExecutionState
     def scope; end
 
     # pkg:gem/activesupport#lib/active_support/isolated_execution_state.rb:58
-    def share_with(other, &block); end
+    def share_with(other, except: T.unsafe(nil), &block); end
   end
 end
 
@@ -8275,22 +8283,22 @@ ActiveSupport::JSON::DATE_REGEX = T.let(T.unsafe(nil), Regexp)
 # pkg:gem/activesupport#lib/active_support/json/encoding.rb:59
 module ActiveSupport::JSON::Encoding
   class << self
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:239
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:241
     def encode_without_escape(value); end
 
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:235
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:237
     def encode_without_options(value); end
 
     # If true, encode >, <, & as escaped unicode sequences (e.g. > as \u003e)
     # as a safety measure.
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:212
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:214
     def escape_html_entities_in_json; end
 
     # If true, encode >, <, & as escaped unicode sequences (e.g. > as \u003e)
     # as a safety measure.
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:212
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:214
     def escape_html_entities_in_json=(_arg0); end
 
     # If true, encode LINE SEPARATOR (U+2028) and PARAGRAPH SEPARATOR (U+2029)
@@ -8299,7 +8307,7 @@ module ActiveSupport::JSON::Encoding
     # but that changed in ECMAScript 2019. As such it's no longer a concern in
     # modern browsers: https://caniuse.com/mdn-javascript_builtins_json_json_superset.
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:219
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:221
     def escape_js_separators_in_json; end
 
     # If true, encode LINE SEPARATOR (U+2028) and PARAGRAPH SEPARATOR (U+2029)
@@ -8308,40 +8316,40 @@ module ActiveSupport::JSON::Encoding
     # but that changed in ECMAScript 2019. As such it's no longer a concern in
     # modern browsers: https://caniuse.com/mdn-javascript_builtins_json_json_superset.
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:219
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:221
     def escape_js_separators_in_json=(_arg0); end
 
     # Sets the encoder used by \Rails to encode Ruby objects into JSON strings
     # in +Object#to_json+ and +ActiveSupport::JSON.encode+.
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:227
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:229
     def json_encoder; end
 
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:229
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:231
     def json_encoder=(encoder); end
 
     # Sets the precision of encoded time values.
     # Defaults to 3 (equivalent to millisecond precision)
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:223
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:225
     def time_precision; end
 
     # Sets the precision of encoded time values.
     # Defaults to 3 (equivalent to millisecond precision)
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:223
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:225
     def time_precision=(_arg0); end
 
     # If true, use ISO 8601 format for dates and times. Otherwise, fall back
     # to the Active Support legacy format.
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:208
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:210
     def use_standard_json_time_format; end
 
     # If true, use ISO 8601 format for dates and times. Otherwise, fall back
     # to the Active Support legacy format.
     #
-    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:208
+    # pkg:gem/activesupport#lib/active_support/json/encoding.rb:210
     def use_standard_json_time_format=(_arg0); end
   end
 end
@@ -8359,12 +8367,12 @@ ActiveSupport::JSON::Encoding::HTML_ENTITIES_REGEX = T.let(T.unsafe(nil), Regexp
 class ActiveSupport::JSON::Encoding::JSONGemCoderEncoder
   # @return [JSONGemCoderEncoder] a new instance of JSONGemCoderEncoder
   #
-  # pkg:gem/activesupport#lib/active_support/json/encoding.rb:171
+  # pkg:gem/activesupport#lib/active_support/json/encoding.rb:173
   def initialize(options = T.unsafe(nil)); end
 
   # Encode the given object into a JSON string
   #
-  # pkg:gem/activesupport#lib/active_support/json/encoding.rb:183
+  # pkg:gem/activesupport#lib/active_support/json/encoding.rb:185
   def encode(value); end
 end
 
@@ -11453,7 +11461,7 @@ class ActiveSupport::NumberHelper::NumberToDelimitedConverter < ::ActiveSupport:
 
   private
 
-  # pkg:gem/activesupport#lib/active_support/number_helper/number_to_delimited_converter.rb:25
+  # pkg:gem/activesupport#lib/active_support/number_helper/number_to_delimited_converter.rb:40
   def delimiter_pattern; end
 
   # pkg:gem/activesupport#lib/active_support/number_helper/number_to_delimited_converter.rb:17
@@ -12469,28 +12477,28 @@ class ActiveSupport::SafeBuffer < ::String
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:103
   def []=(arg1, arg2, arg3 = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:143
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:147
   def as_json(*_arg0); end
 
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:87
   def bytesplice(*args, value); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def capitalize(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def capitalize!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def chomp(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def chomp!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def chop(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def chop!(*args); end
 
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:59
@@ -12499,57 +12507,57 @@ class ActiveSupport::SafeBuffer < ::String
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:79
   def concat(value); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def delete(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def delete!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def delete_prefix(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def delete_prefix!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def delete_suffix(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def delete_suffix!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def downcase(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def downcase!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:151
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:155
   def encode_with(coder); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:171
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:175
   def gsub(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:171
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:175
   def gsub!(*args, &block); end
 
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:135
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:139
   def html_safe?; end
 
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:91
   def insert(index, value); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def lstrip(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def lstrip!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def next(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def next!(*args); end
 
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:95
@@ -12558,16 +12566,16 @@ class ActiveSupport::SafeBuffer < ::String
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:99
   def replace(value); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def reverse(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def reverse!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def rstrip(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def rstrip!(*args); end
 
   # @raise [SafeConcatError]
@@ -12575,10 +12583,10 @@ class ActiveSupport::SafeBuffer < ::String
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:65
   def safe_concat(value); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def scrub(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def scrub!(*args); end
 
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:49
@@ -12587,72 +12595,77 @@ class ActiveSupport::SafeBuffer < ::String
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:51
   def slice!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def squeeze(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def squeeze!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def strip(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def strip!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:171
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:175
   def sub(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:171
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:175
   def sub!(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def succ(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def succ!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def swapcase(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def swapcase!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:147
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:151
   def to_param; end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:139
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:143
   def to_s; end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def tr(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def tr!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def tr_s(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def tr_s!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def unicode_normalize(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def unicode_normalize!(*args); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def upcase(*args, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:157
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:161
   def upcase!(*args); end
+
+  protected
+
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:202
+  def mark_unsafe!; end
 
   private
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:198
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:207
   def explicit_html_escape_interpolated_argument(arg); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:202
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:211
   def implicit_html_escape_interpolated_argument(arg); end
 
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:74
@@ -12661,10 +12674,10 @@ class ActiveSupport::SafeBuffer < ::String
   # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:28
   def original_concat(*_arg0); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:210
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:219
   def set_block_back_references(block, match_data); end
 
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:216
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:225
   def string_into_safe_buffer(new_string, is_html_safe); end
 end
 
@@ -13165,109 +13178,109 @@ class ActiveSupport::TestCase < ::Minitest::Test
   extend ::ActiveSupport::Testing::SetupAndTeardown::ClassMethods
   extend ::ActiveSupport::Testing::Declarative
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:204
   def __callbacks; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:204
   def _run_setup_callbacks; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:204
   def _run_setup_callbacks!(&block); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:204
   def _run_teardown_callbacks; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:204
   def _run_teardown_callbacks!(&block); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:204
   def _setup_callbacks; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:204
   def _teardown_callbacks; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:296
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:302
   def assert_no_match(matcher, obj, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:219
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:225
   def assert_not_empty(obj, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:230
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:236
   def assert_not_equal(exp, act, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:241
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:247
   def assert_not_in_delta(exp, act, delta = T.unsafe(nil), msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:252
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:258
   def assert_not_in_epsilon(exp, act, epsilon = T.unsafe(nil), msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:263
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:269
   def assert_not_includes(collection, obj, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:274
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:280
   def assert_not_instance_of(cls, obj, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:285
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:291
   def assert_not_kind_of(cls, obj, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:307
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:313
   def assert_not_nil(obj, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:318
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:324
   def assert_not_operator(o1, op, o2 = T.unsafe(nil), msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:329
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:335
   def assert_not_predicate(o1, op, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:340
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:346
   def assert_not_respond_to(obj, meth, msg = T.unsafe(nil), include_all: T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:351
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:357
   def assert_not_same(exp, act, msg = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:207
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:213
   def file_fixture_path; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:207
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:213
   def file_fixture_path?; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:355
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:361
   def inspect; end
 
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:190
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:196
   def method_name; end
 
   # Returns the current parallel worker ID if tests are running in parallel
   #
-  # pkg:gem/activesupport#lib/active_support/test_case.rb:193
+  # pkg:gem/activesupport#lib/active_support/test_case.rb:199
   def parallel_worker_id; end
 
   class << self
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def __callbacks; end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def __callbacks=(value); end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def _setup_callbacks; end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def _setup_callbacks=(value); end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def _teardown_callbacks; end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def _teardown_callbacks=(value); end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:207
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:213
     def file_fixture_path; end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:207
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:213
     def file_fixture_path=(value); end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:207
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:213
     def file_fixture_path?; end
 
     # Returns the current parallel worker ID if tests are running in parallel,
@@ -13324,7 +13337,7 @@ class ActiveSupport::TestCase < ::Minitest::Test
     # Note that your test suite may deadlock if you attempt to use only one database
     # with multiple processes.
     #
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:107
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:113
     def parallelize(workers: T.unsafe(nil), with: T.unsafe(nil), threshold: T.unsafe(nil), parallelize_databases: T.unsafe(nil)); end
 
     # Before fork hook for parallel testing. This can be used to run anything
@@ -13338,7 +13351,7 @@ class ActiveSupport::TestCase < ::Minitest::Test
     #     end
     #   end
     #
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:132
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:138
     def parallelize_before_fork(&block); end
 
     # Setup hook for parallel testing. This can be used if you have multiple
@@ -13355,7 +13368,7 @@ class ActiveSupport::TestCase < ::Minitest::Test
     #     end
     #   end
     #
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:149
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:155
     def parallelize_setup(&block); end
 
     # Clean up hook for parallel testing. This can be used to drop databases
@@ -13372,7 +13385,7 @@ class ActiveSupport::TestCase < ::Minitest::Test
     #     end
     #   end
     #
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:166
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:172
     def parallelize_teardown(&block); end
 
     # Returns the order in which test cases are run.
@@ -13400,16 +13413,16 @@ class ActiveSupport::TestCase < ::Minitest::Test
 
     private
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def __class_attr___callbacks; end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:198
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:204
     def __class_attr___callbacks=(new_value); end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:207
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:213
     def __class_attr_file_fixture_path; end
 
-    # pkg:gem/activesupport#lib/active_support/test_case.rb:207
+    # pkg:gem/activesupport#lib/active_support/test_case.rb:213
     def __class_attr_file_fixture_path=(new_value); end
   end
 end
@@ -13469,7 +13482,7 @@ module ActiveSupport::Testing::Assertions
   #     post :create, params: { status: { incident: true } }
   #   end
   #
-  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:211
+  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:212
   def assert_changes(expression, message = T.unsafe(nil), from: T.unsafe(nil), to: T.unsafe(nil), &block); end
 
   # Test numeric difference between the return value of an expression as a
@@ -13559,7 +13572,7 @@ module ActiveSupport::Testing::Assertions
   #     post :create, params: { status: { ok: false } }
   #   end
   #
-  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:280
+  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:281
   def assert_no_changes(expression, message = T.unsafe(nil), from: T.unsafe(nil), &block); end
 
   # Assertion that the numeric result of evaluating an expression is not
@@ -13587,7 +13600,7 @@ module ActiveSupport::Testing::Assertions
   #     post :create, params: { article: invalid_attributes }
   #   end
   #
-  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:161
+  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:162
   def assert_no_difference(expression, message = T.unsafe(nil), &block); end
 
   # Asserts that an expression is not truthy. Passes if +object+ is +nil+ or
@@ -13640,10 +13653,10 @@ module ActiveSupport::Testing::Assertions
 
   private
 
-  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:314
+  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:316
   def _assert_nothing_raised_or_warn(assertion, &block); end
 
-  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:329
+  # pkg:gem/activesupport#lib/active_support/testing/assertions.rb:331
   def _callable_to_source_string(callable); end
 end
 
@@ -14367,16 +14380,16 @@ class ActiveSupport::Testing::Parallelization::Worker
   # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:7
   def initialize(number, url); end
 
-  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:80
+  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:84
   def after_fork; end
 
   # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:42
   def perform_job(job); end
 
-  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:88
+  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:92
   def run_cleanup; end
 
-  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:56
+  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:60
   def safe_record(reporter, result); end
 
   # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:14
@@ -14387,10 +14400,10 @@ class ActiveSupport::Testing::Parallelization::Worker
 
   private
 
-  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:95
+  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:99
   def add_setup_exception(result); end
 
-  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:99
+  # pkg:gem/activesupport#lib/active_support/testing/parallelization/worker.rb:103
   def set_process_title(status); end
 end
 
@@ -14867,7 +14880,7 @@ class ActiveSupport::TimeWithZone
   #   now + 24.hours      # => Mon, 03 Nov 2014 00:26:28.725182881 EST -05:00
   #   now + 1.day         # => Mon, 03 Nov 2014 01:26:28.725182881 EST -05:00
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:310
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:314
   def +(other); end
 
   # Subtracts an interval of time and returns a new TimeWithZone object unless
@@ -14893,19 +14906,19 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now - 1.day.ago # => 86399.999967
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:345
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:349
   def -(other); end
 
   # Use the time in UTC for comparisons.
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:243
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:247
   def <=>(other); end
 
   # So that +self+ <tt>acts_like?(:time)</tt>.
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:502
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:506
   def acts_like_time?; end
 
   # Uses Date to provide precise Time calculations for years, months, and days
@@ -14930,10 +14943,10 @@ class ActiveSupport::TimeWithZone
   #   now.advance(months: 1)  # => Tue, 02 Dec 2014 01:26:28.558049687 EST -05:00
   #   now.advance(years: 1)   # => Mon, 02 Nov 2015 01:26:28.558049687 EST -05:00
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:434
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:438
   def advance(options); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:247
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:251
   def after?(_arg0); end
 
   # Subtracts an interval of time from the current object's time and returns
@@ -14954,7 +14967,7 @@ class ActiveSupport::TimeWithZone
   #   now.ago(24.hours)   # => Sun, 02 Nov 2014 01:26:28.725182881 EDT -04:00
   #   now.ago(1.day)      # => Sun, 02 Nov 2014 00:26:28.725182881 EDT -04:00
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:373
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:377
   def ago(other); end
 
   # Coerces time to a string for JSON encoding. The default format is ISO 8601.
@@ -14970,10 +14983,10 @@ class ActiveSupport::TimeWithZone
   #   Time.utc(2005,2,1,15,15,10).in_time_zone("Hawaii").as_json
   #   # => "2005/02/01 05:15:10 -1000"
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:178
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:182
   def as_json(options = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:246
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:250
   def before?(_arg0); end
 
   # Returns true if the current object's time is within the specified
@@ -14981,14 +14994,14 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:251
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:255
   def between?(min, max); end
 
   # An instance of ActiveSupport::TimeWithZone is never blank
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:513
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:517
   def blank?; end
 
   # Returns a new +ActiveSupport::TimeWithZone+ where one or more of the elements have
@@ -15009,7 +15022,7 @@ class ActiveSupport::TimeWithZone
   #   t.change(offset: "-10:00") # => Fri, 14 Apr 2017 11:45:15.116992711 HST -10:00
   #   t.change(zone: "Hawaii")   # => Fri, 14 Apr 2017 11:45:15.116992711 HST -10:00
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:394
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:398
   def change(options); end
 
   # Returns a <tt>Time</tt> instance of the simultaneous time in the UTC timezone.
@@ -15017,7 +15030,7 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:72
   def comparable_time; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def day; end
 
   # Returns true if the current time is within Daylight Savings \Time for the
@@ -15032,14 +15045,14 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:100
   def dst?; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:190
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:194
   def encode_with(coder); end
 
   # Returns +true+ if +other+ is equal to current object.
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:286
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:290
   def eql?(other); end
 
   # Returns a formatted string of the offset from UTC, or an alternative
@@ -15054,14 +15067,14 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:131
   def formatted_offset(colon = T.unsafe(nil), alternate_utc_string = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:521
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:525
   def freeze; end
 
   # Returns true if the current object's time is in the future.
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:281
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:285
   def future?; end
 
   # Returns a <tt>Time</tt> instance of the simultaneous time in the UTC timezone.
@@ -15106,10 +15119,10 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:121
   def gmtoff; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:290
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:294
   def hash; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def hour; end
 
   # Returns a string of the object's date and time in the format used by
@@ -15117,7 +15130,7 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.httpdate  # => "Tue, 01 Jan 2013 04:39:43 GMT"
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:198
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:202
   def httpdate; end
 
   # Adds an interval of time to the current object's time and returns that
@@ -15137,7 +15150,7 @@ class ActiveSupport::TimeWithZone
   #   now + 24.hours      # => Mon, 03 Nov 2014 00:26:28.725182881 EST -05:00
   #   now + 1.day         # => Mon, 03 Nov 2014 01:26:28.725182881 EST -05:00
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:320
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:324
   def in(other); end
 
   # Returns the simultaneous time in <tt>Time.zone</tt>, or the specified zone.
@@ -15145,7 +15158,7 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:83
   def in_time_zone(new_zone = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:186
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:190
   def init_with(coder); end
 
   # Returns a string of the object's date, time, zone, and offset from UTC.
@@ -15159,7 +15172,7 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:507
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:511
   def is_a?(klass); end
 
   # Returns true if the current time is within Daylight Savings \Time for the
@@ -15179,14 +15192,14 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.xmlschema  # => "2014-12-04T11:02:37-05:00"
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:163
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:167
   def iso8601(fraction_digits = T.unsafe(nil)); end
 
   # Say we're a Time to thwart type checking.
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:510
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:514
   def kind_of?(klass); end
 
   # Returns a <tt>Time</tt> instance of the simultaneous time in the system timezone.
@@ -15194,28 +15207,28 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:89
   def localtime(utc_offset = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:527
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:531
   def marshal_dump; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:531
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:535
   def marshal_load(variables); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def mday; end
 
   # Send the missing method to +time+ instance, and wrap result in a new
   # TimeWithZone with the existing +time_zone+.
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:551
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:555
   def method_missing(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def min; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def mon; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def month; end
 
   # Returns true if the current object's time falls within
@@ -15223,17 +15236,17 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:271
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:275
   def next_day?; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def nsec; end
 
   # Returns true if the current object's time is in the past.
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:256
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:260
   def past?; end
 
   # Returns the underlying +TZInfo::TimezonePeriod+.
@@ -15243,7 +15256,7 @@ class ActiveSupport::TimeWithZone
 
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:517
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:521
   def present?; end
 
   # Returns true if the current object's time falls within
@@ -15251,7 +15264,7 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:278
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:282
   def prev_day?; end
 
   # respond_to_missing? is not called in some cases, such as when type conversion is
@@ -15259,7 +15272,7 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:537
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:541
   def respond_to?(sym, include_priv = T.unsafe(nil)); end
 
   # Returns a string of the object's date and time in the RFC 2822 standard
@@ -15267,7 +15280,7 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.rfc2822  # => "Tue, 01 Jan 2013 04:51:39 +0000"
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:206
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:210
   def rfc2822; end
 
   # Returns a string of the object's date and time in the ISO 8601 standard
@@ -15275,7 +15288,7 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.xmlschema  # => "2014-12-04T11:02:37-05:00"
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:164
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:168
   def rfc3339(fraction_digits = T.unsafe(nil)); end
 
   # Returns a string of the object's date and time in the RFC 2822 standard
@@ -15283,10 +15296,10 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.rfc2822  # => "Tue, 01 Jan 2013 04:51:39 +0000"
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:209
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:213
   def rfc822; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def sec; end
 
   # Adds an interval of time to the current object's time and returns that
@@ -15306,13 +15319,13 @@ class ActiveSupport::TimeWithZone
   #   now + 24.hours      # => Mon, 03 Nov 2014 00:26:28.725182881 EST -05:00
   #   now + 1.day         # => Mon, 03 Nov 2014 01:26:28.725182881 EST -05:00
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:319
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:323
   def since(other); end
 
   # Replaces <tt>%Z</tt> directive with +zone before passing to Time#strftime,
   # so that zone information is correct.
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:237
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:241
   def strftime(format); end
 
   # Returns a <tt>Time</tt> instance that represents the time in +time_zone+.
@@ -15331,10 +15344,10 @@ class ActiveSupport::TimeWithZone
   #   now = Time.zone.now     # => Tue, 18 Aug 2015 02:29:27.485278555 UTC +00:00
   #   now.to_a                # => [27, 29, 2, 18, 8, 2015, 2, 230, false, "UTC"]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:457
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:461
   def to_a; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def to_date; end
 
   # Returns an instance of DateTime with the timezone's UTC offset
@@ -15342,7 +15355,7 @@ class ActiveSupport::TimeWithZone
   #   Time.zone.now.to_datetime                         # => Tue, 18 Aug 2015 02:32:20 +0000
   #   Time.current.in_time_zone('Hawaii').to_datetime   # => Mon, 17 Aug 2015 16:32:20 -1000
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:490
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:494
   def to_datetime; end
 
   # Returns the object's date and time as a floating-point number of seconds
@@ -15350,7 +15363,7 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.to_f # => 1417709320.285418
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:465
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:469
   def to_f; end
 
   # Returns a string of the object's date and time.
@@ -15362,7 +15375,7 @@ class ActiveSupport::TimeWithZone
   # * <tt>:db</tt> - format outputs time in UTC :db time. See Time#to_fs(:db).
   # * Any key in +Time::DATE_FORMATS+ can be used. See active_support/core_ext/time/conversions.rb.
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:233
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:237
   def to_formatted_s(format = T.unsafe(nil)); end
 
   # Returns a string of the object's date and time.
@@ -15374,7 +15387,7 @@ class ActiveSupport::TimeWithZone
   # * <tt>:db</tt> - format outputs time in UTC :db time. See Time#to_fs(:db).
   # * Any key in +Time::DATE_FORMATS+ can be used. See active_support/core_ext/time/conversions.rb.
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:224
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:228
   def to_fs(format = T.unsafe(nil)); end
 
   # Returns the object's date and time as an integer number of seconds
@@ -15382,7 +15395,7 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.to_i # => 1417709320
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:473
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:477
   def to_i; end
 
   # Returns the object's date and time as a rational number of seconds
@@ -15390,19 +15403,19 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.to_r # => (708854548642709/500000)
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:482
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:486
   def to_r; end
 
   # Returns a string of the object's date and time.
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:212
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:216
   def to_s; end
 
   # Returns an instance of +Time+, either with the same timezone as +self+,
   # with the same UTC offset as +self+ or in the local system timezone
   # depending on the setting of +ActiveSupport.to_time_preserves_timezone+.
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:497
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:501
   def to_time; end
 
   # Returns true if the current object's time falls within
@@ -15410,7 +15423,7 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:262
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:266
   def today?; end
 
   # Returns true if the current object's time falls within
@@ -15418,7 +15431,7 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:268
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:272
   def tomorrow?; end
 
   # Returns the object's date and time as an integer number of seconds
@@ -15426,10 +15439,10 @@ class ActiveSupport::TimeWithZone
   #
   #   Time.zone.now.to_i # => 1417709320
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:476
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:480
   def tv_sec; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def usec; end
 
   # Returns a <tt>Time</tt> instance of the simultaneous time in the UTC timezone.
@@ -15454,7 +15467,7 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:117
   def utc_offset; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def wday; end
 
   # Returns a string of the object's date and time in the ISO 8601 standard
@@ -15465,10 +15478,10 @@ class ActiveSupport::TimeWithZone
   # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:154
   def xmlschema(fraction_digits = T.unsafe(nil)); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def yday; end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:445
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:449
   def year; end
 
   # Returns true if the current object's time falls within
@@ -15476,7 +15489,7 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:275
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:279
   def yesterday?; end
 
   # Returns the time zone abbreviation.
@@ -15491,13 +15504,13 @@ class ActiveSupport::TimeWithZone
 
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:589
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:593
   def duration_of_variable_length?(obj); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:570
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:574
   def get_period_and_ensure_valid_local_time(period); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:560
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:564
   def incorporate_utc_offset(time, offset); end
 
   # Ensure proxy class responds to all methods that underlying time instance
@@ -15505,20 +15518,20 @@ class ActiveSupport::TimeWithZone
   #
   # @return [Boolean]
   #
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:545
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:549
   def respond_to_missing?(sym, include_priv); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:583
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:587
   def transfer_time_values_to_utc_constructor(time); end
 
-  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:593
+  # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:597
   def wrap_with_time_zone(time); end
 end
 
 # pkg:gem/activesupport#lib/active_support/time_with_zone.rb:45
 ActiveSupport::TimeWithZone::PRECISIONS = T.let(T.unsafe(nil), Hash)
 
-# pkg:gem/activesupport#lib/active_support/time_with_zone.rb:558
+# pkg:gem/activesupport#lib/active_support/time_with_zone.rb:562
 ActiveSupport::TimeWithZone::SECONDS_PER_DAY = T.let(T.unsafe(nil), Integer)
 
 # = Active Support \Time Zone
@@ -21383,7 +21396,7 @@ class String
   # +raw+ helper in views. It is recommended that you use +sanitize+ instead of
   # this method. It should never be called on user input.
   #
-  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:232
+  # pkg:gem/activesupport#lib/active_support/core_ext/string/output_safety.rb:241
   def html_safe; end
 
   # Capitalizes the first word, turns underscores into spaces, and (by default) strips a
@@ -21394,7 +21407,7 @@ class String
   # optional parameter +capitalize+ to false.
   # By default, this parameter is true.
   #
-  # The trailing '_id' can be kept and capitalized by setting the
+  # The trailing '_id' can be kept by setting the
   # optional parameter +keep_id_suffix+ to true.
   # By default, this parameter is false.
   #

@@ -54,7 +54,7 @@ module Dry
     # @return [Dry::Types::Module]
     # @see Dry::Types::Module
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:253
+    # pkg:gem/dry-types#lib/dry/types.rb:252
     def Types(*namespaces, default: T.unsafe(nil), **aliases); end
   end
 end
@@ -84,12 +84,12 @@ module Dry::Types
     # @param name [String, Class]
     # @return [Type, Class]
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:115
+    # pkg:gem/dry-types#lib/dry/types.rb:114
     def [](name); end
 
     # @api private
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:163
+    # pkg:gem/dry-types#lib/dry/types.rb:162
     def const_missing(const); end
 
     # Return container with registered built-in type objects
@@ -97,7 +97,7 @@ module Dry::Types
     # @api private
     # @return [Container{String => Nominal}]
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:82
+    # pkg:gem/dry-types#lib/dry/types.rb:81
     def container; end
 
     # Add a new type builder method. This is a public API for defining custom
@@ -119,7 +119,7 @@ module Dry::Types
     # @param block [#call]
     # @param method [Symbol]
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:197
+    # pkg:gem/dry-types#lib/dry/types.rb:196
     def define_builder(method, &block); end
 
     # Infer a type identifier from the provided class
@@ -128,23 +128,23 @@ module Dry::Types
     # @param klass [#to_s]
     # @return [String]
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:149
+    # pkg:gem/dry-types#lib/dry/types.rb:148
     def identifier(klass); end
 
     # @api private
     # @private
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:73
+    # pkg:gem/dry-types#lib/dry/types.rb:74
     def included(*_arg0); end
 
     # @api public
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:33
+    # pkg:gem/dry-types#lib/dry/types.rb:32
     def loader; end
 
     # @api public
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:65
+    # pkg:gem/dry-types#lib/dry/types.rb:66
     def module(*args, &block); end
 
     # Register a new built-in type
@@ -155,7 +155,7 @@ module Dry::Types
     # @param type [Type]
     # @return [Container{String => Nominal}]
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:104
+    # pkg:gem/dry-types#lib/dry/types.rb:103
     def register(name, type = T.unsafe(nil), &block); end
 
     # Check if a give type is registered
@@ -163,7 +163,7 @@ module Dry::Types
     # @api private
     # @return [Boolean]
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:91
+    # pkg:gem/dry-types#lib/dry/types.rb:90
     def registered?(class_or_identifier); end
 
     # @api private
@@ -177,7 +177,7 @@ module Dry::Types
     # @api private
     # @return [Concurrent::Map]
     #
-    # pkg:gem/dry-types#lib/dry/types.rb:158
+    # pkg:gem/dry-types#lib/dry/types.rb:157
     def type_map; end
   end
 end
@@ -297,7 +297,7 @@ class Dry::Types::Array::Member < ::Dry::Types::Array
   # @return [Array]
   #
   # pkg:gem/dry-types#lib/dry/types/array/member.rb:45
-  def call_safe(input); end
+  def call_safe(input, &block); end
 
   # @api private
   # @param input [Object]
@@ -308,7 +308,7 @@ class Dry::Types::Array::Member < ::Dry::Types::Array
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/array/member.rb:116
+  # pkg:gem/dry-types#lib/dry/types/array/member.rb:114
   def constructor_type; end
 
   # Build a lax type
@@ -328,7 +328,7 @@ class Dry::Types::Array::Member < ::Dry::Types::Array
   # @api public
   # @see Nominal#to_ast
   #
-  # pkg:gem/dry-types#lib/dry/types/array/member.rb:107
+  # pkg:gem/dry-types#lib/dry/types/array/member.rb:105
   def to_ast(meta: T.unsafe(nil)); end
 
   # @api public
@@ -367,7 +367,7 @@ module Dry::Types::Builder
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:144
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:160
   def <<(constructor = T.unsafe(nil), **options, &block); end
 
   # Compose two types into an Implication type
@@ -387,7 +387,7 @@ module Dry::Types::Builder
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:143
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:159
   def >>(constructor = T.unsafe(nil), **options, &block); end
 
   # Define a constructor for the type
@@ -398,7 +398,7 @@ module Dry::Types::Builder
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:141
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:157
   def append(constructor = T.unsafe(nil), **options, &block); end
 
   # Turn a type into a constrained type
@@ -407,7 +407,7 @@ module Dry::Types::Builder
   # @param options [Hash] constraining rule (see {Types.Rule})
   # @return [Constrained]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:62
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:71
   def constrained(*_arg0, **_arg1, &_arg2); end
 
   # @api private
@@ -424,7 +424,7 @@ module Dry::Types::Builder
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:138
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:154
   def constructor(constructor = T.unsafe(nil), **options, &block); end
 
   # @api private
@@ -443,7 +443,7 @@ module Dry::Types::Builder
   # @raise [ConstraintError]
   # @return [Default]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:77
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:86
   def default(input = T.unsafe(nil), options = T.unsafe(nil), &block); end
 
   # Define an enum on top of the existing type
@@ -452,7 +452,7 @@ module Dry::Types::Builder
   # @param values [Array]
   # @return [Enum]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:110
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:126
   def enum(*values); end
 
   # Use the given value on type mismatch
@@ -464,7 +464,7 @@ module Dry::Types::Builder
   # @param value [Object]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:155
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:171
   def fallback(value = T.unsafe(nil), shared: T.unsafe(nil), &_fallback); end
 
   # Turn a type into a lax type that will rescue from type-errors and
@@ -473,7 +473,7 @@ module Dry::Types::Builder
   # @api public
   # @return [Lax]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:127
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:143
   def lax; end
 
   # Turn a type into an optional type
@@ -492,7 +492,7 @@ module Dry::Types::Builder
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:142
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:158
   def prepend(constructor = T.unsafe(nil), **options, &block); end
 
   # Compose two types into a Sum type
@@ -508,7 +508,7 @@ module Dry::Types::Builder
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/builder.rb:193
+  # pkg:gem/dry-types#lib/dry/types/builder.rb:209
   def compose(other, composition_class); end
 end
 
@@ -870,7 +870,7 @@ class Dry::Types::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:114
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:121
   def compile_fn(fn); end
 
   # @api private
@@ -885,12 +885,12 @@ class Dry::Types::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:110
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:117
   def visit_any(meta); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:59
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:66
   def visit_array(node); end
 
   # @api private
@@ -905,27 +905,27 @@ class Dry::Types::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:100
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:107
   def visit_enum(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:65
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:72
   def visit_hash(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:80
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:87
   def visit_json_array(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:75
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:82
   def visit_json_hash(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:95
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:102
   def visit_key(node); end
 
   # @api private
@@ -935,7 +935,7 @@ class Dry::Types::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:105
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:112
   def visit_map(node); end
 
   # @api private
@@ -945,17 +945,17 @@ class Dry::Types::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:90
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:97
   def visit_params_array(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:85
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:92
   def visit_params_hash(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:50
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:57
   def visit_rule(node); end
 
   # pkg:gem/dry-types#lib/dry/types/compiler.rb:37
@@ -963,12 +963,12 @@ class Dry::Types::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:70
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:77
   def visit_schema(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/compiler.rb:54
+  # pkg:gem/dry-types#lib/dry/types/compiler.rb:61
   def visit_sum(node); end
 end
 
@@ -1284,7 +1284,8 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # Instantiate a new constructor type instance
   #
   # @api private
-  # @param fn [Function]
+  # @option [Function]
+  # @param [Function] [Hash] a customizable set of options
   # @param options [Hash]
   # @param type [Type]
   # @return [Constructor] a new instance of Constructor
@@ -1300,7 +1301,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:143
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:147
   def <<(new_fn = T.unsafe(nil), **options, &block); end
 
   # Build a new constructor by appending a block to the coercion function
@@ -1311,7 +1312,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:117
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:121
   def >>(new_fn = T.unsafe(nil), **options, &block); end
 
   # Build a new constructor by appending a block to the coercion function
@@ -1322,25 +1323,25 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:116
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:120
   def append(new_fn = T.unsafe(nil), **options, &block); end
 
   # @api private
   # @return [Object]
   #
   # pkg:gem/dry-types#lib/dry/types/constructor.rb:72
-  def call_safe(input); end
+  def call_safe(input, &block); end
 
   # @api private
   # @return [Object]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:80
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:84
   def call_unsafe(input); end
 
   # @api private
   # @return [Class]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:122
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:126
   def constrained_type; end
 
   # Build a new constructor by appending a block to the coercion function
@@ -1351,7 +1352,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:107
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:111
   def constructor(new_fn = T.unsafe(nil), **options, &block); end
 
   # @api public
@@ -1365,7 +1366,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @api public
   # @return [Lax]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:149
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:153
   def lax; end
 
   # Build a new constructor by prepending a block to the coercion function
@@ -1376,13 +1377,13 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @param options [Hash]
   # @return [Constructor]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:140
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:144
   def prepend(new_fn = T.unsafe(nil), **options, &block); end
 
   # @api public
   # @see Nominal#to_ast
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:127
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:131
   def to_ast(meta: T.unsafe(nil)); end
 
   # Wrap the type with a proc
@@ -1390,7 +1391,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @api public
   # @return [Proc]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:156
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:160
   def to_proc; end
 
   # @api public
@@ -1399,7 +1400,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @return [Logic::Result, Types::Result]
   # @return [Object] if block given and try fails
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:89
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:93
   def try(input, &_arg1); end
 
   # @api public
@@ -1417,7 +1418,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @param block [#call, nil]
   # @param method [Symbol]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:176
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:180
   def method_missing(method, *_arg1, **_arg2, &_arg3); end
 
   # @api private
@@ -1425,7 +1426,7 @@ class Dry::Types::Constructor < ::Dry::Types::Nominal
   # @param meth [Symbol]
   # @return [Boolean]
   #
-  # pkg:gem/dry-types#lib/dry/types/constructor.rb:165
+  # pkg:gem/dry-types#lib/dry/types/constructor.rb:169
   def respond_to_missing?(meth, include_private = T.unsafe(nil)); end
 
   class << self
@@ -2585,7 +2586,7 @@ module Dry::Types::Meta
   # @overload meta
   # @overload meta
   #
-  # pkg:gem/dry-types#lib/dry/types/meta.rb:29
+  # pkg:gem/dry-types#lib/dry/types/meta.rb:35
   def meta(data = T.unsafe(nil)); end
 
   # Resets meta
@@ -2593,7 +2594,7 @@ module Dry::Types::Meta
   # @api public
   # @return [Dry::Types::Type]
   #
-  # pkg:gem/dry-types#lib/dry/types/meta.rb:44
+  # pkg:gem/dry-types#lib/dry/types/meta.rb:50
   def pristine; end
 
   # @api public
@@ -2733,45 +2734,45 @@ class Dry::Types::Nominal
   # @param primitive [Type, Class]
   # @return [Nominal] a new instance of Nominal
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:42
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:45
   def initialize(primitive, **options); end
 
   # @api private
   # @param input [BasicObject]
   # @return [BasicObject]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:80
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:84
   def call_safe(input, &_arg1); end
 
   # @api private
   # @param input [BasicObject]
   # @return [BasicObject]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:73
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:77
   def call_unsafe(input); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:121
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:125
   def coerce(input, &_arg1); end
 
   # @api public
   # @return [false]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:61
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:65
   def constrained?; end
 
   # @api public
   # @return [false]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:56
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:60
   def default?; end
 
   # @api public
   # @raise [::ArgumentError]
   # @return [Result::Failure]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:105
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:109
   def failure(input, error); end
 
   # Return self. Nominal types are lax by definition
@@ -2779,19 +2780,25 @@ class Dry::Types::Nominal
   # @api public
   # @return [Nominal]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:163
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:167
   def lax; end
 
   # @api public
   # @return [String]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:51
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:55
   def name; end
+
+  # @api public
+  # @return [String, nil]
+  #
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:22
+  def namespace; end
 
   # @api public
   # @return [false]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:66
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:70
   def optional?; end
 
   # @api public
@@ -2806,13 +2813,13 @@ class Dry::Types::Nominal
   # @param value [Object]
   # @return [Boolean]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:118
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:122
   def primitive?(value); end
 
   # @api public
   # @return [Result::Success]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:98
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:102
   def success(input); end
 
   # Return AST representation of a type nominal
@@ -2820,7 +2827,7 @@ class Dry::Types::Nominal
   # @api public
   # @return [Array]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:154
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:158
   def to_ast(meta: T.unsafe(nil)); end
 
   # Wrap the type with a proc
@@ -2828,7 +2835,7 @@ class Dry::Types::Nominal
   # @api public
   # @return [Proc]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:170
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:174
   def to_proc; end
 
   # @api public
@@ -2838,27 +2845,39 @@ class Dry::Types::Nominal
   # @yieldparam failure [Failure]
   # @yieldreturn [Result]
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:91
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:95
   def try(input, &_arg1); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/nominal.rb:132
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:136
   def try_coerce(input); end
+
+  private
+
+  # @api private
+  #
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:188
+  def meta_ast(meta); end
+
+  # @api private
+  #
+  # pkg:gem/dry-types#lib/dry/types/nominal.rb:179
+  def namespace_ast; end
 
   class << self
     # @api private
     # @param primitive [Class]
     # @return [Type]
     #
-    # pkg:gem/dry-types#lib/dry/types/nominal.rb:26
+    # pkg:gem/dry-types#lib/dry/types/nominal.rb:29
     def [](primitive); end
   end
 end
 
 # @api public
 #
-# pkg:gem/dry-types#lib/dry/types/nominal.rb:36
+# pkg:gem/dry-types#lib/dry/types/nominal.rb:39
 Dry::Types::Nominal::ALWAYS = T.let(T.unsafe(nil), Proc)
 
 # Common API for types with options
@@ -2887,7 +2906,7 @@ module Dry::Types::Options
   def with(**new_options); end
 end
 
-# pkg:gem/dry-types#lib/dry/types/printer.rb:293
+# pkg:gem/dry-types#lib/dry/types/printer.rb:309
 Dry::Types::PRINTER = T.let(T.unsafe(nil), Dry::Types::Printer)
 
 # PredicateInferrer returns the list of predicates used by a type.
@@ -3102,7 +3121,7 @@ class Dry::Types::PrimitiveInferrer
   # @api private
   # @return [PrimitiveInferrer] a new instance of PrimitiveInferrer
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:71
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:59
   def initialize; end
 
   # Infer primitives from the provided type
@@ -3110,13 +3129,13 @@ class Dry::Types::PrimitiveInferrer
   # @api private
   # @return [Array[Class]]
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:80
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:68
   def [](type); end
 
   # @api private
   # @return [Compiler]
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:68
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:56
   def compiler; end
 end
 
@@ -3133,37 +3152,37 @@ class Dry::Types::PrimitiveInferrer::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:63
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:51
   def visit_any(_); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:32
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:29
   def visit_array(_); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:57
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:48
   def visit_constrained(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:38
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:35
   def visit_constructor(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:44
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:38
   def visit_enum(node); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:28
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:25
   def visit_hash(_); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:35
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:32
   def visit_lax(node); end
 
   # @api private
@@ -3173,12 +3192,12 @@ class Dry::Types::PrimitiveInferrer::Compiler
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:29
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:26
   def visit_schema(_); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:50
+  # pkg:gem/dry-types#lib/dry/types/primitive_inferrer.rb:41
   def visit_sum(node); end
 end
 
@@ -3237,7 +3256,7 @@ class Dry::Types::Printer
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:152
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:168
   def visit_callable(callable); end
 
   # @api private
@@ -3257,48 +3276,58 @@ class Dry::Types::Printer
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:126
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:142
   def visit_default(default); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:108
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:124
   def visit_enum(enum); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:250
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:266
   def visit_hash(hash); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:240
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:256
   def visit_key(key); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:146
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:162
   def visit_lax(lax); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:226
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:242
   def visit_map(map); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:140
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:156
   def visit_nominal(type); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:269
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:285
   def visit_options(options, meta = T.unsafe(nil)); end
 
   # @api private
   #
-  # pkg:gem/dry-types#lib/dry/types/printer.rb:187
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:203
   def visit_schema(schema); end
+
+  # @api private
+  #
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:116
+  def visit_sum_constructor(type, &_arg1); end
+
+  # @api private
+  #
+  # pkg:gem/dry-types#lib/dry/types/printer.rb:108
+  def visit_sum_constructors(sum); end
 end
 
 # @api private
@@ -3803,9 +3832,18 @@ class Dry::Types::SchemaKeyError < ::Dry::Types::CoercionError; end
 
 # Sum type
 #
-# @api public
+# Sum types try each constituent type from left to right and return the result
+# from the first successful type. If all types fail, the error from the rightmost
+# (last attempted) type is raised, not necessarily the most "relevant" error.
 #
-# pkg:gem/dry-types#lib/dry/types/sum.rb:8
+# @api public
+# @example
+#   # Given: FixedAmount | Percentage
+#   # Input: { type: "fixed", value: -1.1 }
+#   # FixedAmount fails on value constraint, Percentage fails on type mismatch
+#   # Error raised will be from Percentage (rightmost), not FixedAmount
+#
+# pkg:gem/dry-types#lib/dry/types/sum.rb:18
 class Dry::Types::Sum
   include ::Dry::Types::Type
   include ::Dry::Core::Constants
@@ -3820,14 +3858,16 @@ class Dry::Types::Sum
   # @param input [Object]
   # @return [Object]
   #
-  # pkg:gem/dry-types#lib/dry/types/sum.rb:32
+  # pkg:gem/dry-types#lib/dry/types/sum.rb:45
   def call_safe(input, &block); end
 
   # @api private
+  # @note Tries left type first, then right type. If both fail, raises the
+  #   error from the right (last attempted) type for performance reasons.
   # @param input [Object]
   # @return [Object]
   #
-  # pkg:gem/dry-types#lib/dry/types/sum.rb:23
+  # pkg:gem/dry-types#lib/dry/types/sum.rb:36
   def call_unsafe(input); end
 
   # @api public
@@ -3835,7 +3875,7 @@ class Dry::Types::Sum
   # @return [Constrained, Sum]
   # @see Builder#constrained
   #
-  # pkg:gem/dry-types#lib/dry/types/sum.rb:83
+  # pkg:gem/dry-types#lib/dry/types/sum.rb:96
   def constrained(*_arg0, **_arg1, &_arg2); end
 
   # Manage metadata to the type. If the type is an optional, #meta delegates
@@ -3844,50 +3884,50 @@ class Dry::Types::Sum
   # @api public
   # @see [Meta#meta]
   #
-  # pkg:gem/dry-types#lib/dry/types/sum.rb:66
+  # pkg:gem/dry-types#lib/dry/types/sum.rb:79
   def meta(data = T.unsafe(nil)); end
 
   # @api public
   # @return [Boolean]
   #
-  # pkg:gem/dry-types#lib/dry/types/sum.rb:16
+  # pkg:gem/dry-types#lib/dry/types/sum.rb:26
   def optional?; end
 
   # @api private
   # @param value [Object]
   # @return [Boolean]
   #
-  # pkg:gem/dry-types#lib/dry/types/sum.rb:56
+  # pkg:gem/dry-types#lib/dry/types/sum.rb:69
   def primitive?(value); end
 
   # @api public
   # @param input [Object]
   #
-  # pkg:gem/dry-types#lib/dry/types/sum.rb:39
+  # pkg:gem/dry-types#lib/dry/types/sum.rb:52
   def try(input); end
 
   class << self
-    # pkg:gem/dry-types#lib/dry/types/sum.rb:9
+    # pkg:gem/dry-types#lib/dry/types/sum.rb:19
     def ast_type; end
 
-    # pkg:gem/dry-types#lib/dry/types/sum.rb:9
+    # pkg:gem/dry-types#lib/dry/types/sum.rb:19
     def composition_name; end
 
     # @api public
     #
-    # pkg:gem/dry-types#lib/dry/types/sum.rb:11
+    # pkg:gem/dry-types#lib/dry/types/sum.rb:21
     def operator; end
   end
 end
 
-# pkg:gem/dry-types#lib/dry/types/sum.rb:9
+# pkg:gem/dry-types#lib/dry/types/sum.rb:19
 class Dry::Types::Sum::Constrained < ::Dry::Types::Sum
   include ::Dry::Types::Composition::Constrained
 end
 
 # @api public
 #
-# pkg:gem/dry-types#lib/dry/types.rb:31
+# pkg:gem/dry-types#lib/dry/types.rb:30
 Dry::Types::TYPE_SPEC_REGEX = T.let(T.unsafe(nil), Regexp)
 
 # Common Type module denoting an object is a Type
