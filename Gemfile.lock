@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    grape_sorbet (0.0.15)
+    grape_sorbet (0.1.0)
       activesupport
       grape (~> 3.0)
       sorbet-runtime (>= 0.6)
@@ -247,7 +247,7 @@ CHECKSUMS
   erubi (1.13.1) sha256=a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9
   grape (3.2.0) sha256=2aeeb020e5605f6314ce8ca8d30d90c9ee8f26bc959c5b34db7b8486764e4d2c
   grape-entity (1.0.1) sha256=e00f9e94e407aff77aa2945d741f544d07e48501927942988799913151d02634
-  grape_sorbet (0.0.15)
+  grape_sorbet (0.1.0)
   i18n (1.14.8) sha256=285778639134865c5e0f6269e0b818256017e8cde89993fdfcbfb64d088824a5
   io-console (0.8.2) sha256=d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc
   irb (1.17.0) sha256=168c4ddb93d8a361a045c41d92b2952c7a118fa73f23fe14e55609eb7a863aae
