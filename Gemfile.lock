@@ -3,7 +3,7 @@ PATH
   specs:
     grape_sorbet (0.0.15)
       activesupport
-      grape (~> 2.0)
+      grape (~> 3.0)
       sorbet-runtime (>= 0.6)
 
 GEM
@@ -33,6 +33,9 @@ GEM
     date (3.5.1)
     docile (1.4.1)
     drb (2.2.3)
+    dry-configurable (1.3.0)
+      dry-core (~> 1.1)
+      zeitwerk (~> 2.6)
     dry-core (1.2.0)
       concurrent-ruby (~> 1.0)
       logger
@@ -52,8 +55,9 @@ GEM
       zeitwerk (~> 2.6)
     erb (6.0.2)
     erubi (1.13.1)
-    grape (2.4.0)
-      activesupport (>= 6.1)
+    grape (3.2.0)
+      activesupport (>= 7.2)
+      dry-configurable
       dry-types (>= 1.1)
       mustermann-grape (~> 1.1.0)
       rack (>= 2)
@@ -234,13 +238,14 @@ CHECKSUMS
   date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
   docile (1.4.1) sha256=96159be799bfa73cdb721b840e9802126e4e03dfc26863db73647204c727f21e
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
+  dry-configurable (1.3.0) sha256=882d862858567fc1210d2549d4c090f34370fc1bb7c5c1933de3fe792e18afa8
   dry-core (1.2.0) sha256=0cc5a7da88df397f153947eeeae42e876e999c1e30900f3c536fb173854e96a1
   dry-inflector (1.3.1) sha256=7fb0c2bb04f67638f25c52e7ba39ab435d922a3a5c3cd196120f63accb682dcc
   dry-logic (1.6.0) sha256=da6fedbc0f90fc41f9b0cc7e6f05f5d529d1efaef6c8dcc8e0733f685745cea2
   dry-types (1.9.1) sha256=baebeecdb9f8395d6c9d227b62011279440943e3ef2468fe8ccc1ba11467f178
   erb (6.0.2) sha256=9fe6264d44f79422c87490a1558479bd0e7dad4dd0e317656e67ea3077b5242b
   erubi (1.13.1) sha256=a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9
-  grape (2.4.0) sha256=3d59673e80f11d49ba86270b78344e5348dc057b318c2bbc1c01f3532f9b6aec
+  grape (3.2.0) sha256=2aeeb020e5605f6314ce8ca8d30d90c9ee8f26bc959c5b34db7b8486764e4d2c
   grape-entity (1.0.1) sha256=e00f9e94e407aff77aa2945d741f544d07e48501927942988799913151d02634
   grape_sorbet (0.0.15)
   i18n (1.14.8) sha256=285778639134865c5e0f6269e0b818256017e8cde89993fdfcbfb64d088824a5
