@@ -46,16 +46,16 @@ module SimpleCov
     # pkg:gem/simplecov#lib/simplecov.rb:86
     def collate(result_filenames, profile = T.unsafe(nil), ignore_timeout: T.unsafe(nil), &block); end
 
-    # Thinking: Move this behavior earlier so if there was an error we do nothing?
-    #
     # @api private
+    #
+    # Thinking: Move this behavior earlier so if there was an error we do nothing?
     #
     # pkg:gem/simplecov#lib/simplecov.rb:223
     def exit_and_report_previous_error(exit_status); end
 
-    # Returns the exit status from the exit exception
-    #
     # @api private
+    #
+    # Returns the exit status from the exit exception
     #
     # pkg:gem/simplecov#lib/simplecov.rb:200
     def exit_status_from_exception; end
@@ -72,9 +72,6 @@ module SimpleCov
     # pkg:gem/simplecov#lib/simplecov.rb:28
     def external_at_exit=(_arg0); end
 
-    # Basically, should we take care of at_exit behavior or something else?
-    # Used by the minitest plugin. See lib/minitest/simplecov_plugin.rb
-    #
     # pkg:gem/simplecov#lib/simplecov.rb:29
     def external_at_exit?; end
 
@@ -84,7 +81,6 @@ module SimpleCov
     def filtered(files); end
 
     # @api private
-    # @return [Boolean]
     #
     # pkg:gem/simplecov#lib/simplecov.rb:268
     def final_result_process?; end
@@ -102,28 +98,21 @@ module SimpleCov
     # pkg:gem/simplecov#lib/simplecov.rb:158
     def load_profile(name); end
 
-    # Returns the value of attribute pid.
-    #
     # pkg:gem/simplecov#lib/simplecov.rb:24
     def pid; end
 
-    # Sets the attribute pid
-    #
-    # @param value the value to set the attribute pid to.
-    #
     # pkg:gem/simplecov#lib/simplecov.rb:24
     def pid=(_arg0); end
 
     # @api private
-    # @return [Boolean]
     #
     # pkg:gem/simplecov#lib/simplecov.rb:213
     def previous_error?(error_exit_status); end
 
+    # @api private
+    #
     # Usage:
     #   exit_status = SimpleCov.process_result(SimpleCov.result, exit_status)
-    #
-    # @api private
     #
     # pkg:gem/simplecov#lib/simplecov.rb:248
     def process_result(result); end
@@ -132,7 +121,6 @@ module SimpleCov
     def process_results_and_report_error; end
 
     # @api private
-    # @return [Boolean]
     #
     # pkg:gem/simplecov#lib/simplecov.rb:229
     def ready_to_process_results?; end
@@ -146,37 +134,29 @@ module SimpleCov
     # Returns nil if the result has not been computed
     # Otherwise, returns the result
     #
-    # @return [Boolean]
-    #
     # pkg:gem/simplecov#lib/simplecov.rb:124
     def result?; end
 
     # pkg:gem/simplecov#lib/simplecov.rb:256
     def result_exit_status(result); end
 
-    # Rounding down to be extra strict, see #679
-    #
     # @api private
+    #
+    # Rounding down to be extra strict, see #679
     #
     # pkg:gem/simplecov#lib/simplecov.rb:296
     def round_coverage(coverage); end
 
-    # Called from at_exit block
-    #
     # @api private
+    #
+    # Called from at_exit block
     #
     # pkg:gem/simplecov#lib/simplecov.rb:186
     def run_exit_tasks!; end
 
-    # Returns the value of attribute running.
-    #
     # pkg:gem/simplecov#lib/simplecov.rb:24
     def running; end
 
-    # Sets the attribute running
-    #
-    # @param value the value to set the attribute running to.
-    #
     # pkg:gem/simplecov#lib/simplecov.rb:24
     def running=(_arg0); end
 
@@ -235,8 +215,6 @@ module SimpleCov
     # pkg:gem/simplecov#lib/simplecov.rb:425
     def make_parallel_tests_available; end
 
-    # @return [Boolean]
-    #
     # pkg:gem/simplecov#lib/simplecov.rb:434
     def probably_running_parallel_tests?; end
 
@@ -279,15 +257,11 @@ end
 
 # pkg:gem/simplecov#lib/simplecov/filter.rb:77
 class SimpleCov::ArrayFilter < ::SimpleCov::Filter
-  # @return [ArrayFilter] a new instance of ArrayFilter
-  #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:78
   def initialize(filter_argument); end
 
   # Returns true if any of the filters in the array match the given source file.
   # Configure this Filter like StringFilter.new(['some/path', /^some_regex/, Proc.new {|src_file| ... }])
-  #
-  # @return [Boolean]
   #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:88
   def matches?(source_files_list); end
@@ -297,8 +271,6 @@ end
 class SimpleCov::BlockFilter < ::SimpleCov::Filter
   # Returns true if the block given when initializing this filter with BlockFilter.new {|src_file| ... }
   # returns true for the given source file.
-  #
-  # @return [Boolean]
   #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:72
   def matches?(source_file); end
@@ -337,8 +309,6 @@ module SimpleCov::Combine
     # pkg:gem/simplecov#lib/simplecov/combine.rb:16
     def combine(combiner_module, coverage_a, coverage_b); end
 
-    # @return [Boolean]
-    #
     # pkg:gem/simplecov#lib/simplecov/combine.rb:22
     def empty_coverage?(coverage_a, coverage_b); end
 
@@ -422,14 +392,15 @@ module SimpleCov::Combine::LinesCombiner
 
   # Return depends on coverage in a specific line
   #
+  # @param [Integer || nil] first_val
+  # @param [Integer || nil] second_val
+  #
   # Logic:
   #
   # => nil + 0 = nil
   # => nil + nil = nil
   # => int + int = int
   #
-  # @param first_val [Integer || nil]
-  # @param second_val [Integer || nil]
   # @return [Integer || nil]
   #
   # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:32
@@ -441,14 +412,15 @@ module SimpleCov::Combine::LinesCombiner
 
     # Return depends on coverage in a specific line
     #
+    # @param [Integer || nil] first_val
+    # @param [Integer || nil] second_val
+    #
     # Logic:
     #
     # => nil + 0 = nil
     # => nil + nil = nil
     # => int + int = int
     #
-    # @param first_val [Integer || nil]
-    # @param second_val [Integer || nil]
     # @return [Integer || nil]
     #
     # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:32
@@ -479,8 +451,9 @@ module SimpleCov::Combine::ResultsCombiner
 
   # Combine two files coverage results
   #
-  # @param coverage_a [Hash]
-  # @param coverage_b [Hash]
+  # @param [Hash] coverage_a
+  # @param [Hash] coverage_b
+  #
   # @return [Hash]
   #
   # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:55
@@ -488,8 +461,9 @@ module SimpleCov::Combine::ResultsCombiner
 
   # Manage combining results on files level
   #
-  # @param combined_results [Hash]
-  # @param result [Hash]
+  # @param [Hash] combined_results
+  # @param [Hash] result
+  #
   # @return [Hash]
   #
   # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:36
@@ -509,8 +483,9 @@ module SimpleCov::Combine::ResultsCombiner
 
     # Combine two files coverage results
     #
-    # @param coverage_a [Hash]
-    # @param coverage_b [Hash]
+    # @param [Hash] coverage_a
+    # @param [Hash] coverage_b
+    #
     # @return [Hash]
     #
     # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:55
@@ -518,8 +493,9 @@ module SimpleCov::Combine::ResultsCombiner
 
     # Manage combining results on files level
     #
-    # @param combined_results [Hash]
-    # @param result [Hash]
+    # @param [Hash] combined_results
+    # @param [Hash] result
+    #
     # @return [Hash]
     #
     # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:36
@@ -637,13 +613,9 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:233
   def at_fork(&block); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:428
   def branch_coverage?; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:443
   def branch_coverage_supported?; end
 
@@ -687,13 +659,11 @@ module SimpleCov::Configuration
   #
   # If not set the default is `:line`
   #
-  # @param criterion [Symbol]
+  # @param [Symbol] criterion
   #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:393
   def coverage_criterion(criterion = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:420
   def coverage_criterion_enabled?(criterion); end
 
@@ -704,13 +674,9 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:34
   def coverage_dir(dir = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:452
   def coverage_for_eval_enabled?; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:447
   def coverage_for_eval_supported?; end
 
@@ -721,8 +687,6 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:46
   def coverage_path; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:432
   def coverage_start_arguments_supported?; end
 
@@ -740,8 +704,6 @@ module SimpleCov::Configuration
 
   # gets the enabled_for_subprocess configuration
   #
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:209
   def enabled_for_subprocesses?; end
 
@@ -750,9 +712,7 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:74
   def filters; end
 
-  # Sets the attribute filters
-  #
-  # @param value the value to set the attribute filters to.
+  # Returns the list of configured filters. Add filters using SimpleCov.add_filter.
   #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:14
   def filters=(_arg0); end
@@ -764,9 +724,9 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:98
   def formatter(formatter = T.unsafe(nil)); end
 
-  # Sets the attribute formatter
+  # Gets or sets the configured formatter.
   #
-  # @param value the value to set the attribute formatter to.
+  # Configure with: SimpleCov.formatter(SimpleCov::Formatter::SimpleFormatter)
   #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:14
   def formatter=(_arg0); end
@@ -786,9 +746,7 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:150
   def groups; end
 
-  # Sets the attribute groups
-  #
-  # @param value the value to set the attribute groups to.
+  # Returns the configured groups. Add groups using SimpleCov.add_group
   #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:14
   def groups=(_arg0); end
@@ -850,9 +808,8 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:129
   def print_error_status; end
 
-  # Sets the attribute print_error_status
-  #
-  # @param value the value to set the attribute print_error_status to.
+  # Whether we should print non-success status codes. This can be
+  # configured with the #print_error_status= method.
   #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:14
   def print_error_status=(_arg0); end
@@ -885,12 +842,6 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:22
   def root(root = T.unsafe(nil)); end
 
-  # Certain code blocks (i.e. Ruby-implementation specific code) can be excluded from
-  # the coverage metrics by wrapping it inside # :nocov: comment blocks. The nocov token
-  # can be configured to be any other string using this.
-  #
-  # Configure with SimpleCov.nocov_token('skip') or it's alias SimpleCov.skip_token('skip')
-  #
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:145
   def skip_token(nocov_token = T.unsafe(nil)); end
 
@@ -952,33 +903,21 @@ class SimpleCov::CoverageStatistics
   #
   # Other values are computed by this class.
   #
-  # @return [CoverageStatistics] a new instance of CoverageStatistics
-  #
   # pkg:gem/simplecov#lib/simplecov/coverage_statistics.rb:34
   def initialize(covered:, missed:, total_strength: T.unsafe(nil)); end
 
-  # Returns the value of attribute covered.
-  #
   # pkg:gem/simplecov#lib/simplecov/coverage_statistics.rb:14
   def covered; end
 
-  # Returns the value of attribute missed.
-  #
   # pkg:gem/simplecov#lib/simplecov/coverage_statistics.rb:14
   def missed; end
 
-  # Returns the value of attribute percent.
-  #
   # pkg:gem/simplecov#lib/simplecov/coverage_statistics.rb:14
   def percent; end
 
-  # Returns the value of attribute strength.
-  #
   # pkg:gem/simplecov#lib/simplecov/coverage_statistics.rb:14
   def strength; end
 
-  # Returns the value of attribute total.
-  #
   # pkg:gem/simplecov#lib/simplecov/coverage_statistics.rb:14
   def total; end
 
@@ -1029,16 +968,12 @@ SimpleCov::ExitCodes::MINIMUM_COVERAGE = T.let(T.unsafe(nil), Integer)
 
 # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:5
 class SimpleCov::ExitCodes::MaximumCoverageDropCheck
-  # @return [MaximumCoverageDropCheck] a new instance of MaximumCoverageDropCheck
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:6
   def initialize(result, maximum_coverage_drop); end
 
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:28
   def exit_code; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:11
   def failing?; end
 
@@ -1062,13 +997,9 @@ class SimpleCov::ExitCodes::MaximumCoverageDropCheck
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:36
   def last_run; end
 
-  # Returns the value of attribute maximum_coverage_drop.
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:34
   def maximum_coverage_drop; end
 
-  # Returns the value of attribute result.
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:34
   def result; end
 end
@@ -1080,16 +1011,12 @@ SimpleCov::ExitCodes::MaximumCoverageDropCheck::MAX_DROP_ACCURACY = T.let(T.unsa
 
 # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:5
 class SimpleCov::ExitCodes::MinimumCoverageByFileCheck
-  # @return [MinimumCoverageByFileCheck] a new instance of MinimumCoverageByFileCheck
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:6
   def initialize(result, minimum_coverage_by_file); end
 
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:26
   def exit_code; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:11
   def failing?; end
 
@@ -1101,32 +1028,24 @@ class SimpleCov::ExitCodes::MinimumCoverageByFileCheck
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:41
   def compute_minimum_coverage_data; end
 
-  # Returns the value of attribute minimum_coverage_by_file.
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:32
   def minimum_coverage_by_file; end
 
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:34
   def minimum_violations; end
 
-  # Returns the value of attribute result.
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:32
   def result; end
 end
 
 # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:5
 class SimpleCov::ExitCodes::MinimumOverallCoverageCheck
-  # @return [MinimumOverallCoverageCheck] a new instance of MinimumOverallCoverageCheck
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:6
   def initialize(result, minimum_coverage); end
 
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:26
   def exit_code; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:11
   def failing?; end
 
@@ -1138,16 +1057,12 @@ class SimpleCov::ExitCodes::MinimumOverallCoverageCheck
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:38
   def calculate_minimum_violations; end
 
-  # Returns the value of attribute minimum_coverage.
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:32
   def minimum_coverage; end
 
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:34
   def minimum_violations; end
 
-  # Returns the value of attribute result.
-  #
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:32
   def result; end
 end
@@ -1163,8 +1078,6 @@ class SimpleCov::FileList
   include ::Enumerable
   extend ::Forwardable
 
-  # @return [FileList] a new instance of FileList
-  #
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:22
   def initialize(files); end
 
@@ -1191,7 +1104,6 @@ class SimpleCov::FileList
   def covered_lines; end
 
   # Computes the coverage based upon lines covered and lines missed
-  #
   # @return [Float]
   #
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:76
@@ -1204,7 +1116,6 @@ class SimpleCov::FileList
   def covered_percentages; end
 
   # Computes the strength (hits / line) based upon lines covered and lines missed
-  #
   # @return [Float]
   #
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:82
@@ -1287,23 +1198,15 @@ end
 #
 # pkg:gem/simplecov#lib/simplecov/filter.rb:15
 class SimpleCov::Filter
-  # @return [Filter] a new instance of Filter
-  #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:18
   def initialize(filter_argument); end
 
-  # Returns the value of attribute filter_argument.
-  #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:16
   def filter_argument; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:22
   def matches?(_source_file); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:26
   def passes?(source_file); end
 
@@ -1379,13 +1282,9 @@ class SimpleCov::LinesClassifier
     # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:15
     def no_cov_line; end
 
-    # @return [Boolean]
-    #
     # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:19
     def no_cov_line?(line); end
 
-    # @return [Boolean]
-    #
     # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:26
     def whitespace_line?(line); end
   end
@@ -1433,8 +1332,6 @@ class SimpleCov::RegexFilter < ::SimpleCov::Filter
   # Returns true when the given source file's filename matches the
   # regex configured when initializing this Filter with RegexFilter.new(/someregex/)
   #
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:64
   def matches?(source_file); end
 end
@@ -1449,17 +1346,18 @@ class SimpleCov::Result
   # Initialize a new SimpleCov::Result from given Coverage.result (a Hash of filenames each containing an array of
   # coverage data)
   #
-  # @return [Result] a new instance of Result
-  #
   # pkg:gem/simplecov#lib/simplecov/result.rb:28
   def initialize(original_result, command_name: T.unsafe(nil), created_at: T.unsafe(nil)); end
 
   # The command name that launched this result.
   # Delegated to SimpleCov.command_name if not set manually
+  # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:61
   def command_name; end
 
+  # The command name that launched this result.
+  # Delegated to SimpleCov.command_name if not set manually
   # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:21
@@ -1487,10 +1385,12 @@ class SimpleCov::Result
   def covered_strength(*_arg0, **_arg1, &_arg2); end
 
   # Defines when this result has been created. Defaults to Time.now
+  # Explicitly set the Time this result has been created
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:55
   def created_at; end
 
+  # Defines when this result has been created. Defaults to Time.now
   # Explicitly set the Time this result has been created
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:19
@@ -1530,8 +1430,6 @@ class SimpleCov::Result
   # pkg:gem/simplecov#lib/simplecov/result.rb:14
   def original_result; end
 
-  # Returns all files that are applicable to this result (sans filters!) as instances of SimpleCov::SourceFile. Aliased as :source_files
-  #
   # pkg:gem/simplecov#lib/simplecov/result.rb:17
   def source_files; end
 
@@ -1568,16 +1466,12 @@ end
 #
 # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:7
 class SimpleCov::ResultAdapter
-  # @return [ResultAdapter] a new instance of ResultAdapter
-  #
   # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:10
   def initialize(result); end
 
   # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:18
   def adapt; end
 
-  # Returns the value of attribute result.
-  #
   # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:8
   def result; end
 
@@ -1635,8 +1529,6 @@ module SimpleCov::ResultMerger
 
     # pre 0.18 coverage data pointed from file directly to an array of line coverage
     #
-    # @return [Boolean]
-    #
     # pkg:gem/simplecov#lib/simplecov/result_merger.rb:181
     def pre_simplecov_0_18_result?(result); end
 
@@ -1671,8 +1563,6 @@ module SimpleCov::ResultMerger
     # pkg:gem/simplecov#lib/simplecov/result_merger.rb:46
     def valid_results(file_path, ignore_timeout: T.unsafe(nil)); end
 
-    # @return [Boolean]
-    #
     # pkg:gem/simplecov#lib/simplecov/result_merger.rb:85
     def within_merge_timeout?(data); end
   end
@@ -1712,8 +1602,6 @@ end
 #
 # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:4
 class SimpleCov::SourceFile
-  # @return [SourceFile] a new instance of SourceFile
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:14
   def initialize(filename, coverage_data); end
 
@@ -1775,7 +1663,8 @@ class SimpleCov::SourceFile
 
   # Check if any branches missing on given line number
   #
-  # @param line_number [Integer]
+  # @param [Integer] line_number
+  #
   # @return [Boolean]
   #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:153
@@ -1811,13 +1700,9 @@ class SimpleCov::SourceFile
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:60
   def never_lines; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:102
   def no_branches?; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:88
   def no_lines?; end
 
@@ -1834,14 +1719,9 @@ class SimpleCov::SourceFile
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:65
   def skipped_lines; end
 
-  # The source code for this file. Aliased as :source
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:30
   def source; end
 
-  # Returns all source lines for this file as instances of SimpleCov::SourceFile::Line,
-  # and thus including coverage data. Aliased as :source_lines
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:45
   def source_lines; end
 
@@ -1864,7 +1744,6 @@ class SimpleCov::SourceFile
   def build_branch(branch_data, hit_count, condition_start_line); end
 
   # Call recursive method that transform our static hash to array of objects
-  #
   # @return [Array]
   #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:273
@@ -1933,8 +1812,6 @@ class SimpleCov::SourceFile
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:206
   def set_encoding_based_on_magic_comment(file, line); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file.rb:194
   def shebang?(line); end
 end
@@ -1944,13 +1821,9 @@ end
 #
 # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:8
 class SimpleCov::SourceFile::Branch
-  # @return [Branch] a new instance of Branch
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:12
   def initialize(start_line:, end_line:, coverage:, inline:, type:); end
 
-  # Returns the value of attribute coverage.
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:9
   def coverage; end
 
@@ -1961,13 +1834,9 @@ class SimpleCov::SourceFile::Branch
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:31
   def covered?; end
 
-  # Returns the value of attribute end_line.
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:9
   def end_line; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:22
   def inline?; end
 
@@ -1978,8 +1847,6 @@ class SimpleCov::SourceFile::Branch
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:40
   def missed?; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:70
   def overlaps_with?(line_range); end
 
@@ -2008,18 +1875,12 @@ class SimpleCov::SourceFile::Branch
 
   # Returns true if the branch was marked skipped by virtue of nocov comments.
   #
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:66
   def skipped?; end
 
-  # Returns the value of attribute start_line.
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:9
   def start_line; end
 
-  # Returns the value of attribute type.
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/branch.rb:9
   def type; end
 end
@@ -2032,9 +1893,6 @@ end
 #
 # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:10
 class SimpleCov::SourceFile::Line
-  # @raise [ArgumentError]
-  # @return [Line] a new instance of Line
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:25
   def initialize(src, line_number, coverage); end
 
@@ -2045,13 +1903,9 @@ class SimpleCov::SourceFile::Line
 
   # Returns true if this is a line that has been covered
   #
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:42
   def covered?; end
 
-  # The line number in the source file. Aliased as :line, :number
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:22
   def line; end
 
@@ -2062,20 +1916,14 @@ class SimpleCov::SourceFile::Line
 
   # Returns true if this is a line that should have been covered, but was not
   #
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:37
   def missed?; end
 
   # Returns true if this line is not relevant for coverage
   #
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:47
   def never?; end
 
-  # The line number in the source file. Aliased as :line, :number
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:23
   def number; end
 
@@ -2092,12 +1940,9 @@ class SimpleCov::SourceFile::Line
   # Returns true if this line was skipped, false otherwise. Lines are skipped if they are wrapped with
   # # :nocov: comment lines.
   #
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:58
   def skipped?; end
 
-  # The source code for this line. Aliased as :source
   # Lets grab some fancy aliases, shall we?
   #
   # pkg:gem/simplecov#lib/simplecov/source_file/line.rb:21
@@ -2125,8 +1970,6 @@ SimpleCov::SourceFile::SHEBANG_REGEX = T.let(T.unsafe(nil), Regexp)
 class SimpleCov::StringFilter < ::SimpleCov::Filter
   # Returns true when the given source file's filename matches the
   # string configured when initializing this Filter with StringFilter.new('somestring')
-  #
-  # @return [Boolean]
   #
   # pkg:gem/simplecov#lib/simplecov/filter.rb:56
   def matches?(source_file); end

@@ -13,8 +13,6 @@ module SimpleCov::Formatter; end
 
 # pkg:gem/simplecov-html#lib/simplecov-html.rb:17
 class SimpleCov::Formatter::HTMLFormatter
-  # @return [HTMLFormatter] a new instance of HTMLFormatter
-  #
   # pkg:gem/simplecov-html#lib/simplecov-html.rb:26
   def initialize; end
 
@@ -32,8 +30,6 @@ class SimpleCov::Formatter::HTMLFormatter
   # pkg:gem/simplecov-html#lib/simplecov-html.rb:87
   def assets_path(name); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov-html#lib/simplecov-html.rb:48
   def branchable_result?; end
 
@@ -58,8 +54,6 @@ class SimpleCov::Formatter::HTMLFormatter
   # pkg:gem/simplecov-html#lib/simplecov-html.rb:145
   def id(source_file); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/simplecov-html#lib/simplecov-html.rb:55
   def line_status?(source_file, line); end
 

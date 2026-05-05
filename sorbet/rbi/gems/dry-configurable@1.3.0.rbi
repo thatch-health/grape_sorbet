@@ -17,26 +17,26 @@ end
 
 # A simple configuration mixin
 #
-# @api public
 # @example class-level configuration
 #
 #   class App
-#   extend Dry::Configurable
+#     extend Dry::Configurable
 #
-#   setting :database do
-#   setting :dsn, 'sqlite:memory'
-#   end
+#     setting :database do
+#       setting :dsn, 'sqlite:memory'
+#     end
 #   end
 #
 #   App.config.database.dsn = 'jdbc:sqlite:memory'
 #   App.config.database.dsn
-#   # => "jdbc:sqlite:memory"
+#     # => "jdbc:sqlite:memory"
+#
 # @example instance-level configuration
 #
 #   class App
-#   include Dry::Configurable
+#     include Dry::Configurable
 #
-#   setting :database
+#     setting :database
 #   end
 #
 #   production = App.new
@@ -46,6 +46,14 @@ end
 #   development = App.new
 #   development.config.database = 'jdbc:sqlite:memory'
 #   development.finalize!
+#
+# @api public
+# Shared constants
+#
+# @api private
+# Shared errors
+#
+# @api public
 #
 # pkg:gem/dry-configurable#lib/dry/configurable/constants.rb:7
 module Dry::Configurable
@@ -64,26 +72,20 @@ module Dry::Configurable
 
   class << self
     # @api private
-    # @private
     #
     # pkg:gem/dry-configurable#lib/dry/configurable.rb:64
     def extended(klass); end
 
     # @api private
-    # @private
     #
     # pkg:gem/dry-configurable#lib/dry/configurable.rb:70
     def included(klass); end
 
-    # @api public
-    #
     # pkg:gem/dry-configurable#lib/dry/configurable.rb:49
     def loader; end
   end
 end
 
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/errors.rb:14
 class Dry::Configurable::AlreadyIncludedError < ::Dry::Configurable::Error; end
 
@@ -113,8 +115,9 @@ module Dry::Configurable::ClassMethods
 
   # Return configuration
   #
-  # @api public
   # @return [Config]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/class_methods.rb:67
   def config; end
@@ -126,21 +129,29 @@ module Dry::Configurable::ClassMethods
 
   # Add a setting to the configuration
   #
-  # @api public
-  # @param constructor [#call] Transformation given value will go through
-  # @param default [Mixed] Default value for the setting
-  # @param name [Mixed] The accessor key for the configuration value
-  # @param reader [Boolean] Whether a reader accessor must be created
+  # @param [Mixed] name
+  #   The accessor key for the configuration value
+  # @param [Mixed] default
+  #   Default value for the setting
+  # @param [#call] constructor
+  #   Transformation given value will go through
+  # @param [Boolean] reader
+  #   Whether a reader accessor must be created
+  # @yield
+  #   A block can be given to add nested settings.
+  #
   # @return [Dry::Configurable::Config]
-  # @yield A block can be given to add nested settings.
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/class_methods.rb:43
   def setting(*_arg0, **_arg1, &_arg2); end
 
   # Returns the defined settings for the class.
   #
-  # @api public
   # @return [Settings]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/class_methods.rb:58
   def settings; end
@@ -152,8 +163,6 @@ end
 #
 # pkg:gem/dry-configurable#lib/dry/configurable/compiler.rb:8
 class Dry::Configurable::Compiler
-  # @api private
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/compiler.rb:9
   def call(ast); end
 
@@ -182,15 +191,14 @@ class Dry::Configurable::Config
   include ::Dry::Core::Equalizer::Methods
 
   # @api private
-  # @return [Config] a new instance of Config
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:24
   def initialize(settings, values: T.unsafe(nil)); end
 
   # Get config value by a key
   #
-  # @api public
-  # @param name [String, Symbol]
+  # @param [String,Symbol] name
+  #
   # @return Config value
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:47
@@ -199,10 +207,8 @@ class Dry::Configurable::Config
   # Set config value.
   # Note that finalized configs cannot be changed.
   #
-  # @api public
-  # @param name [String, Symbol]
-  # @param value [Object]
-  # @raise [FrozenConfigError]
+  # @param [String,Symbol] name
+  # @param [Object] value
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:69
   def []=(name, value); end
@@ -230,8 +236,9 @@ class Dry::Configurable::Config
   # does not compare equally to its corresdponing default value. This relies on these objects
   # having functioning `#==` checks.
   #
-  # @api public
   # @return [Bool]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:116
   def configured?(key); end
@@ -259,17 +266,20 @@ class Dry::Configurable::Config
   # Returns config values as a hash, with nested values also converted from {Config} instances
   # into hashes.
   #
-  # @api public
   # @return [Hash]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:144
   def to_h; end
 
   # Update config with new values
   #
-  # @api public
   # @param values [Hash, #to_hash] A hash with new values
+  #
   # @return [Config]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:90
   def update(values); end
@@ -278,8 +288,9 @@ class Dry::Configurable::Config
   #
   # Nested configs remain in their {Config} instances.
   #
-  # @api public
   # @return [Hash]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:131
   def values; end
@@ -293,30 +304,20 @@ class Dry::Configurable::Config
 
   private
 
-  # @api public
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:208
   def dup_values; end
 
   # @api private
-  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:31
   def initialize_copy(source); end
 
-  # @api public
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:187
   def method_missing(name, *args); end
 
-  # @api public
-  # @return [Boolean]
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:200
   def respond_to_missing?(meth, include_private = T.unsafe(nil)); end
 
-  # @api public
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/config.rb:204
   def setting_name_from_method(method_name); end
 end
@@ -327,79 +328,54 @@ end
 #
 # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:8
 class Dry::Configurable::DSL
-  # @api private
-  # @return [DSL] a new instance of DSL
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:17
   def initialize(**options, &block); end
 
-  # @api private
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:13
   def ast; end
 
-  # @api private
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:11
   def compiler; end
 
-  # @api private
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:49
   def config_class; end
 
-  # @api private
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:53
   def default; end
 
-  # @api private
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:15
   def options; end
 
   # Registers a new setting node and compile it into a setting object
   #
+  # @see ClassMethods.setting
   # @api private
   # @return Setting
-  # @see ClassMethods.setting
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:29
   def setting(name, **options, &block); end
 
   private
 
-  # @api private
-  # @raise [ArgumentError]
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:59
   def ensure_valid_options(options); end
 
   # Returns a tuple of valid and invalid options hashes derived from the options hash
   # given to the setting
   #
-  # @api private
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:69
   def valid_and_invalid_options(options); end
 end
 
-# @api private
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/dsl.rb:9
 Dry::Configurable::DSL::VALID_NAME = T.let(T.unsafe(nil), Regexp)
 
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/errors.rb:10
 class Dry::Configurable::Error < ::StandardError; end
 
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/extension.rb:5
 class Dry::Configurable::Extension < ::Module
   # @api private
-  # @return [Extension] a new instance of Extension
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/extension.rb:13
   def initialize(config_class: T.unsafe(nil), default_undefined: T.unsafe(nil)); end
@@ -425,8 +401,6 @@ class Dry::Configurable::Extension < ::Module
   def included(klass); end
 end
 
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/errors.rb:12
 class Dry::Configurable::FrozenConfigError < ::Dry::Configurable::Error; end
 
@@ -453,8 +427,9 @@ module Dry::Configurable::InstanceMethods
 
   # Return object's configuration
   #
-  # @api public
   # @return [Config]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/instance_methods.rb:33
   def config; end
@@ -481,16 +456,15 @@ end
 # pkg:gem/dry-configurable#lib/dry/configurable/methods.rb:8
 module Dry::Configurable::Methods
   # @api public
-  # @raise [FrozenConfigError]
-  # @yield [config]
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/methods.rb:10
   def configure(&block); end
 
   # Finalize and freeze configuration
   #
-  # @api public
   # @return [Dry::Configurable::Config]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/methods.rb:22
   def finalize!(freeze_values: T.unsafe(nil)); end
@@ -505,7 +479,6 @@ class Dry::Configurable::Setting
   include ::Dry::Core::Equalizer::Methods
 
   # @api private
-  # @return [Setting] a new instance of Setting
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:43
   def initialize(name, default:, constructor: T.unsafe(nil), children: T.unsafe(nil), **options); end
@@ -515,9 +488,6 @@ class Dry::Configurable::Setting
   # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:32
   def children; end
 
-  # @api public
-  # @return [Boolean]
-  #
   # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:70
   def cloneable?; end
 
@@ -537,7 +507,6 @@ class Dry::Configurable::Setting
   def mutable; end
 
   # @api public
-  # @return [Boolean]
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:67
   def mutable?; end
@@ -553,7 +522,6 @@ class Dry::Configurable::Setting
   def options; end
 
   # @api private
-  # @return [Boolean]
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:62
   def reader?; end
@@ -565,25 +533,18 @@ class Dry::Configurable::Setting
 
   class << self
     # @api private
-    # @return [Boolean]
     #
     # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:38
     def mutable_value?(value); end
   end
 end
 
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:15
 Dry::Configurable::Setting::DEFAULT_CONSTRUCTOR = T.let(T.unsafe(nil), Proc)
 
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:17
 Dry::Configurable::Setting::MUTABLE_VALUE_TYPES = T.let(T.unsafe(nil), Array)
 
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/setting.rb:13
 Dry::Configurable::Setting::OPTIONS = T.let(T.unsafe(nil), Array)
 
@@ -597,7 +558,6 @@ class Dry::Configurable::Settings
   include ::Enumerable
 
   # @api private
-  # @return [Settings] a new instance of Settings
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/settings.rb:17
   def initialize(settings = T.unsafe(nil)); end
@@ -609,8 +569,9 @@ class Dry::Configurable::Settings
 
   # Returns the setting for the given name, if found.
   #
-  # @api public
   # @return [Setting, nil] the setting, or nil if not found
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/settings.rb:37
   def [](name); end
@@ -622,16 +583,18 @@ class Dry::Configurable::Settings
 
   # Returns true if a setting for the given name is defined.
   #
-  # @api public
   # @return [Boolean]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/settings.rb:46
   def key?(name); end
 
   # Returns the list of defined setting names.
   #
-  # @api public
   # @return [Array<Symbol>]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/settings.rb:55
   def keys; end
@@ -644,7 +607,6 @@ class Dry::Configurable::Settings
   private
 
   # @api private
-  # @api private
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/settings.rb:22
   def initialize_copy(source); end
@@ -652,14 +614,13 @@ end
 
 # Methods meant to be used in a testing scenario
 #
-# @api public
-#
 # pkg:gem/dry-configurable#lib/dry/configurable/test_interface.rb:6
 module Dry::Configurable::TestInterface
   # Resets configuration to default values
   #
-  # @api public
   # @return [Dry::Configurable::Config]
+  #
+  # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/test_interface.rb:12
   def reset_config; end

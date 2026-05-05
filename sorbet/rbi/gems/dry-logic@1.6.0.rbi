@@ -23,13 +23,9 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/appliable.rb:5
 module Dry::Logic::Appliable
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/appliable.rb:14
   def applied?; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/appliable.rb:22
   def failure?; end
 
@@ -39,8 +35,6 @@ module Dry::Logic::Appliable
   # pkg:gem/dry-logic#lib/dry/logic/appliable.rb:10
   def result; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/appliable.rb:18
   def success?; end
 
@@ -50,32 +44,21 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/builder.rb:8
 module Dry::Logic::Builder
-  # Predicate and operation builder
-  #
-  # @example Check if input is zero
-  #   is_zero = Dry::Logic::Builder.call do
-  #   negation { lt?(0) ^ gt?(0) }
-  #   end
-  #
-  #   p is_zero.call(1) # => false
-  #   p is_zero.call(0) # => true
-  #   p is_zero.call(-1) # => false
-  # @return [Builder::Result]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/builder.rb:35
   def build(&_arg0); end
 
   # Predicate and operation builder
   #
+  # @block [Proc]
+  # @return [Builder::Result]
   # @example Check if input is zero
   #   is_zero = Dry::Logic::Builder.call do
-  #   negation { lt?(0) ^ gt?(0) }
+  #     negation { lt?(0) ^ gt?(0) }
   #   end
   #
   #   p is_zero.call(1) # => false
   #   p is_zero.call(0) # => true
   #   p is_zero.call(-1) # => false
-  # @return [Builder::Result]
   #
   # pkg:gem/dry-logic#lib/dry/logic/builder.rb:31
   def call(&_arg0); end
@@ -83,15 +66,16 @@ module Dry::Logic::Builder
   class << self
     # Predicate and operation builder
     #
+    # @block [Proc]
+    # @return [Builder::Result]
     # @example Check if input is zero
     #   is_zero = Dry::Logic::Builder.call do
-    #   negation { lt?(0) ^ gt?(0) }
+    #     negation { lt?(0) ^ gt?(0) }
     #   end
     #
     #   p is_zero.call(1) # => false
     #   p is_zero.call(0) # => true
     #   p is_zero.call(-1) # => false
-    # @return [Builder::Result]
     #
     # pkg:gem/dry-logic#lib/dry/logic/builder.rb:34
     def call(&_arg0); end
@@ -108,8 +92,6 @@ class Dry::Logic::Builder::Context
 
   # Defines methods for operations and predicates
   #
-  # @return [Context] a new instance of Context
-  #
   # pkg:gem/dry-logic#lib/dry/logic/builder.rb:68
   def initialize; end
 
@@ -119,6 +101,9 @@ class Dry::Logic::Builder::Context
   def call(&_arg0); end
 
   # Defines custom predicate
+  #
+  # @name [Symbol] Name of predicate
+  # @Context [Proc]
   #
   # pkg:gem/dry-logic#lib/dry/logic/builder.rb:55
   def predicate(name, context = T.unsafe(nil), &block); end
@@ -151,13 +136,9 @@ Dry::Logic::Builder::IGNORED_PREDICATES = T.let(T.unsafe(nil), Array)
 class Dry::Logic::Evaluator
   include ::Dry::Core::Equalizer::Methods
 
-  # @return [Evaluator] a new instance of Evaluator
-  #
   # pkg:gem/dry-logic#lib/dry/logic/evaluator.rb:43
   def initialize(path); end
 
-  # Returns the value of attribute path.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/evaluator.rb:8
   def path; end
 end
@@ -184,8 +165,6 @@ end
 class Dry::Logic::Evaluator::Set
   include ::Dry::Core::Equalizer::Methods
 
-  # @return [Set] a new instance of Set
-  #
   # pkg:gem/dry-logic#lib/dry/logic/evaluator.rb:19
   def initialize(evaluators); end
 
@@ -195,8 +174,6 @@ class Dry::Logic::Evaluator::Set
   # pkg:gem/dry-logic#lib/dry/logic/evaluator.rb:23
   def call(input); end
 
-  # Returns the value of attribute evaluators.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/evaluator.rb:13
   def evaluators; end
 
@@ -215,8 +192,6 @@ class Dry::Logic::Operations::Abstract
   include ::Dry::Core::Equalizer::Methods
   include ::Dry::Logic::Operators
 
-  # @return [Abstract] a new instance of Abstract
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/abstract.rb:15
   def initialize(*rules, **options); end
 
@@ -229,13 +204,9 @@ class Dry::Logic::Operations::Abstract
   # pkg:gem/dry-logic#lib/dry/logic/operations/abstract.rb:28
   def new(rules, **new_options); end
 
-  # Returns the value of attribute options.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/abstract.rb:13
   def options; end
 
-  # Returns the value of attribute rules.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/abstract.rb:11
   def rules; end
 
@@ -248,8 +219,6 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/operations/and.rb:6
 class Dry::Logic::Operations::And < ::Dry::Logic::Operations::Binary
-  # @return [And] a new instance of And
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/and.rb:9
   def initialize(*_arg0, **_arg1); end
 
@@ -259,8 +228,6 @@ class Dry::Logic::Operations::And < ::Dry::Logic::Operations::Binary
   # pkg:gem/dry-logic#lib/dry/logic/operations/and.rb:19
   def call(input); end
 
-  # Returns the value of attribute hints.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/and.rb:7
   def hints; end
 
@@ -284,21 +251,15 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/operations/binary.rb:6
 class Dry::Logic::Operations::Binary < ::Dry::Logic::Operations::Abstract
-  # @return [Binary] a new instance of Binary
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/binary.rb:11
   def initialize(left, right, **options); end
 
   # pkg:gem/dry-logic#lib/dry/logic/operations/binary.rb:17
   def ast(input = T.unsafe(nil)); end
 
-  # Returns the value of attribute left.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/binary.rb:7
   def left; end
 
-  # Returns the value of attribute right.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/binary.rb:9
   def right; end
 
@@ -308,8 +269,6 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/operations/check.rb:6
 class Dry::Logic::Operations::Check < ::Dry::Logic::Operations::Unary
-  # @return [Check] a new instance of Check
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/check.rb:20
   def initialize(*rules, **options); end
 
@@ -322,8 +281,6 @@ class Dry::Logic::Operations::Check < ::Dry::Logic::Operations::Unary
   # pkg:gem/dry-logic#lib/dry/logic/operations/check.rb:29
   def call(input); end
 
-  # Returns the value of attribute evaluator.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/check.rb:7
   def evaluator; end
 
@@ -365,8 +322,6 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/operations/key.rb:6
 class Dry::Logic::Operations::Key < ::Dry::Logic::Operations::Unary
-  # @return [Key] a new instance of Key
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/key.rb:25
   def initialize(*rules, **options); end
 
@@ -379,13 +334,9 @@ class Dry::Logic::Operations::Key < ::Dry::Logic::Operations::Unary
   # pkg:gem/dry-logic#lib/dry/logic/operations/key.rb:35
   def call(hash); end
 
-  # Returns the value of attribute evaluator.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/key.rb:7
   def evaluator; end
 
-  # Returns the value of attribute path.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/key.rb:9
   def path; end
 
@@ -451,16 +402,12 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/operations/unary.rb:6
 class Dry::Logic::Operations::Unary < ::Dry::Logic::Operations::Abstract
-  # @return [Unary] a new instance of Unary
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/unary.rb:9
   def initialize(*rules, **options); end
 
   # pkg:gem/dry-logic#lib/dry/logic/operations/unary.rb:14
   def ast(input = T.unsafe(nil)); end
 
-  # Returns the value of attribute rule.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/operations/unary.rb:7
   def rule; end
 
@@ -521,8 +468,6 @@ module Dry::Logic::Predicates
   mixes_in_class_methods ::Dry::Logic::Predicates::Methods
 
   class << self
-    # @private
-    #
     # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:226
     def included(other); end
   end
@@ -533,198 +478,122 @@ module Dry::Logic::Predicates::Methods
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:39
   def [](name); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:87
   def array?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:50
   def attr?(name, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:63
   def bool?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:114
   def bytesize?(size, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:170
   def case?(pattern, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:65
   def date?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:67
   def date_time?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:81
   def decimal?(input); end
 
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:213
   def deprecated(name, in_favor_of); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:52
   def empty?(input); end
 
   # This overrides Object#eql? so we need to make it compatible
   #
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:154
   def eql?(left, right = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:91
   def even?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:139
   def excluded_from?(list, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:151
   def excludes?(value, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:132
   def exclusion?(list, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:166
   def false?(value); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:61
   def filled?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:79
   def float?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:168
   def format?(regex, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:95
   def gt?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:99
   def gteq?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:85
   def hash?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:137
   def included_in?(list, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:141
   def includes?(value, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:127
   def inclusion?(list, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:77
   def int?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:160
   def is?(left, right); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:48
   def key?(name, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:93
   def lt?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:97
   def lteq?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:125
   def max_bytesize?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:112
   def max_size?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:123
   def min_bytesize?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:110
   def min_size?(num, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:45
   def nil?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:46
   def none?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:162
   def not_eql?(left, right); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:71
   def number?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:89
   def odd?(input); end
 
@@ -733,83 +602,51 @@ module Dry::Logic::Predicates::Methods
 
   # This overrides Object#respond_to? so we need to make it compatible
   #
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:203
   def respond_to?(method, input = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:101
   def size?(size, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:83
   def str?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:69
   def time?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:164
   def true?(value); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:43
   def type?(type, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:189
   def uri?(schemes, input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:200
   def uri_rfc3986?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:172
   def uuid_v1?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:174
   def uuid_v2?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:176
   def uuid_v3?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:178
   def uuid_v4?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:180
   def uuid_v5?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:182
   def uuid_v6?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:184
   def uuid_v7?(input); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:186
   def uuid_v8?(input); end
 
@@ -845,36 +682,24 @@ Dry::Logic::Predicates::Methods::UUIDv8 = T.let(T.unsafe(nil), Regexp)
 
 # pkg:gem/dry-logic#lib/dry/logic/result.rb:5
 class Dry::Logic::Result
-  # @return [Result] a new instance of Result
-  #
   # pkg:gem/dry-logic#lib/dry/logic/result.rb:22
   def initialize(success, id = T.unsafe(nil), &block); end
 
   # pkg:gem/dry-logic#lib/dry/logic/result.rb:40
   def ast(input = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/result.rb:32
   def failure?; end
 
-  # Returns the value of attribute id.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/result.rb:18
   def id; end
 
-  # Returns the value of attribute serializer.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/result.rb:20
   def serializer; end
 
-  # Returns the value of attribute success.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/result.rb:16
   def success; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/result.rb:28
   def success?; end
 
@@ -920,18 +745,12 @@ class Dry::Logic::Rule
   include ::Dry::Core::Equalizer::Methods
   include ::Dry::Logic::Operators
 
-  # @return [Rule] a new instance of Rule
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule.rb:45
   def initialize(predicate, options = T.unsafe(nil)); end
 
-  # Returns the value of attribute args.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule.rb:24
   def args; end
 
-  # Returns the value of attribute arity.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule.rb:26
   def arity; end
 
@@ -950,16 +769,12 @@ class Dry::Logic::Rule
   # pkg:gem/dry-logic#lib/dry/logic/rule.rb:56
   def id; end
 
-  # Returns the value of attribute options.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule.rb:22
   def options; end
 
   # pkg:gem/dry-logic#lib/dry/logic/rule.rb:83
   def parameters; end
 
-  # Returns the value of attribute predicate.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule.rb:20
   def predicate; end
 
@@ -988,28 +803,18 @@ end
 
 # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:6
 class Dry::Logic::Rule::Interface < ::Module
-  # @return [Interface] a new instance of Interface
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:13
   def initialize(arity, curried); end
 
-  # Returns the value of attribute arity.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:9
   def arity; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:32
   def constant?; end
 
-  # Returns the value of attribute curried.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:11
   def curried; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:36
   def curried?; end
 
@@ -1034,8 +839,6 @@ class Dry::Logic::Rule::Interface < ::Module
   # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:131
   def unapplied_args; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule/interface.rb:34
   def variable_arity?; end
 end
@@ -1066,18 +869,19 @@ class Dry::Logic::Rule::Predicate < ::Dry::Logic::Rule
   end
 end
 
+class Dry::Logic::Rule::Predicate::Predicate2Arity < ::Dry::Logic::Rule::Predicate; end
+class Dry::Logic::Rule::Predicate::Predicate2Arity1Curried < ::Dry::Logic::Rule::Predicate; end
+class Dry::Logic::Rule::Predicate::PredicateVariable1Arity < ::Dry::Logic::Rule::Predicate; end
+class Dry::Logic::Rule::Predicate::PredicateVariable1Arity1Curried < ::Dry::Logic::Rule::Predicate; end
+
 # pkg:gem/dry-logic#lib/dry/logic/rule_compiler.rb:5
 class Dry::Logic::RuleCompiler
-  # @return [RuleCompiler] a new instance of RuleCompiler
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule_compiler.rb:8
   def initialize(predicates); end
 
   # pkg:gem/dry-logic#lib/dry/logic/rule_compiler.rb:12
   def call(ast); end
 
-  # Returns the value of attribute predicates.
-  #
   # pkg:gem/dry-logic#lib/dry/logic/rule_compiler.rb:6
   def predicates; end
 

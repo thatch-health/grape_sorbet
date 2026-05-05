@@ -11,7 +11,7 @@ plugins:
 AllCops:
   NewCops: enable
   SuggestExtensions: false
-  TargetRubyVersion: 3.2
+  TargetRubyVersion: 3.3
 
 Naming/ConstantName:
   Enabled: false

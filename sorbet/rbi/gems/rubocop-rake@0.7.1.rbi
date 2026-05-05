@@ -22,14 +22,14 @@ module RuboCop::Cop::Rake; end
 # @example
 #   # bad
 #   task :foo do
-#   class C
-#   end
+#     class C
+#     end
 #   end
 #
 #   # bad
 #   namespace :foo do
-#   module M
-#   end
+#     module M
+#     end
 #   end
 #
 #   # good - It is also defined to the top level,
@@ -88,16 +88,12 @@ class RuboCop::Cop::Rake::Desc < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/desc.rb:76
   def can_insert_desc_to?(parent); end
 
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/desc.rb:62
   def parent_and_task(task_node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/desc.rb:50
   def task_with_desc?(node); end
 end
@@ -113,28 +109,26 @@ RuboCop::Cop::Rake::Desc::MSG = T.let(T.unsafe(nil), String)
 # @example
 #   # bad
 #   namespace :foo do
-#   task :bar do
-#   end
+#     task :bar do
+#     end
 #   end
 #   namespace :foo do
-#   task :hoge do
-#   end
+#     task :hoge do
+#     end
 #   end
 #
 #   # good
 #   namespace :foo do
-#   task :bar do
-#   end
-#   task :hoge do
-#   end
+#     task :bar do
+#     end
+#     task :hoge do
+#     end
 #   end
 #
 # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_namespace.rb:30
 class RuboCop::Cop::Rake::DuplicateNamespace < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::Rake::Helper::OnNamespace
 
-  # @return [DuplicateNamespace] a new instance of DuplicateNamespace
-  #
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_namespace.rb:35
   def initialize(*_arg0); end
 
@@ -162,24 +156,22 @@ RuboCop::Cop::Rake::DuplicateNamespace::MSG = T.let(T.unsafe(nil), String)
 # @example
 #   # bad
 #   task :foo do
-#   p 'foo 1'
+#     p 'foo 1'
 #   end
 #   task :foo do
-#   p 'foo 2'
+#     p 'foo 2'
 #   end
 #
 #   # good
 #   task :foo do
-#   p 'foo 1'
-#   p 'foo 2'
+#     p 'foo 1'
+#     p 'foo 2'
 #   end
 #
 # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_task.rb:26
 class RuboCop::Cop::Rake::DuplicateTask < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::Rake::Helper::OnTask
 
-  # @return [DuplicateTask] a new instance of DuplicateTask
-  #
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_task.rb:31
   def initialize(*_arg0); end
 
@@ -210,8 +202,6 @@ module RuboCop::Cop::Rake::Helper::ClassDefinition
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/helper/class_definition.rb:11
   def class_definition?(param0 = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/helper/class_definition.rb:22
   def in_class_definition?(node); end
 end
@@ -246,8 +236,6 @@ module RuboCop::Cop::Rake::Helper::TaskDefinition
   extend ::RuboCop::AST::NodePattern::Macros
   extend ::RuboCop::Cop::Rake::Helper::TaskDefinition
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/helper/task_definition.rb:19
   def in_task_or_namespace?(node); end
 
@@ -271,16 +259,16 @@ end
 # @example
 #   # bad
 #   task :foo do
-#   def helper_method
-#   do_something
-#   end
+#     def helper_method
+#       do_something
+#     end
 #   end
 #
 #   # bad
 #   namespace :foo do
-#   def helper_method
-#   do_something
-#   end
+#     def helper_method
+#       do_something
+#     end
 #   end
 #
 #   # good - It is also defined to the top level,
@@ -318,8 +306,6 @@ class RuboCop::Rake::Plugin < ::LintRoller::Plugin
   # pkg:gem/rubocop-rake#lib/rubocop/rake/plugin.rb:22
   def rules(_context); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-rake#lib/rubocop/rake/plugin.rb:18
   def supported?(context); end
 end

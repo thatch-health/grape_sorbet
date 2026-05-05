@@ -12,6 +12,7 @@ module Mustermann; end
 #
 # @example
 #   Mustermann.new('/:foo', type: :grape) === '/bar' # => true
+#
 # @see Mustermann::Pattern
 # @see file:README.md#grape Syntax description in the README
 #

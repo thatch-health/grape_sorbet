@@ -12,7 +12,6 @@ module RuboCop; end
 module RuboCop::Cop; end
 
 # Methods that calculate and return `Parser::Source::Ranges`.
-#
 # @api private
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/argument_range_helper.rb:7
@@ -21,43 +20,30 @@ module RuboCop::Cop::ArgumentRangeHelper
 
   private
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/argument_range_helper.rb:19
   def all_arguments_range(node); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/argument_range_helper.rb:12
   def first_and_second_arguments_range(node); end
 end
 
 # Common functionality for `AssertInDelta` and `RefuteInDelta` cops.
-#
 # @api private
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/in_delta_mixin.rb:7
 module RuboCop::Cop::InDeltaMixin
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/in_delta_mixin.rb:10
   def on_send(node); end
 
   private
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/in_delta_mixin.rb:35
   def assertion_method; end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/in_delta_mixin.rb:27
   def build_good_method(expected, actual, message); end
 end
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/in_delta_mixin.rb:8
 RuboCop::Cop::InDeltaMixin::MSG = T.let(T.unsafe(nil), String)
 
@@ -462,8 +448,6 @@ class RuboCop::Cop::Minitest::AssertOutput < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_output.rb:38
   def find_test_case(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_output.rb:42
   def references_gvar?(assertion, gvar_name); end
 end
@@ -543,21 +527,21 @@ RuboCop::Cop::Minitest::AssertPredicate::RESTRICT_ON_SEND = T.let(T.unsafe(nil),
 # @example
 #   # bad
 #   assert_raises(MyError) do
-#   foo
-#   bar
+#     foo
+#     bar
 #   end
 #
 #   # good
 #   assert_raises(MyError) do
-#   foo
+#     foo
 #   end
 #
 #   # good
 #   assert_raises(MyError) do
-#   foo do
-#   bar
-#   baz
-#   end
+#     foo do
+#       bar
+#       baz
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_raises_compound_body.rb:28
@@ -567,8 +551,6 @@ class RuboCop::Cop::Minitest::AssertRaisesCompoundBody < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_raises_compound_body.rb:39
   def multi_statement_begin?(node); end
 end
@@ -587,12 +569,12 @@ RuboCop::Cop::Minitest::AssertRaisesCompoundBody::MSG = T.let(T.unsafe(nil), Str
 #
 #   # bad
 #   assert_raises FooError, /some message/ do
-#   obj.occur_error
+#     obj.occur_error
 #   end
 #
 #   # good
 #   exception = assert_raises FooError do
-#   obj.occur_error
+#     obj.occur_error
 #   end
 #   assert_match(/some message/, exception.message)
 #
@@ -717,8 +699,6 @@ class RuboCop::Cop::Minitest::AssertSilent < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_silent.rb:41
   def empty_string?(node); end
 end
@@ -727,6 +707,16 @@ end
 RuboCop::Cop::Minitest::AssertSilent::MSG = T.let(T.unsafe(nil), String)
 
 # Enforces the test to use `assert(actual)` instead of using `assert_equal(true, actual)`.
+#
+# @safety
+#   This cop is unsafe because true might be expected instead of truthy.
+#   False positives cannot be prevented when this is a variable or method return value.
+#
+#   [source,ruby]
+#   ----
+#   assert_equal(true, 'truthy') # failure
+#   assert('truthy')             # success
+#   ----
 #
 # @example
 #   # bad
@@ -761,6 +751,10 @@ RuboCop::Cop::Minitest::AssertTruthy::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Ar
 #
 # NOTE: The second argument to the `assert` method named `message` and `msg` is allowed.
 #       Because their names are inferred as message arguments.
+#
+# @safety
+#   This cop is unsafe because it is not possible to determine
+#   whether the second argument of `assert` is a message or not.
 #
 # @example
 #   # bad
@@ -799,16 +793,16 @@ RuboCop::Cop::Minitest::AssertWithExpectedArgument::RESTRICT_ON_SEND = T.let(T.u
 # @example
 #   # bad
 #   class FooTest < Minitest::Test
-#   def setup
-#   assert_equal(foo, bar)
-#   end
+#     def setup
+#       assert_equal(foo, bar)
+#     end
 #   end
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def test_something
-#   assert_equal(foo, bar)
-#   end
+#     def test_something
+#       assert_equal(foo, bar)
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assertion_in_lifecycle_hook.rb:23
@@ -833,24 +827,25 @@ RuboCop::Cop::Minitest::AssertionInLifecycleHook::MSG = T.let(T.unsafe(nil), Str
 # @example
 #   # bad
 #   class ParentTest < Minitest::Test
-#   def test_parent # it will run this test twice.
-#   end
+#     def test_parent # it will run this test twice.
+#     end
 #   end
 #
 #   class ChildTest < ParentTest
-#   def test_child
+#     def test_child
+#     end
 #   end
-#   end
+#
 #
 #   # good
 #   class ParentTest < Minitest::Test
-#   def test_parent
-#   end
+#     def test_parent
+#     end
 #   end
 #
 #   class ChildTest < Minitest::Test
-#   def test_child
-#   end
+#     def test_child
+#     end
 #   end
 #
 #   # good
@@ -858,11 +853,11 @@ RuboCop::Cop::Minitest::AssertionInLifecycleHook::MSG = T.let(T.unsafe(nil), Str
 #   end
 #
 #   class ChildTest
-#   def test_child
-#   end
+#     def test_child
+#     end
 #
-#   def test_parent
-#   end
+#     def test_parent
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/duplicate_test_run.rb:48
@@ -876,13 +871,9 @@ class RuboCop::Cop::Minitest::DuplicateTestRun < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/duplicate_test_run.rb:63
   def parent_class_has_test_methods?(class_node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/duplicate_test_run.rb:77
   def test_methods?(class_node); end
 end
@@ -916,34 +907,24 @@ class RuboCop::Cop::Minitest::EmptyLineBeforeAssertionMethods < ::RuboCop::Cop::
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:52
   def accept_previous_line?(previous_line_node, node); end
 
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:43
   def assertion_method(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:73
   def heredoc?(last_argument); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:77
   def no_empty_line?(previous_line_node, node); end
 
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:87
   def register_offense(node, previous_line_node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:63
   def use_assertion_method_at_last_of_block?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:59
   def use_heredoc_argument?(node); end
 end
@@ -988,24 +969,6 @@ RuboCop::Cop::Minitest::Focus::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 # Checks for deprecated global expectations
 # and autocorrects them to use expect format.
 #
-# @example EnforcedStyle: _
-#   # bad
-#   musts.must_equal expected_musts
-#   wonts.wont_match expected_wonts
-#   musts.must_raise TypeError
-#
-#   expect(musts).must_equal expected_musts
-#   expect(wonts).wont_match expected_wonts
-#   expect { musts }.must_raise TypeError
-#
-#   value(musts).must_equal expected_musts
-#   value(wonts).wont_match expected_wonts
-#   value { musts }.must_raise TypeError
-#
-#   # good
-#   _(musts).must_equal expected_musts
-#   _(wonts).wont_match expected_wonts
-#   _ { musts }.must_raise TypeError
 # @example EnforcedStyle: any (default)
 #   # bad
 #   musts.must_equal expected_musts
@@ -1024,6 +987,26 @@ RuboCop::Cop::Minitest::Focus::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 #   value(musts).must_equal expected_musts
 #   value(wonts).wont_match expected_wonts
 #   value { musts }.must_raise TypeError
+#
+# @example EnforcedStyle: _
+#   # bad
+#   musts.must_equal expected_musts
+#   wonts.wont_match expected_wonts
+#   musts.must_raise TypeError
+#
+#   expect(musts).must_equal expected_musts
+#   expect(wonts).wont_match expected_wonts
+#   expect { musts }.must_raise TypeError
+#
+#   value(musts).must_equal expected_musts
+#   value(wonts).wont_match expected_wonts
+#   value { musts }.must_raise TypeError
+#
+#   # good
+#   _(musts).must_equal expected_musts
+#   _(wonts).wont_match expected_wonts
+#   _ { musts }.must_raise TypeError
+#
 # @example EnforcedStyle: expect
 #   # bad
 #   musts.must_equal expected_musts
@@ -1042,6 +1025,7 @@ RuboCop::Cop::Minitest::Focus::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 #   expect(musts).must_equal expected_musts
 #   expect(wonts).wont_match expected_wonts
 #   expect { musts }.must_raise TypeError
+#
 # @example EnforcedStyle: value
 #   # bad
 #   musts.must_equal expected_musts
@@ -1077,8 +1061,6 @@ class RuboCop::Cop::Minitest::GlobalExpectations < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/global_expectations.rb:118
   def method_allowed?(method); end
 
@@ -1110,7 +1092,6 @@ RuboCop::Cop::Minitest::GlobalExpectations::RESTRICT_ON_SEND = T.let(T.unsafe(ni
 RuboCop::Cop::Minitest::GlobalExpectations::VALUE_MATCHERS = T.let(T.unsafe(nil), Array)
 
 # Common functionality for `Minitest/AssertInstanceOf` and `Minitest/RefuteInstanceOf` cops.
-#
 # @api private
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/instance_of_assertion_handleable.rb:8
@@ -1120,24 +1101,16 @@ module RuboCop::Cop::Minitest::InstanceOfAssertionHandleable
 
   private
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/instance_of_assertion_handleable.rb:30
   def build_required_arguments(node, method_name, first_capture, second_capture); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/instance_of_assertion_handleable.rb:15
   def investigate(node, assertion_type); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/instance_of_assertion_handleable.rb:38
   def replacement_range(node, method_name); end
 end
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/instance_of_assertion_handleable.rb:11
 RuboCop::Cop::Minitest::InstanceOfAssertionHandleable::MSG = T.let(T.unsafe(nil), String)
 
@@ -1146,39 +1119,39 @@ RuboCop::Cop::Minitest::InstanceOfAssertionHandleable::MSG = T.let(T.unsafe(nil)
 # @example
 #   # bad
 #   class FooTest < Minitest::Test
-#   def teardown; end
-#   def setup; end
+#     def teardown; end
+#     def setup; end
 #   end
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def setup; end
-#   def teardown; end
+#     def setup; end
+#     def teardown; end
 #   end
 #
 #   # bad (after test cases)
 #   class FooTest < Minitest::Test
-#   def test_something
-#   assert foo
-#   end
-#   def setup; end
-#   def teardown; end
+#     def test_something
+#       assert foo
+#     end
+#     def setup; end
+#     def teardown; end
 #   end
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def setup; end
-#   def teardown; end
-#   def test_something
-#   assert foo
-#   end
+#     def setup; end
+#     def teardown; end
+#     def test_something
+#       assert foo
+#     end
 #   end
 #
 #   # good (after non test case methods)
 #   class FooTest < Minitest::Test
-#   def do_something; end
-#   def setup; end
-#   def teardown; end
+#     def do_something; end
+#     def setup; end
+#     def teardown; end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/lifecycle_hooks_order.rb:46
@@ -1257,21 +1230,21 @@ RuboCop::Cop::Minitest::LiteralAsActualArgument::RESTRICT_ON_SEND = T.let(T.unsa
 # @example Max: 1
 #   # bad
 #   class FooTest < Minitest::Test
-#   def test_asserts_twice
-#   assert_equal(42, do_something)
-#   assert_empty(array)
-#   end
+#     def test_asserts_twice
+#       assert_equal(42, do_something)
+#       assert_empty(array)
+#     end
 #   end
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def test_asserts_once
-#   assert_equal(42, do_something)
-#   end
+#     def test_asserts_once
+#       assert_equal(42, do_something)
+#     end
 #
-#   def test_another_asserts_once
-#   assert_empty(array)
-#   end
+#     def test_another_asserts_once
+#       assert_empty(array)
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:30
@@ -1308,37 +1281,25 @@ end
 RuboCop::Cop::Minitest::MultipleAssertions::MSG = T.let(T.unsafe(nil), String)
 
 # Common functionality for `AssertNil` and `RefuteNil` cops.
-#
 # @api private
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/nil_assertion_handleable.rb:8
 module RuboCop::Cop::Minitest::NilAssertionHandleable
   private
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/nil_assertion_handleable.rb:35
   def autocorrect(corrector, node, actual); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/nil_assertion_handleable.rb:21
   def build_message(node, actual, message); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/nil_assertion_handleable.rb:45
   def comparison_or_predicate_assertion_method?(node); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/nil_assertion_handleable.rb:13
   def register_offense(node, actual, message); end
 end
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/nil_assertion_handleable.rb:9
 RuboCop::Cop::Minitest::NilAssertionHandleable::MSG = T.let(T.unsafe(nil), String)
 
@@ -1349,32 +1310,32 @@ RuboCop::Cop::Minitest::NilAssertionHandleable::MSG = T.let(T.unsafe(nil), Strin
 # @example
 #   # bad
 #   class FooTest < Minitest::Test
-#   def test_the_truth
-#   end
+#     def test_the_truth
+#     end
 #   end
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def test_the_truth
-#   assert true
-#   end
+#     def test_the_truth
+#       assert true
+#     end
 #   end
 #
 #   # bad
 #   class FooTest < ActiveSupport::TestCase
-#   describe 'foo' do
-#   it 'test equal' do
-#   end
-#   end
+#     describe 'foo' do
+#       it 'test equal' do
+#       end
+#     end
 #   end
 #
 #   # good
 #   class FooTest < ActiveSupport::TestCase
-#   describe 'foo' do
-#   it 'test equal' do
-#   musts.must_equal expected_musts
-#   end
-#   end
+#     describe 'foo' do
+#       it 'test equal' do
+#         musts.must_equal expected_musts
+#       end
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/no_assertions.rb:41
@@ -1395,15 +1356,15 @@ RuboCop::Cop::Minitest::NoAssertions::MSG = T.let(T.unsafe(nil), String)
 # @example
 #   # bad
 #   class FooTest < Minitest::Test
-#   def do_something
-#   end
+#     def do_something
+#     end
 #   end
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def test_something
-#   assert true
-#   end
+#     def test_something
+#       assert true
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/no_test_cases.rb:22
@@ -1436,8 +1397,8 @@ RuboCop::Cop::Minitest::NoTestCases::MSG = T.let(T.unsafe(nil), String)
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def test_method_should_be_inside_test_class
-#   end
+#     def test_method_should_be_inside_test_class
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:27
@@ -1451,13 +1412,9 @@ class RuboCop::Cop::Minitest::NonExecutableTestMethod < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:47
   def possible_test_class?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:41
   def use_test_class?; end
 end
@@ -1471,33 +1428,33 @@ RuboCop::Cop::Minitest::NonExecutableTestMethod::MSG = T.let(T.unsafe(nil), Stri
 # @example
 #   # bad
 #   class FooTest
-#   private # or protected
-#   def test_does_something
-#   assert_equal 42, do_something
-#   end
+#     private # or protected
+#     def test_does_something
+#       assert_equal 42, do_something
+#     end
 #   end
 #
 #   # good
 #   class FooTest
-#   def test_does_something
-#   assert_equal 42, do_something
-#   end
+#     def test_does_something
+#       assert_equal 42, do_something
+#     end
 #   end
 #
 #   # good (not a test case name)
 #   class FooTest
-#   private # or protected
-#   def does_something
-#   assert_equal 42, do_something
-#   end
+#     private # or protected
+#     def does_something
+#       assert_equal 42, do_something
+#     end
 #   end
 #
 #   # good (no assertions)
 #   class FooTest
-#   private # or protected
-#   def test_does_something
-#   do_something
-#   end
+#     private # or protected
+#     def test_does_something
+#       do_something
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_public_test_method.rb:41
@@ -1514,47 +1471,31 @@ end
 RuboCop::Cop::Minitest::NonPublicTestMethod::MSG = T.let(T.unsafe(nil), String)
 
 # Common functionality for `Minitest/AssertPredicate` and `Minitest/RefutePredicate` cops.
-#
 # @api private
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:8
 module RuboCop::Cop::Minitest::PredicateAssertionHandleable
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:21
   def autocorrect(corrector, node, arguments); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:11
   def on_send(node); end
 
   private
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:50
   def correct_receiver(receiver); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:43
   def new_arguments(arguments); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:35
   def offense_message(arguments); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:31
   def predicate_method?(first_argument); end
 end
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/predicate_assertion_handleable.rb:9
 RuboCop::Cop::Minitest::PredicateAssertionHandleable::MSG = T.let(T.unsafe(nil), String)
 
@@ -1662,6 +1603,16 @@ RuboCop::Cop::Minitest::RefuteEqual::MSG = T.let(T.unsafe(nil), String)
 RuboCop::Cop::Minitest::RefuteEqual::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 
 # Enforces the use of `refute(object)` over `assert_equal(false, object)`.
+#
+# @safety
+#   This cop is unsafe because it cannot detect failure when second argument is `nil`.
+#   False positives cannot be prevented when this is a variable or method return value.
+#
+#   [source,ruby]
+#   ----
+#   assert_equal(false, nil) # failure
+#   refute(nil)              # success
+#   ----
 #
 # @example
 #   # bad
@@ -2125,14 +2076,14 @@ RuboCop::Cop::Minitest::RefuteSame::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arra
 # @example
 #   # bad
 #   def test_something
-#   return if condition?
-#   assert_equal(42, something)
+#     return if condition?
+#     assert_equal(42, something)
 #   end
 #
 #   # good
 #   def test_something
-#   skip if condition?
-#   assert_equal(42, something)
+#     skip if condition?
+#     assert_equal(42, something)
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/return_in_test_method.rb:21
@@ -2147,8 +2098,6 @@ class RuboCop::Cop::Minitest::ReturnInTestMethod < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/return_in_test_method.rb:38
   def inside_block?(node); end
 end
@@ -2167,52 +2116,52 @@ RuboCop::Cop::Minitest::ReturnInTestMethod::MSG = T.let(T.unsafe(nil), String)
 #
 #   # bad
 #   def test_skip
-#   skip 'This test is skipped.'
+#     skip 'This test is skipped.'
 #
-#   assert 'foo'.present?
+#     assert 'foo'.present?
 #   ensure
-#   do_something
+#     do_something
 #   end
 #
 #   # bad
 #   def test_conditional_skip
-#   skip 'This test is skipped.' if condition
+#     skip 'This test is skipped.' if condition
 #
-#   assert do_something
+#     assert do_something
 #   ensure
-#   do_teardown
+#     do_teardown
 #   end
 #
 #   # good
 #   def test_skip
-#   skip 'This test is skipped.'
+#     skip 'This test is skipped.'
 #
-#   begin
-#   assert 'foo'.present?
-#   ensure
-#   do_something
-#   end
+#     begin
+#       assert 'foo'.present?
+#     ensure
+#       do_something
+#     end
 #   end
 #
 #   # good
 #   def test_conditional_skip
-#   skip 'This test is skipped.' if condition
+#     skip 'This test is skipped.' if condition
 #
-#   assert do_something
+#     assert do_something
 #   ensure
-#   unless condition
-#   do_teardown
-#   end
+#     unless condition
+#       do_teardown
+#     end
 #   end
 #
 #   # good
 #   def test_skip_is_used_in_rescue
-#   do_setup
-#   assert do_something
+#     do_setup
+#     assert do_something
 #   rescue
-#   skip 'This test is skipped.'
+#     skip 'This test is skipped.'
 #   ensure
-#   do_teardown
+#     do_teardown
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:65
@@ -2225,13 +2174,9 @@ class RuboCop::Cop::Minitest::SkipEnsure < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:78
   def find_skip(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:84
   def use_skip_in_rescue?(skip_method); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_ensure.rb:88
   def valid_conditional_skip?(skip_method, ensure_node); end
 end
@@ -2248,9 +2193,9 @@ RuboCop::Cop::Minitest::SkipEnsure::MSG = T.let(T.unsafe(nil), String)
 #
 #   # bad
 #   if condition?
-#   skip
+#     skip
 #   else
-#   skip
+#     skip
 #   end
 #
 #   # good
@@ -2266,16 +2211,12 @@ class RuboCop::Cop::Minitest::SkipWithoutReason < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_without_reason.rb:44
   def blank_argument?(node); end
 
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_without_reason.rb:49
   def conditional_parent(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/skip_without_reason.rb:59
   def only_skip_branches?(node); end
 end
@@ -2309,13 +2250,9 @@ class RuboCop::Cop::Minitest::TestFileName < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/test_file_name.rb:32
   def test_file?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/test_file_name.rb:38
   def valid_file_name?; end
 end
@@ -2329,22 +2266,22 @@ RuboCop::Cop::Minitest::TestFileName::MSG = T.let(T.unsafe(nil), String)
 # @example
 #   # bad
 #   class FooTest < Minitest::Test
-#   def does_something
-#   assert_equal 42, do_something
-#   end
-#   end
-#
-#   # good
-#   class FooTest < Minitest::Test
-#   def test_does_something
-#   assert_equal 42, do_something
-#   end
+#     def does_something
+#       assert_equal 42, do_something
+#     end
 #   end
 #
 #   # good
 #   class FooTest < Minitest::Test
-#   def helper_method(argument)
+#     def test_does_something
+#       assert_equal 42, do_something
+#     end
 #   end
+#
+#   # good
+#   class FooTest < Minitest::Test
+#     def helper_method(argument)
+#     end
 #   end
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/test_method_name.rb:30
@@ -2359,18 +2296,12 @@ class RuboCop::Cop::Minitest::TestMethodName < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/test_method_name.rb:53
   def offense?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/test_method_name.rb:59
   def public?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/test_method_name.rb:63
   def test_method_name?(node); end
 end
@@ -2385,13 +2316,13 @@ RuboCop::Cop::Minitest::TestMethodName::MSG = T.let(T.unsafe(nil), String)
 #
 #   # bad
 #   assert_raises FooError do
-#   obj.occur_error
-#   assert_equal('foo', obj.bar) # Never asserted.
+#     obj.occur_error
+#     assert_equal('foo', obj.bar) # Never asserted.
 #   end
 #
 #   # good
 #   assert_raises FooError do
-#   obj.occur_error
+#     obj.occur_error
 #   end
 #   assert_equal('foo', obj.bar)
 #
@@ -2426,8 +2357,6 @@ class RuboCop::Cop::Minitest::UnspecifiedException < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/unspecified_exception.rb:29
   def unspecified_exception?(node); end
 end
@@ -2456,13 +2385,9 @@ class RuboCop::Cop::Minitest::UselessAssertion < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/useless_assertion.rb:67
   def empty_composite?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/useless_assertion.rb:44
   def offense?(node); end
 end
@@ -2485,31 +2410,32 @@ RuboCop::Cop::Minitest::UselessAssertion::TWO_ASSERTION_ARGUMENTS_METHODS = T.le
 module RuboCop::Cop::MinitestCopRule
   # Define offense rule for Minitest cops.
   #
-  # @api private
   # @example
   #   define_rule :assert, target_method: :match
   #   define_rule :refute, target_method: :match
   #   define_rule :assert, target_method: :include?, preferred_method: :assert_includes
   #   define_rule :assert, target_method: :instance_of?, inverse: true
+  #
   # @example Multiple target methods
   #   # `preferred_method` is required
   #   define_rule :assert, target_method: %i[match match? =~],
-  #   preferred_method: :assert_match, inverse: 'regexp_type?'
+  #               preferred_method: :assert_match, inverse: 'regexp_type?'
+  #
   # @param assertion_method [Symbol] Assertion method like `assert` or `refute`.
-  # @param inverse [Boolean, String] An optional param. Order of arguments replaced by autocorrection.
-  #   If string is passed, it becomes a predicate method for the first argument node.
-  # @param preferred_method [Symbol] Is required if passing multiple target methods. Custom method name replaced by
-  #   autocorrection. The preferred method name that connects
-  #   `assertion_method` and `target_method` with `_` is
-  #   the default name.
   # @param target_method [Symbol, Array<Symbol>] Method name(s) offensed by assertion method arguments.
+  # @param preferred_method [Symbol] Is required if passing multiple target methods. Custom method name replaced by
+  #                                  autocorrection. The preferred method name that connects
+  #                                  `assertion_method` and `target_method` with `_` is
+  #                                  the default name.
+  # @param inverse [Boolean, String] An optional param. Order of arguments replaced by autocorrection.
+  #                                  If string is passed, it becomes a predicate method for the first argument node.
+  # @api private
   #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_cop_rule.rb:31
   def define_rule(assertion_method, target_method:, preferred_method: T.unsafe(nil), inverse: T.unsafe(nil)); end
 end
 
 # Helper methods for different explorations against test files and test cases.
-#
 # @api private
 #
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:9
@@ -2520,107 +2446,61 @@ module RuboCop::Cop::MinitestExplorationHelpers
 
   private
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:117
   def assertion_method?(node); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:129
   def assertion_prefix_method?(node); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:97
   def assertions(def_node); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:111
   def assertions_count(node); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:82
   def class_def_nodes(class_node); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:125
   def lifecycle_hook_method?(node); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:77
   def lifecycle_hooks(class_node); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:73
   def test_block?(block_node); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:47
   def test_case?(node); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:93
   def test_case_name?(name); end
 
-  # @api private
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:55
   def test_cases(class_node, visibility_check: T.unsafe(nil)); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:43
   def test_class?(class_node); end
 
-  # @api private
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:67
   def test_method?(def_node, visibility_check: T.unsafe(nil)); end
 end
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:28
 RuboCop::Cop::MinitestExplorationHelpers::ASSERTION_PREFIXES = T.let(T.unsafe(nil), Array)
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:22
 RuboCop::Cop::MinitestExplorationHelpers::BLOCK_MATCHERS = T.let(T.unsafe(nil), Array)
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:39
 RuboCop::Cop::MinitestExplorationHelpers::LIFECYCLE_HOOK_METHODS = T.let(T.unsafe(nil), Set)
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:30
 RuboCop::Cop::MinitestExplorationHelpers::LIFECYCLE_HOOK_METHODS_IN_ORDER = T.let(T.unsafe(nil), Array)
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:26
 RuboCop::Cop::MinitestExplorationHelpers::MATCHER_METHODS = T.let(T.unsafe(nil), Array)
 
-# @api private
-#
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:13
 RuboCop::Cop::MinitestExplorationHelpers::VALUE_MATCHERS = T.let(T.unsafe(nil), Array)
 
@@ -2639,8 +2519,6 @@ class RuboCop::Minitest::Plugin < ::LintRoller::Plugin
   # pkg:gem/rubocop-minitest#lib/rubocop/minitest/plugin.rb:22
   def rules(_context); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-minitest#lib/rubocop/minitest/plugin.rb:18
   def supported?(context); end
 end
