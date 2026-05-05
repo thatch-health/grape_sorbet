@@ -1,3 +1,7 @@
+## 0.1.1 (2026-05-05)
+
+- Bump dependencies and drop support for Ruby 3.2 (#36)
+
 ## 0.1.0 (2026-04-14)
 
 ⚠️ This release is a BREAKING CHANGE. ⚠️
@@ -5,7 +9,7 @@
 grape_sorbet now targets grape >= 3.0 and is no longer compatible with grape 2.x.
 
 - Compatibility with grape >= 3.0 (#35)
-- Bump dependencies and regenerate RBIs(#34)
+- Bump dependencies and regenerate RBIs (#34)
 
 ## 0.0.15 (2026-03-23)
 
