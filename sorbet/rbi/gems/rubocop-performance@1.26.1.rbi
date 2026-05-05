@@ -21,6 +21,10 @@ module RuboCop::Cop::Performance; end
 
 # Identifies usages of `ancestors.include?` and change them to use `<=` instead.
 #
+# @safety
+#   This cop is unsafe because it can't tell whether the receiver is a class or an object.
+#   e.g. the false positive was for `Nokogiri::XML::Node#ancestors`.
+#
 # @example
 #   # bad
 #   A.ancestors.include?(B)
@@ -55,6 +59,9 @@ RuboCop::Cop::Performance::AncestorsInclude::RESTRICT_ON_SEND = T.let(T.unsafe(n
 # can be replaced by `Array#take` and `Array#drop`.
 # This cop was created due to a mistake in microbenchmark and hence is disabled by default.
 # Refer https://github.com/rubocop/rubocop-performance/pull/175#issuecomment-731892717
+#
+# @safety
+#   This cop is unsafe for string slices because strings do not have `#take` and `#drop` methods.
 #
 # @example
 #   # bad
@@ -211,19 +218,19 @@ RuboCop::Cop::Performance::BindCall::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arr
 # @example
 #   # bad
 #   def method(&block)
-#   do_something if block_given?
+#     do_something if block_given?
 #   end
 #
 #   # good
 #   def method(&block)
-#   do_something if block
+#     do_something if block
 #   end
 #
 #   # good - block is reassigned
 #   def method(&block)
-#   block ||= -> { do_something }
-#   warn "Using default ..." unless block_given?
-#   # ...
+#     block ||= -> { do_something }
+#     warn "Using default ..." unless block_given?
+#     # ...
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/block_given_with_explicit_block.rb:30
@@ -302,35 +309,43 @@ RuboCop::Cop::Performance::Caller::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array
 # this defining a higher level when condition to override a condition
 # that is inside of the splat expansion.
 #
+# @safety
+#   This cop is not unsafe autocorrection because it is not a guaranteed
+#   performance improvement. If the data being processed by the `case` condition is
+#   normalized in a manner that favors hitting a condition in the splat expansion,
+#   it is possible that moving the splat condition to the end will use more memory,
+#   and run slightly slower.
+#   See for more details: https://github.com/rubocop/rubocop/pull/6163
+#
 # @example
 #   # bad
 #   case foo
 #   when *condition
-#   bar
+#     bar
 #   when baz
-#   foobar
+#     foobar
 #   end
 #
 #   case foo
 #   when *[1, 2, 3, 4]
-#   bar
+#     bar
 #   when 5
-#   baz
+#     baz
 #   end
 #
 #   # good
 #   case foo
 #   when baz
-#   foobar
+#     foobar
 #   when *condition
-#   bar
+#     bar
 #   end
 #
 #   case foo
 #   when 1, 2, 3, 4
-#   bar
+#     bar
 #   when 5
-#   baz
+#     baz
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/case_when_splat.rb:58
@@ -354,8 +369,6 @@ class RuboCop::Cop::Performance::CaseWhenSplat < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/case_when_splat.rb:101
   def inline_fix_branch(corrector, when_node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/case_when_splat.rb:178
   def needs_reorder?(when_node); end
 
@@ -365,8 +378,6 @@ class RuboCop::Cop::Performance::CaseWhenSplat < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/case_when_splat.rb:140
   def new_condition_with_then(node, new_condition); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/case_when_splat.rb:172
   def non_splat?(condition); end
 
@@ -403,6 +414,10 @@ RuboCop::Cop::Performance::CaseWhenSplat::MSG = T.let(T.unsafe(nil), String)
 #
 # If you are working only with ASCII characters, then this cop can be
 # safely enabled.
+#
+# @safety
+#   This cop is unsafe because `String#casecmp` and `String#casecmp?` behave
+#   differently when using Non-ASCII characters.
 #
 # @example
 #   # bad
@@ -479,8 +494,6 @@ class RuboCop::Cop::Performance::ChainArrayAllocation < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/chain_array_allocation.rb:75
   def enumerable_select_method?(node); end
 end
@@ -538,20 +551,20 @@ RuboCop::Cop::Performance::ChainArrayAllocation::RETURN_NEW_ARRAY_WHEN_ARGS = T.
 # @example
 #   # bad
 #   users.select do |user|
-#   %i[superadmin admin].include?(user.role)
+#     %i[superadmin admin].include?(user.role)
 #   end
 #
 #   # good
 #   admin_roles = %i[superadmin admin]
 #   users.select do |user|
-#   admin_roles.include?(user.role)
+#     admin_roles.include?(user.role)
 #   end
 #
 #   # good
 #   ADMIN_ROLES = %i[superadmin admin]
 #   ...
 #   users.select do |user|
-#   ADMIN_ROLES.include?(user.role)
+#     ADMIN_ROLES.include?(user.role)
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:42
@@ -567,52 +580,36 @@ class RuboCop::Cop::Performance::CollectionLiteralInLoop < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:102
   def check_literal?(node, method, arguments); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:161
   def enumerable_method?(method_name); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:143
   def keyword_loop?(type); end
 
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:153
   def literal_class(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:139
   def loop?(ancestor, node); end
 
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:165
   def min_size; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:147
   def node_within_enumerable_loop?(node, ancestor); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:130
   def nonmutable_method_of_array_or_hash?(node, method); end
 
   # Since Ruby 3.4, simple arguments to Array#include? are optimized.
   # See https://github.com/ruby/ruby/pull/12123 for more details.
   #
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:113
   def optimized_array_include?(node, method, arguments); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/collection_literal_in_loop.rb:135
   def parent_is_loop?(node); end
 end
@@ -665,7 +662,7 @@ RuboCop::Cop::Performance::CollectionLiteralInLoop::RESTRICT_ON_SEND = T.let(T.u
 #   array.sort_by!(&:foo)
 #   array.sort_by { |v| v.foo }
 #   array.sort_by do |var|
-#   var.foo
+#     var.foo
 #   end
 #   array.max_by(&:foo)
 #   array.min_by(&:foo)
@@ -694,8 +691,6 @@ class RuboCop::Cop::Performance::CompareWithBlock < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/compare_with_block.rb:91
   def message(send, method, var_a, var_b, args); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/compare_with_block.rb:76
   def slow_compare?(method, args_a, args_b); end
 end
@@ -745,23 +740,23 @@ RuboCop::Cop::Performance::ConcurrentMonotonicTime::RESTRICT_ON_SEND = T.let(T.u
 #
 #   # bad
 #   def tokens(pattern)
-#   pattern.scan(TOKEN).reject { |token| token.match?(/\A#{SEPARATORS}\Z/) }
+#     pattern.scan(TOKEN).reject { |token| token.match?(/\A#{SEPARATORS}\Z/) }
 #   end
 #
 #   # good
 #   ALL_SEPARATORS = /\A#{SEPARATORS}\Z/
 #   def tokens(pattern)
-#   pattern.scan(TOKEN).reject { |token| token.match?(ALL_SEPARATORS) }
+#     pattern.scan(TOKEN).reject { |token| token.match?(ALL_SEPARATORS) }
 #   end
 #
 #   # good
 #   def tokens(pattern)
-#   pattern.scan(TOKEN).reject { |token| token.match?(/\A#{SEPARATORS}\Z/o) }
+#     pattern.scan(TOKEN).reject { |token| token.match?(/\A#{SEPARATORS}\Z/o) }
 #   end
 #
 #   # good
 #   def separators
-#   @separators ||= /\A#{SEPARATORS}\Z/
+#     @separators ||= /\A#{SEPARATORS}\Z/
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/constant_regexp.rb:36
@@ -776,13 +771,9 @@ class RuboCop::Cop::Performance::ConstantRegexp < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/constant_regexp.rb:64
   def include_interpolated_const?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/constant_regexp.rb:55
   def within_allowed_assignment?(node); end
 
@@ -798,6 +789,27 @@ RuboCop::Cop::Performance::ConstantRegexp::MSG = T.let(T.unsafe(nil), String)
 # Identifies usages of `count` on an `Enumerable` that
 # follow calls to `select`, `find_all`, `filter` or `reject`. Querying logic can instead be
 # passed to the `count` call.
+#
+# @safety
+#   This cop is unsafe because it has known compatibility issues with `ActiveRecord` and other
+#   frameworks. Before Rails 5.1, `ActiveRecord` will ignore the block that is passed to `count`.
+#   Other methods, such as `select`, will convert the association to an
+#   array and then run the block on the array. A simple work around to
+#   make `count` work with a block is to call `to_a.count {...}`.
+#
+#   For example:
+#
+#   [source,ruby]
+#   ----
+#   Model.where(id: [1, 2, 3]).select { |m| m.method == true }.size
+#   ----
+#
+#   becomes:
+#
+#   [source,ruby]
+#   ----
+#   Model.where(id: [1, 2, 3]).to_a.count { |m| m.method == true }
+#   ----
 #
 # @example
 #   # bad
@@ -836,8 +848,6 @@ class RuboCop::Cop::Performance::Count < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/count.rb:79
   def autocorrect(corrector, node, selector_node, selector); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/count.rb:89
   def eligible_node?(node); end
 
@@ -877,6 +887,9 @@ RuboCop::Cop::Performance::Count::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 #
 # The `delete_prefix('prefix')` method is faster than `gsub(/\Aprefix/, '')`.
 #
+# @safety
+#   This cop is unsafe because `Pathname` has `sub` but not `delete_prefix`.
+#
 # @example
 #
 #   # bad
@@ -889,16 +902,18 @@ RuboCop::Cop::Performance::Count::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 #   # good
 #   str.delete_prefix('prefix')
 #   str.delete_prefix!('prefix')
-# @example SafeMultiline: false
 #
-#   # bad
+# @example SafeMultiline: true (default)
+#
+#   # good
 #   str.gsub(/^prefix/, '')
 #   str.gsub!(/^prefix/, '')
 #   str.sub(/^prefix/, '')
 #   str.sub!(/^prefix/, '')
-# @example SafeMultiline: true (default)
 #
-#   # good
+# @example SafeMultiline: false
+#
+#   # bad
 #   str.gsub(/^prefix/, '')
 #   str.gsub!(/^prefix/, '')
 #   str.sub(/^prefix/, '')
@@ -940,6 +955,9 @@ RuboCop::Cop::Performance::DeletePrefix::RESTRICT_ON_SEND = T.let(T.unsafe(nil),
 #
 # The `delete_suffix('suffix')` method is faster than `gsub(/suffix\z/, '')`.
 #
+# @safety
+#   This cop is unsafe because `Pathname` has `sub` but not `delete_suffix`.
+#
 # @example
 #
 #   # bad
@@ -952,16 +970,18 @@ RuboCop::Cop::Performance::DeletePrefix::RESTRICT_ON_SEND = T.let(T.unsafe(nil),
 #   # good
 #   str.delete_suffix('suffix')
 #   str.delete_suffix!('suffix')
-# @example SafeMultiline: false
 #
-#   # bad
+# @example SafeMultiline: true (default)
+#
+#   # good
 #   str.gsub(/suffix$/, '')
 #   str.gsub!(/suffix$/, '')
 #   str.sub(/suffix$/, '')
 #   str.sub!(/suffix$/, '')
-# @example SafeMultiline: true (default)
 #
-#   # good
+# @example SafeMultiline: false
+#
+#   # bad
 #   str.gsub(/suffix$/, '')
 #   str.gsub!(/suffix$/, '')
 #   str.sub(/suffix$/, '')
@@ -996,6 +1016,11 @@ RuboCop::Cop::Performance::DeleteSuffix::RESTRICT_ON_SEND = T.let(T.unsafe(nil),
 # chained to `select`, `find_all` or `filter` and change them to use
 # `detect` instead.
 #
+# @safety
+#   This cop is unsafe because it assumes that the receiver is an
+#   `Array` or equivalent, but can't reliably detect it. For example,
+#   if the receiver is a `Hash`, it may report a false positive.
+#
 # @example
 #   # bad
 #   [].select { |item| true }.first
@@ -1026,16 +1051,12 @@ class RuboCop::Cop::Performance::Detect < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/detect.rb:70
   def accept_first_call?(receiver, body); end
 
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/detect.rb:102
   def autocorrect(corrector, node, replacement); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/detect.rb:128
   def lazy?(node); end
 
@@ -1089,6 +1110,7 @@ RuboCop::Cop::Performance::Detect::REVERSE_MSG = T.let(T.unsafe(nil), String)
 #   str.start_with?("a", "b", "c")
 #   !str.start_with?(foo, bar)
 #   str.end_with?(var1, var2)
+#
 # @example IncludeActiveSupportAliases: false (default)
 #   # good
 #   str.starts_with?("a", "b") || str.starts_with?("c")
@@ -1096,6 +1118,7 @@ RuboCop::Cop::Performance::Detect::REVERSE_MSG = T.let(T.unsafe(nil), String)
 #
 #   str.starts_with?("a", "b", "c")
 #   str.ends_with?(var1, var2)
+#
 # @example IncludeActiveSupportAliases: true
 #   # bad
 #   str.starts_with?("a", "b") || str.starts_with?("c")
@@ -1129,8 +1152,6 @@ class RuboCop::Cop::Performance::DoubleStartEndWith < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/double_start_end_with.rb:65
   def check(node, receiver, method, first_call_args, second_call_args); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/double_start_end_with.rb:104
   def check_for_active_support_aliases?; end
 
@@ -1159,6 +1180,11 @@ RuboCop::Cop::Performance::DoubleStartEndWith::MSG = T.let(T.unsafe(nil), String
 # `end$` is unsafe as it will behave incompatible with `end_with?`
 # for receiver is multiline string.
 #
+# @safety
+#   This will change to a new method call which isn't guaranteed to be on the
+#   object. Switching these methods has to be done with knowledge of the types
+#   of the variables which rubocop doesn't have.
+#
 # @example
 #   # bad
 #   'abc'.match?(/bc\Z/)
@@ -1170,18 +1196,20 @@ RuboCop::Cop::Performance::DoubleStartEndWith::MSG = T.let(T.unsafe(nil), String
 #
 #   # good
 #   'abc'.end_with?('bc')
-# @example SafeMultiline: false
 #
-#   # bad
+# @example SafeMultiline: true (default)
+#
+#   # good
 #   'abc'.match?(/bc$/)
 #   /bc$/.match?('abc')
 #   'abc' =~ /bc$/
 #   /bc$/ =~ 'abc'
 #   'abc'.match(/bc$/)
 #   /bc$/.match('abc')
-# @example SafeMultiline: true (default)
 #
-#   # good
+# @example SafeMultiline: false
+#
+#   # bad
 #   'abc'.match?(/bc$/)
 #   /bc$/.match?('abc')
 #   'abc' =~ /bc$/
@@ -1268,33 +1296,21 @@ class RuboCop::Cop::Performance::FixedSize < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/fixed_size.rb:73
   def allowed_argument?(arg); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/fixed_size.rb:77
   def allowed_parent?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/fixed_size.rb:69
   def allowed_variable?(var); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/fixed_size.rb:87
   def contains_double_splat?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/fixed_size.rb:81
   def contains_splat?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/fixed_size.rb:93
   def non_string_argument?(node); end
 end
@@ -1368,6 +1384,9 @@ RuboCop::Cop::Performance::FlatMap::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arra
 # both perform an O(n) search through all of the values, calling `values`
 # allocates a new array while using `value?` does not.
 #
+# @safety
+#   This cop is unsafe because it can't tell whether the receiver is a hash object.
+#
 # @example
 #   # bad
 #   { a: 1, b: 2 }.keys.include?(:a)
@@ -1425,8 +1444,6 @@ class RuboCop::Cop::Performance::InefficientHashSearch < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/inefficient_hash_search.rb:71
   def replacement(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/inefficient_hash_search.rb:86
   def use_long_method?; end
 end
@@ -1500,6 +1517,11 @@ RuboCop::Cop::Performance::IoReadlines::RESTRICT_ON_SEND = T.let(T.unsafe(nil), 
 #
 # This cop identifies places where `map { ... }.compact` can be replaced by `filter_map`.
 #
+# @safety
+#   This cop is unsafe because `map { ... }.compact` might yield
+#   different results than `filter_map`. As illustrated in the example, `filter_map`
+#   also filters out falsey values, while `compact` only gets rid of `nil`.
+#
 # [source,ruby]
 # ----
 # [true, false, nil].compact              #=> [true, false]
@@ -1536,21 +1558,15 @@ class RuboCop::Cop::Performance::MapCompact < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/map_compact.rb:95
   def compact_method_with_final_newline_range(compact_method_range); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/map_compact.rb:91
   def invoke_method_after_map_compact_on_same_line?(compact_node, chained_method); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/map_compact.rb:87
   def map_method_and_compact_method_on_same_line?(map_node, compact_node); end
 
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/map_compact.rb:69
   def remove_compact_method(corrector, map_node, compact_node, chained_method); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/map_compact.rb:83
   def use_dot?(node); end
 end
@@ -1564,6 +1580,10 @@ RuboCop::Cop::Performance::MapCompact::RESTRICT_ON_SEND = T.let(T.unsafe(nil), A
 # Checks if the map method is used in a chain.
 #
 # Autocorrection is not supported because an appropriate block variable name cannot be determined automatically.
+#
+# @safety
+#   This cop is unsafe because false positives occur if the number of times the first method is executed
+#   affects the return value of subsequent methods.
 #
 # [source,ruby]
 # ----
@@ -1647,20 +1667,24 @@ RuboCop::Cop::Performance::MethodObjectAsBlock::MSG = T.let(T.unsafe(nil), Strin
 # especially in case of single-threaded
 # applications with multiple `OpenStruct` instantiations.
 #
+# @safety
+#   This cop is unsafe because `OpenStruct.new` and `Struct.new`
+#   are not equivalent.
+#
 # @example
 #   # bad
 #   class MyClass
-#   def my_method
-#   OpenStruct.new(my_key1: 'my_value1', my_key2: 'my_value2')
-#   end
+#     def my_method
+#       OpenStruct.new(my_key1: 'my_value1', my_key2: 'my_value2')
+#     end
 #   end
 #
 #   # good
 #   class MyClass
-#   MyStruct = Struct.new(:my_key1, :my_key2)
-#   def my_method
-#   MyStruct.new('my_value1', 'my_value2')
-#   end
+#     MyStruct = Struct.new(:my_key1, :my_key2)
+#     def my_method
+#       MyStruct.new('my_value1', 'my_value2')
+#     end
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/open_struct.rb:34
@@ -1683,6 +1707,16 @@ RuboCop::Cop::Performance::OpenStruct::RESTRICT_ON_SEND = T.let(T.unsafe(nil), A
 # `Range#cover?` simply compares the target item with the beginning and
 # end points of the `Range`. In a great majority of cases, this is what
 # is wanted.
+#
+# @safety
+#   This cop is unsafe because `Range#include?` (or `Range#member?`) and `Range#cover?`
+#   are not equivalent behavior.
+#   Example of a case where `Range#cover?` may not provide the desired result:
+#
+#   [source,ruby]
+#   ----
+#   ('a'..'z').cover?('yellow') # => true
+#   ----
 #
 # @example
 #   # bad
@@ -1718,18 +1752,18 @@ RuboCop::Cop::Performance::RangeInclude::RESTRICT_ON_SEND = T.let(T.unsafe(nil),
 # @example
 #   # bad
 #   def method(&block)
-#   block.call
+#     block.call
 #   end
 #   def another(&func)
-#   func.call 1, 2, 3
+#     func.call 1, 2, 3
 #   end
 #
 #   # good
 #   def method
-#   yield
+#     yield
 #   end
 #   def another
-#   yield 1, 2, 3
+#     yield 1, 2, 3
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_block_call.rb:25
@@ -1753,8 +1787,6 @@ class RuboCop::Cop::Performance::RedundantBlockCall < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_block_call.rb:99
   def args_include_block_pass?(blockcall); end
 
@@ -1766,8 +1798,6 @@ class RuboCop::Cop::Performance::RedundantBlockCall < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_block_call.rb:83
   def calls_to_report(argname, body); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_block_call.rb:93
   def shadowed_block_argument?(body, block_argument_of_method_signature); end
 end
@@ -1804,6 +1834,9 @@ RuboCop::Cop::Performance::RedundantBlockCall::YIELD = T.let(T.unsafe(nil), Stri
 # [/pattern/].all?('pattern')                            # => false
 # ----
 #
+# @safety
+#   This cop is unsafe because `===` and `==` do not always behave the same.
+#
 # @example
 #   # bad
 #   items.all? { |item| pattern === item }
@@ -1814,14 +1847,16 @@ RuboCop::Cop::Performance::RedundantBlockCall::YIELD = T.let(T.unsafe(nil), Stri
 #   # good
 #   items.all?(pattern)
 #   items.all?(Klass)
-# @example AllowRegexpMatch: false
 #
-#   # bad
-#   items.all? { |item| item =~ pattern }
-#   items.all? { |item| item.match?(pattern) }
 # @example AllowRegexpMatch: true (default)
 #
 #   # good
+#   items.all? { |item| item =~ pattern }
+#   items.all? { |item| item.match?(pattern) }
+#
+# @example AllowRegexpMatch: false
+#
+#   # bad
 #   items.all? { |item| item =~ pattern }
 #   items.all? { |item| item.match?(pattern) }
 #
@@ -1835,8 +1870,6 @@ class RuboCop::Cop::Performance::RedundantEqualityComparisonBlock < ::RuboCop::C
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_equality_comparison_block.rb:131
   def allow_regexp_match?; end
 
@@ -1846,23 +1879,15 @@ class RuboCop::Cop::Performance::RedundantEqualityComparisonBlock < ::RuboCop::C
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_equality_comparison_block.rb:127
   def offense_range(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_equality_comparison_block.rb:82
   def one_block_argument?(block_arguments); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_equality_comparison_block.rb:94
   def same_block_argument_and_is_a_argument?(block_body, block_argument); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_equality_comparison_block.rb:118
   def use_block_argument_in_method_argument_of_operand?(block_argument, operand); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_equality_comparison_block.rb:86
   def use_equality_comparison_block?(block_body); end
 end
@@ -1890,7 +1915,7 @@ RuboCop::Cop::Performance::RedundantEqualityComparisonBlock::TARGET_METHODS = T.
 #   # bad
 #   do_something if str.match(/regex/)
 #   while regex.match('str')
-#   do_something
+#     do_something
 #   end
 #
 #   # good
@@ -1915,26 +1940,18 @@ class RuboCop::Cop::Performance::RedundantMatch < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_match.rb:51
   def autocorrect(corrector, node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_match.rb:57
   def autocorrectable?(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_match.rb:86
   def call_like?(arg); end
 
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_match.rb:63
   def replacement(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_match.rb:73
   def requires_parentheses?(arg); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_match.rb:80
   def requires_parentheses_for_call_like?(arg); end
 end
@@ -1952,6 +1969,10 @@ RuboCop::Cop::Performance::RedundantMatch::RESTRICT_ON_SEND = T.let(T.unsafe(nil
 # You can set the maximum number of key-value pairs to consider
 # an offense with `MaxKeyValuePairs`.
 #
+# @safety
+#   This cop is unsafe because RuboCop cannot determine if the
+#   receiver of `merge!` is actually a hash or not.
+#
 # @example
 #   # bad
 #   hash.merge!(a: 1)
@@ -1960,6 +1981,7 @@ RuboCop::Cop::Performance::RedundantMatch::RESTRICT_ON_SEND = T.let(T.unsafe(nil
 #   # good
 #   hash[:a] = 1
 #   hash['key'] = 'value'
+#
 # @example MaxKeyValuePairs: 2 (default)
 #   # bad
 #   hash.merge!(a: 1, b: 2)
@@ -1993,8 +2015,6 @@ class RuboCop::Cop::Performance::RedundantMerge < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:79
   def each_redundant_merge(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:98
   def kwsplat_used?(pairs); end
 
@@ -2007,18 +2027,12 @@ class RuboCop::Cop::Performance::RedundantMerge < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:71
   def message(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:87
   def non_redundant_merge?(node, receiver, pairs); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:94
   def non_redundant_pairs?(receiver, pairs); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:102
   def non_redundant_value_used?(receiver, node); end
 
@@ -2039,33 +2053,23 @@ RuboCop::Cop::Performance::RedundantMerge::AREF_ASGN = T.let(T.unsafe(nil), Stri
 class RuboCop::Cop::Performance::RedundantMerge::EachWithObjectInspector
   extend ::RuboCop::AST::NodePattern::Macros
 
-  # @return [EachWithObjectInspector] a new instance of EachWithObjectInspector
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:157
   def initialize(node, receiver); end
 
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:188
   def each_with_object_node(param0 = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:162
   def value_used?; end
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:172
   def eligible_receiver?; end
 
-  # Returns the value of attribute node.
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:170
   def node; end
 
-  # Returns the value of attribute receiver.
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_merge.rb:170
   def receiver; end
 
@@ -2140,8 +2144,6 @@ class RuboCop::Cop::Performance::RedundantSplitRegexpArgument < ::RuboCop::Cop::
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/redundant_split_regexp_argument.rb:42
   def determinist_regexp?(regexp_node); end
 
@@ -2248,65 +2250,65 @@ RuboCop::Cop::Performance::RedundantStringChars::RESTRICT_ON_SEND = T.let(T.unsa
 # @example
 #   # bad
 #   def foo
-#   if x =~ /re/
-#   do_something
-#   end
-#   end
-#
-#   # bad
-#   def foo
-#   if x !~ /re/
-#   do_something
-#   end
+#     if x =~ /re/
+#       do_something
+#     end
 #   end
 #
 #   # bad
 #   def foo
-#   if x.match(/re/)
-#   do_something
-#   end
+#     if x !~ /re/
+#       do_something
+#     end
 #   end
 #
 #   # bad
 #   def foo
-#   if /re/ === x
-#   do_something
+#     if x.match(/re/)
+#       do_something
+#     end
 #   end
+#
+#   # bad
+#   def foo
+#     if /re/ === x
+#       do_something
+#     end
 #   end
 #
 #   # good
 #   def foo
-#   if x.match?(/re/)
-#   do_something
-#   end
-#   end
-#
-#   # good
-#   def foo
-#   if !x.match?(/re/)
-#   do_something
-#   end
+#     if x.match?(/re/)
+#       do_something
+#     end
 #   end
 #
 #   # good
 #   def foo
-#   if x =~ /re/
-#   do_something(Regexp.last_match)
-#   end
-#   end
-#
-#   # good
-#   def foo
-#   if x.match(/re/)
-#   do_something($~)
-#   end
+#     if !x.match?(/re/)
+#       do_something
+#     end
 #   end
 #
 #   # good
 #   def foo
-#   if /re/ === x
-#   do_something($~)
+#     if x =~ /re/
+#       do_something(Regexp.last_match)
+#     end
 #   end
+#
+#   # good
+#   def foo
+#     if x.match(/re/)
+#       do_something($~)
+#     end
+#   end
+#
+#   # good
+#   def foo
+#     if /re/ === x
+#       do_something($~)
+#     end
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:75
@@ -2332,8 +2334,6 @@ class RuboCop::Cop::Performance::RegexpMatch < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:93
   def match_with_int_arg_method?(param0 = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:105
   def match_with_lvasgn?(node); end
 
@@ -2360,21 +2360,15 @@ class RuboCop::Cop::Performance::RegexpMatch < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:221
   def find_last_match(body, range, scope_root); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:181
   def last_match_used?(match_node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:246
   def match_gvar?(sym); end
 
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:177
   def message(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/regexp_match.rb:217
   def modifier_form?(match_node); end
 
@@ -2450,8 +2444,6 @@ class RuboCop::Cop::Performance::ReverseEach < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/reverse_each.rb:54
   def offense_range(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/reverse_each.rb:48
   def use_return_value?(node); end
 end
@@ -2547,9 +2539,6 @@ RuboCop::Cop::Performance::SelectMap::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Ar
 
 # Identifies usages of `count` on an `Array` and `Hash` and change them to `size`.
 #
-# TODO: Add advanced detection of variables that could
-# have been assigned to an array or a hash.
-#
 # @example
 #   # bad
 #   [1, 2, 3].count
@@ -2577,6 +2566,8 @@ RuboCop::Cop::Performance::SelectMap::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Ar
 #
 #   # good
 #   [1, 2, 3].count { |e| e > 2 }
+# TODO: Add advanced detection of variables that could
+# have been assigned to an array or a hash.
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/size.rb:37
 class RuboCop::Cop::Performance::Size < ::RuboCop::Cop::Base
@@ -2665,8 +2656,6 @@ class RuboCop::Cop::Performance::Squeeze < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/squeeze.rb:65
   def repeating_literal?(regex_str); end
 end
@@ -2686,6 +2675,11 @@ RuboCop::Cop::Performance::Squeeze::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arra
 # `^start` is unsafe as it will behave incompatible with `start_with?`
 # for receiver is multiline string.
 #
+# @safety
+#   This will change to a new method call which isn't guaranteed to be on the
+#   object. Switching these methods has to be done with knowledge of the types
+#   of the variables which rubocop doesn't have.
+#
 # @example
 #   # bad
 #   'abc'.match?(/\Aab/)
@@ -2697,18 +2691,20 @@ RuboCop::Cop::Performance::Squeeze::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arra
 #
 #   # good
 #   'abc'.start_with?('ab')
-# @example SafeMultiline: false
 #
-#   # bad
+# @example SafeMultiline: true (default)
+#
+#   # good
 #   'abc'.match?(/^ab/)
 #   /^ab/.match?('abc')
 #   'abc' =~ /^ab/
 #   /^ab/ =~ 'abc'
 #   'abc'.match(/^ab/)
 #   /^ab/.match('abc')
-# @example SafeMultiline: true (default)
 #
-#   # good
+# @example SafeMultiline: false
+#
+#   # bad
 #   'abc'.match?(/^ab/)
 #   /^ab/.match?('abc')
 #   'abc' =~ /^ab/
@@ -2743,6 +2739,10 @@ RuboCop::Cop::Performance::StartWith::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Ar
 # Checks for calls to `#bytes` counting method and suggests using `bytesize` instead.
 # The `bytesize` method is more efficient and directly returns the size in bytes,
 # avoiding the intermediate array allocation that `bytes.size` incurs.
+#
+# @safety
+#   This cop is unsafe because it assumes that the receiver
+#   responds to `#bytesize` method.
 #
 # @example
 #   # bad
@@ -2840,6 +2840,9 @@ RuboCop::Cop::Performance::StringIdentifierArgument::TWO_ARGUMENTS_METHOD = T.le
 
 # Identifies unnecessary use of a regex where `String#include?` would suffice.
 #
+# @safety
+#   This cop's offenses are not safe to autocorrect if a receiver is nil or a Symbol.
+#
 # @example
 #   # bad
 #   str.match?(/ab/)
@@ -2871,8 +2874,6 @@ class RuboCop::Cop::Performance::StringInclude < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/string_include.rb:59
   def literal?(regex_str); end
 end
@@ -2914,13 +2915,9 @@ class RuboCop::Cop::Performance::StringReplacement < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/string_replacement.rb:84
   def accept_first_param?(first_param); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/string_replacement.rb:79
   def accept_second_param?(second_param); end
 
@@ -2979,6 +2976,41 @@ RuboCop::Cop::Performance::StringReplacement::TR = T.let(T.unsafe(nil), String)
 # Identifies places where custom code finding the sum of elements
 # in some Enumerable object can be replaced by `Enumerable#sum` method.
 #
+# @safety
+#   Autocorrections are unproblematic wherever an initial value is provided explicitly:
+#
+#   [source,ruby]
+#   ----
+#   [1, 2, 3].reduce(4, :+) # => 10
+#   [1, 2, 3].sum(4) # => 10
+#
+#   [].reduce(4, :+) # => 4
+#   [].sum(4) # => 4
+#   ----
+#
+#   This also holds true for non-numeric types which implement a `:+` method:
+#
+#   [source,ruby]
+#   ----
+#   ['l', 'o'].reduce('Hel', :+) # => "Hello"
+#   ['l', 'o'].sum('Hel') # => "Hello"
+#   ----
+#
+#   When no initial value is provided though, `Enumerable#reduce` will pick the first enumerated value
+#   as initial value and successively add all following values to it, whereas
+#   `Enumerable#sum` will set an initial value of `0` (`Integer`) which can lead to a `TypeError`:
+#
+#   [source,ruby]
+#   ----
+#   [].reduce(:+) # => nil
+#   [1, 2, 3].reduce(:+) # => 6
+#   ['H', 'e', 'l', 'l', 'o'].reduce(:+) # => "Hello"
+#
+#   [].sum # => 0
+#   [1, 2, 3].sum # => 6
+#   ['H', 'e', 'l', 'l', 'o'].sum # => in `+': String can't be coerced into Integer (TypeError)
+#   ----
+#
 # @example OnlySumOrWithInitialValue: false (default)
 #   # bad
 #   [1, 2, 3].inject(:+)                        # Autocorrections for cases without initial value are unsafe
@@ -2993,6 +3025,7 @@ RuboCop::Cop::Performance::StringReplacement::TR = T.let(T.unsafe(nil), String)
 #   [1, 2, 3].sum(10)
 #   [1, 2, 3].sum { |elem| elem ** 2 }
 #   [1, 2, 3].sum(10, &:count)
+#
 # @example OnlySumOrWithInitialValue: true
 #   # bad
 #   [1, 2, 3].reduce(10, :+)
@@ -3036,8 +3069,6 @@ class RuboCop::Cop::Performance::Sum < ::RuboCop::Cop::Base
 
   private
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/sum.rb:160
   def array_literal?(node); end
 
@@ -3065,8 +3096,6 @@ class RuboCop::Cop::Performance::Sum < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/sum.rb:209
   def build_sum_map_message(send_node, init); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/sum.rb:155
   def empty_array_literal?(node); end
 
@@ -3102,15 +3131,27 @@ RuboCop::Cop::Performance::Sum::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
 # In most cases such calls can be replaced
 # with an explicit array creation.
 #
+# @safety
+#   This cop's autocorrection is unsafe because `Integer#times` does nothing if receiver is 0
+#   or less. However, `Array.new` raises an error if argument is less than 0.
+#
+#   For example:
+#
+#   [source,ruby]
+#   ----
+#   -1.times{}    # does nothing
+#   Array.new(-1) # ArgumentError: negative array size
+#   ----
+#
 # @example
 #   # bad
 #   9.times.map do |i|
-#   i.to_s
+#     i.to_s
 #   end
 #
 #   # good
 #   Array.new(9) do |i|
-#   i.to_s
+#     i.to_s
 #   end
 #
 # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/times_map.rb:32
@@ -3140,8 +3181,6 @@ class RuboCop::Cop::Performance::TimesMap < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/times_map.rb:59
   def check(node); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/performance/times_map.rb:71
   def handleable_receiver?(node); end
 
@@ -3161,6 +3200,12 @@ RuboCop::Cop::Performance::TimesMap::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Arr
 # In Ruby 2.3 or later, use unary plus operator to unfreeze a string
 # literal instead of `String#dup` and `String.new`.
 # Unary plus operator is faster than `String#dup`.
+#
+# @safety
+#   This cop's autocorrection is unsafe because `String.new` (without operator) is not
+#   exactly the same as `+''`. These differ in encoding. `String.new.encoding` is always
+#   `ASCII-8BIT`. However, `(+'').encoding` is the same as script encoding(e.g. `UTF-8`).
+#   if you expect `ASCII-8BIT` encoding, disable this cop.
 #
 # @example
 #   # bad
@@ -3228,6 +3273,12 @@ RuboCop::Cop::Performance::UriDefaultParser::RESTRICT_ON_SEND = T.let(T.unsafe(n
 
 # Checks for `map { |id| [id] }` and suggests replacing it with `zip`.
 #
+# @safety
+#   This cop is unsafe for novel definitions of `map` and `collect`
+#   on non-Enumerable objects that do not respond to `zip`.
+#   To make your object enumerable, define an `each` method
+#   as described in https://ruby-doc.org/core/Enumerable.html
+#
 # @example
 #   # bad
 #   [1, 2, 3].map { |id| [id] }
@@ -3275,38 +3326,24 @@ module RuboCop::Cop::RegexpMetacharacter
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:55
   def drop_start_metacharacter(regexp_string); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:15
   def literal_at_end?(regexp); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:41
   def literal_at_end_with_backslash_z?(regex_str); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:48
   def literal_at_end_with_dollar?(regex_str); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:9
   def literal_at_start?(regexp); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:21
   def literal_at_start_with_backslash_a?(regex_str); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:31
   def literal_at_start_with_caret?(regex_str); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/cop/mixin/regexp_metacharacter.rb:71
   def safe_multiline?; end
 end
@@ -3348,8 +3385,6 @@ class RuboCop::Performance::Plugin < ::LintRoller::Plugin
   # pkg:gem/rubocop-performance#lib/rubocop/performance/plugin.rb:22
   def rules(_context); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/rubocop-performance#lib/rubocop/performance/plugin.rb:18
   def supported?(context); end
 end

@@ -6,112 +6,101 @@
 
 
 # pkg:gem/grape-entity#lib/grape_entity/entity.rb:5
-module Grape; end
+module Grape
+  extend ::Dry::Core::Constants
+  extend ::Dry::Configurable::Methods
+end
 
 # An Entity is a lightweight structure that allows you to easily
 # represent data from your application in a consistent and abstracted
 # way in your API. Entities can also provide documentation for the
 # fields exposed.
 #
+# @example Entity Definition
+#
+#   module API
+#     module Entities
+#       class User < Grape::Entity
+#         expose :first_name, :last_name, :screen_name, :location
+#         expose :field, documentation: { type: "string", desc: "describe the field" }
+#         expose :latest_status, using: API::Status, as: :status, unless: { collection: true }
+#         expose :email, if: { type: :full }
+#         expose :new_attribute, if: { version: 'v2' }
+#         expose(:name) { |model, options| [model.first_name, model.last_name].join(' ') }
+#       end
+#     end
+#   end
+#
 # Entities are not independent structures, rather, they create
 # **representations** of other Ruby objects using a number of methods
 # that are convenient for use in an API. Once you've defined an Entity,
 # you can use it in your API like this:
 #
-# @example Entity Definition
-#
-#   module API
-#   module Entities
-#   class User < Grape::Entity
-#   expose :first_name, :last_name, :screen_name, :location
-#   expose :field, documentation: { type: "string", desc: "describe the field" }
-#   expose :latest_status, using: API::Status, as: :status, unless: { collection: true }
-#   expose :email, if: { type: :full }
-#   expose :new_attribute, if: { version: 'v2' }
-#   expose(:name) { |model, options| [model.first_name, model.last_name].join(' ') }
-#   end
-#   end
-#   end
 # @example Usage in the API Layer
 #
 #   module API
-#   class Users < Grape::API
-#   version 'v2'
+#     class Users < Grape::API
+#       version 'v2'
 #
-#   desc 'User index', { params: API::Entities::User.documentation }
-#   get '/users' do
-#   @users = User.all
-#   type = current_user.admin? ? :full : :default
-#   present @users, with: API::Entities::User, type: type
-#   end
-#   end
+#       desc 'User index', { params: API::Entities::User.documentation }
+#       get '/users' do
+#         @users = User.all
+#         type = current_user.admin? ? :full : :default
+#         present @users, with: API::Entities::User, type: type
+#       end
+#     end
 #   end
 #
 # pkg:gem/grape-entity#lib/grape_entity/entity.rb:45
 class Grape::Entity
-  # @return [Entity] a new instance of Entity
-  #
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:479
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:490
   def initialize(object, options = T.unsafe(nil)); end
 
-  # The serializable hash is the Entity's primary output. It is the transformed
-  # hash for the given data model and is used as the basis for serialization to
-  # JSON and other formats.
-  #
-  # @param runtime_options [Hash] Any options you pass in here will be known to the entity
-  #   representation, this is where you can trigger things from conditional options
-  #   etc.
-  #
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:557
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:593
   def as_json(runtime_options = T.unsafe(nil)); end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:540
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:576
   def delegate_attribute(attribute); end
 
-  # Returns the value of attribute delegator.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/entity.rb:46
   def delegator; end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:493
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:504
   def documentation; end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:532
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:538
+  def ensure_block_arity!(block); end
+
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:568
   def exec_with_attribute(attribute, &block); end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:516
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:527
   def exec_with_object(options, &block); end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:497
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:508
   def formatters; end
 
   # Prevent default serialization of :options or :delegator.
   #
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:474
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:480
   def inspect; end
 
-  # @return [Boolean]
-  #
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:550
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:586
   def is_defined_in_entity?(attribute); end
 
-  # Returns the value of attribute object.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/entity.rb:46
   def object; end
 
-  # Returns the value of attribute options.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/entity.rb:46
   def options; end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:465
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:471
   def presented; end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:489
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:500
   def root_exposure; end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:485
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:496
   def root_exposures; end
 
   # The serializable hash is the Entity's primary output. It is the transformed
@@ -122,28 +111,35 @@ class Grape::Entity
   #   representation, this is where you can trigger things from conditional options
   #   etc.
   #
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:508
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:519
   def serializable_hash(runtime_options = T.unsafe(nil)); end
 
   # pkg:gem/grape-entity#lib/grape_entity/entity.rb:559
+  def symbol_to_proc_wrapper?(block); end
+
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:595
   def to_json(options = T.unsafe(nil)); end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:564
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:600
   def to_xml(options = T.unsafe(nil)); end
 
-  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:536
+  # pkg:gem/grape-entity#lib/grape_entity/entity.rb:572
   def value_for(key, options = T.unsafe(nil)); end
 
   class << self
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:218
+    # Satisfies the respond_to?(:[]) check in Grape::DryTypes (>= 3.2)
+    # so Entity subclasses can be used as param types.
+    #
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:135
+    def [](val); end
+
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:224
     def build_exposure_for_attribute(attribute, nesting_stack, options, block); end
 
-    # @return [Boolean]
-    #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:257
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:263
     def can_unexpose?; end
 
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:261
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:267
     def cannot_unexpose!; end
 
     # pkg:gem/grape-entity#lib/grape_entity/entity.rb:129
@@ -153,79 +149,98 @@ class Grape::Entity
     # the values are document keys in the entity's documentation key. When calling
     # #docmentation, any exposure without a documentation key will be ignored.
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:283
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:289
     def documentation; end
 
     # This method is the primary means by which you will declare what attributes
     # should be exposed by the entity.
     #
-    # Note the parameters passed in via the lambda syntax.
+    # @option options :expose_nil When set to false the associated exposure will not
+    #   be rendered if its value is nil.
     #
+    # @option options :as Declare an alias for the representation of this attribute.
+    #   If a proc is presented it is evaluated in the context of the entity so object
+    #   and the entity methods are available to it.
     #
     # @example as: a proc or lambda
     #
     #   object = OpenStruct(awesomeness: 'awesome_key', awesome: 'not-my-key', other: 'other-key' )
     #
     #   class MyEntity < Grape::Entity
-    #   expose :awesome, as: proc { object.awesomeness }
-    #   expose :awesomeness, as: ->(object, opts) { object.other }
+    #     expose :awesome, as: proc { object.awesomeness }
+    #     expose :awesomeness, as: ->(object, opts) { object.other }
     #   end
     #
     #   => { 'awesome_key': 'not-my-key', 'other-key': 'awesome_key' }
-    # @option options
-    # @option options
-    # @option options
-    # @option options
-    # @option options
-    # @option options
-    # @option options
-    # @option options
-    # @param options [Hash] a customizable set of options
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:190
+    # Note the parameters passed in via the lambda syntax.
+    #
+    # @option options :if When passed a Hash, the attribute will only be exposed if the
+    #   runtime options match all the conditions passed in. When passed a lambda, the
+    #   lambda will execute with two arguments: the object being represented and the
+    #   options passed into the representation call. Return true if you want the attribute
+    #   to be exposed.
+    # @option options :unless When passed a Hash, the attribute will be exposed if the
+    #   runtime options fail to match any of the conditions passed in. If passed a lambda,
+    #   it will yield the object being represented and the options passed to the
+    #   representation call. Return true to prevent exposure, false to allow it.
+    # @option options :using This option allows you to map an attribute to another Grape
+    #   Entity. Pass it a Grape::Entity class and the attribute in question will
+    #   automatically be transformed into a representation that will receive the same
+    #   options as the parent entity when called. Note that arrays are fine here and
+    #   will automatically be detected and handled appropriately.
+    # @option options :proc If you pass a Proc into this option, it will
+    #   be used directly to determine the value for that attribute. It
+    #   will be called with the represented object as well as the
+    #   runtime options that were passed in. You can also just supply a
+    #   block to the expose call to achieve the same effect.
+    # @option options :documentation Define documenation for an exposed
+    #   field, typically the value is a hash with two fields, type and desc.
+    # @option options :merge This option allows you to merge an exposed field to the root
+    #
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:196
     def expose(*args, &block); end
 
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:241
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:247
     def find_exposure(attribute); end
 
     # This allows you to declare a Proc in which exposures can be formatted with.
     # It take a block with an arity of 1 which is passed as the value of the exposed attribute.
     #
+    # @param name [Symbol] the name of the formatter
+    # @param block [Proc] the block that will interpret the exposed attribute
+    #
     # @example Formatter declaration
     #
     #   module API
-    #   module Entities
-    #   class User < Grape::Entity
-    #   format_with :timestamp do |date|
-    #   date.strftime('%m/%d/%Y')
+    #     module Entities
+    #       class User < Grape::Entity
+    #         format_with :timestamp do |date|
+    #           date.strftime('%m/%d/%Y')
+    #         end
+    #
+    #         expose :birthday, :last_signed_in, format_with: :timestamp
+    #       end
+    #     end
     #   end
     #
-    #   expose :birthday, :last_signed_in, format_with: :timestamp
-    #   end
-    #   end
-    #   end
     # @example Formatters are available to all decendants
     #
     #   Grape::Entity.format_with :timestamp do |date|
-    #   date.strftime('%m/%d/%Y')
+    #     date.strftime('%m/%d/%Y')
     #   end
-    # @param block [Proc] the block that will interpret the exposed attribute
-    # @param name [Symbol] the name of the formatter
-    # @raise [ArgumentError]
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:315
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:321
     def format_with(name, &block); end
 
     # Returns all formatters that are registered for this and it's ancestors
-    #
     # @return [Hash] of formatters
     #
     # pkg:gem/grape-entity#lib/grape_entity/entity.rb:111
     def formatters; end
 
-    # Sets the attribute formatters
-    #
-    # @param value the value to set the attribute formatters to.
+    # Returns all formatters that are registered for this and it's ancestors
+    # @return [Hash] of formatters
     #
     # pkg:gem/grape-entity#lib/grape_entity/entity.rb:107
     def formatters=(_arg0); end
@@ -236,69 +251,68 @@ class Grape::Entity
     # pkg:gem/grape-entity#lib/grape_entity/entity.rb:119
     def hash_access=(value); end
 
-    # @private
-    #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:136
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:142
     def inherited(subclass); end
 
     # Merges the given options with current block options.
     #
     # @param options [Hash] Exposure options.
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:593
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:629
     def merge_options(options); end
 
     # This allows you to present a collection of objects.
     #
+    # @param present_collection   [true or false] when true all objects will be available as
+    #   items in your presenter instead of wrapping each object in an instance of your presenter.
     #  When false (default) every object in a collection to present will be wrapped separately
     #  into an instance of your presenter.
+    # @param collection_name [Symbol] the name of the collection accessor in your entity object.
+    #  Default :items
     #
     # @example Entity Definition
     #
     #   module API
-    #   module Entities
-    #   class User < Grape::Entity
-    #   expose :id
+    #     module Entities
+    #       class User < Grape::Entity
+    #         expose :id
+    #       end
+    #
+    #       class Users < Grape::Entity
+    #         present_collection true
+    #         expose :items, as: 'users', using: API::Entities::User
+    #         expose :version, documentation: { type: 'string',
+    #                                           desc: 'actual api version',
+    #                                           required: true }
+    #
+    #         def version
+    #           options[:version]
+    #         end
+    #       end
+    #     end
     #   end
     #
-    #   class Users < Grape::Entity
-    #   present_collection true
-    #   expose :items, as: 'users', using: API::Entities::User
-    #   expose :version, documentation: { type: 'string',
-    #   desc: 'actual api version',
-    #   required: true }
-    #
-    #   def version
-    #   options[:version]
-    #   end
-    #   end
-    #   end
-    #   end
     # @example Usage in the API Layer
     #
     #   module API
-    #   class Users < Grape::API
-    #   version 'v2'
+    #     class Users < Grape::API
+    #       version 'v2'
     #
-    #   # this will render { "users" : [ { "id" : "1" }, { "id" : "2" } ], "version" : "v2" }
-    #   get '/users' do
-    #   @users = User.all
-    #   present @users, with: API::Entities::Users
+    #       # this will render { "users" : [ { "id" : "1" }, { "id" : "2" } ], "version" : "v2" }
+    #       get '/users' do
+    #         @users = User.all
+    #         present @users, with: API::Entities::Users
+    #       end
+    #
+    #       # this will render { "user" : { "id" : "1" } }
+    #       get '/users/:id' do
+    #         @user = User.find(params[:id])
+    #         present @user, with: API::Entities::User
+    #       end
+    #     end
     #   end
     #
-    #   # this will render { "user" : { "id" : "1" } }
-    #   get '/users/:id' do
-    #   @user = User.find(params[:id])
-    #   present @user, with: API::Entities::User
-    #   end
-    #   end
-    #   end
-    # @param collection_name [Symbol] the name of the collection accessor in your entity object.
-    #   Default :items
-    # @param present_collection [true or false] when true all objects will be available as
-    #   items in your presenter instead of wrapping each object in an instance of your presenter.
-    #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:416
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:422
     def present_collection(present_collection = T.unsafe(nil), collection_name = T.unsafe(nil)); end
 
     # This convenience method allows you to instantiate one or more entities by
@@ -307,86 +321,86 @@ class Grape::Entity
     # an array of entities will be returned. If a single object is passed in,
     # a single entity will be returned.
     #
-    # @option options
-    # @option options
-    # @option options
-    # @option options
     # @param objects [Object or Array] One or more objects to be represented.
     # @param options [Hash] Options that will be passed through to each entity
     #   representation.
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:438
+    # @option options :root [String or false] override the default root name set for the entity.
+    #   Pass nil or false to represent the object or objects with no root name
+    #   even if one is defined for the entity.
+    # @option options :serializable [true or false] when true a serializable Hash will be returned
+    #
+    # @option options :only [Array] all the fields that should be returned
+    # @option options :except [Array] all the fields that should not be returned
+    #
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:444
     def represent(objects, options = T.unsafe(nil)); end
 
     # This allows you to set a root element name for your representation.
     #
-    # @example Entity Definition
-    #
-    #   module API
-    #   module Entities
-    #   class User < Grape::Entity
-    #   root 'users', 'user'
-    #   expose :id
-    #   end
-    #   end
-    #   end
-    # @example Usage in the API Layer
-    #
-    #   module API
-    #   class Users < Grape::API
-    #   version 'v2'
-    #
-    #   # this will render { "users" : [ { "id" : "1" }, { "id" : "2" } ] }
-    #   get '/users' do
-    #   @users = User.all
-    #   present @users, with: API::Entities::User
-    #   end
-    #
-    #   # this will render { "user" : { "id" : "1" } }
-    #   get '/users/:id' do
-    #   @user = User.find(params[:id])
-    #   present @user, with: API::Entities::User
-    #   end
-    #   end
-    #   end
-    # @param plural [String] the root key to use when representing
+    # @param plural   [String] the root key to use when representing
     #   a collection of objects. If missing or nil, no root key will be used
     #   when representing collections of objects.
     # @param singular [String] the root key to use when representing
     #   a single object. If missing or nil, no root key will be used when
     #   representing an individual object.
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:360
+    # @example Entity Definition
+    #
+    #   module API
+    #     module Entities
+    #       class User < Grape::Entity
+    #         root 'users', 'user'
+    #         expose :id
+    #       end
+    #     end
+    #   end
+    #
+    # @example Usage in the API Layer
+    #
+    #   module API
+    #     class Users < Grape::API
+    #       version 'v2'
+    #
+    #       # this will render { "users" : [ { "id" : "1" }, { "id" : "2" } ] }
+    #       get '/users' do
+    #         @users = User.all
+    #         present @users, with: API::Entities::User
+    #       end
+    #
+    #       # this will render { "user" : { "id" : "1" } }
+    #       get '/users/:id' do
+    #         @user = User.find(params[:id])
+    #         present @user, with: API::Entities::User
+    #       end
+    #     end
+    #   end
+    #
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:366
     def root(plural, singular = T.unsafe(nil)); end
 
     # This method returns the entity's root or collection root node, or its parent's
-    #
     # @param root_type: either :collection_root or just :root
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:456
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:462
     def root_element(root_type); end
 
     # pkg:gem/grape-entity#lib/grape_entity/entity.rb:103
     def root_exposure; end
 
-    # Sets the attribute root_exposure
-    #
-    # @param value the value to set the attribute root_exposure to.
-    #
     # pkg:gem/grape-entity#lib/grape_entity/entity.rb:107
     def root_exposure=(_arg0); end
 
     # Returns exposures that have been declared for this Entity on the top level.
-    #
     # @return [Array] of exposures
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:237
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:243
     def root_exposures; end
 
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:245
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:251
     def unexpose(*attributes); end
 
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:251
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:257
     def unexpose_all; end
 
     # Raises an error if the given options include unknown keys.
@@ -394,7 +408,7 @@ class Grape::Entity
     #
     # @param options [Hash] Exposure options.
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:622
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:658
     def valid_options(options); end
 
     # Set options that will be applied to any exposures declared inside the block.
@@ -402,12 +416,12 @@ class Grape::Entity
     # @example Multi-exposure if
     #
     #   class MyEntity < Grape::Entity
-    #   with_options if: { awesome: true } do
-    #   expose :awesome, :sweet
-    #   end
+    #     with_options if: { awesome: true } do
+    #       expose :awesome, :sweet
+    #     end
     #   end
     #
-    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:274
+    # pkg:gem/grape-entity#lib/grape_entity/entity.rb:280
     def with_options(options); end
   end
 end
@@ -430,26 +444,18 @@ end
 
 # pkg:gem/grape-entity#lib/grape_entity/condition/base.rb:6
 class Grape::Entity::Condition::Base
-  # @return [Base] a new instance of Base
-  #
   # pkg:gem/grape-entity#lib/grape_entity/condition/base.rb:11
   def initialize(inverse = T.unsafe(nil)); end
 
   # pkg:gem/grape-entity#lib/grape_entity/condition/base.rb:15
   def ==(other); end
 
-  # @raise [NotImplementedError]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/condition/base.rb:27
   def if_value(_entity, _options); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/condition/base.rb:19
   def inversed?; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/condition/base.rb:23
   def met?(entity, options); end
 
@@ -467,8 +473,6 @@ class Grape::Entity::Condition::BlockCondition < ::Grape::Entity::Condition::Bas
   # pkg:gem/grape-entity#lib/grape_entity/condition/block_condition.rb:13
   def ==(other); end
 
-  # Returns the value of attribute block.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/condition/block_condition.rb:7
   def block; end
 
@@ -484,8 +488,6 @@ class Grape::Entity::Condition::HashCondition < ::Grape::Entity::Condition::Base
   # pkg:gem/grape-entity#lib/grape_entity/condition/hash_condition.rb:13
   def ==(other); end
 
-  # Returns the value of attribute cond_hash.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/condition/hash_condition.rb:7
   def cond_hash; end
 
@@ -510,8 +512,6 @@ class Grape::Entity::Condition::SymbolCondition < ::Grape::Entity::Condition::Ba
   # pkg:gem/grape-entity#lib/grape_entity/condition/symbol_condition.rb:9
   def setup(symbol); end
 
-  # Returns the value of attribute symbol.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/condition/symbol_condition.rb:7
   def symbol; end
 end
@@ -529,8 +529,6 @@ module Grape::Entity::DSL
   def entity(options = T.unsafe(nil)); end
 
   class << self
-    # @private
-    #
     # pkg:gem/grape-entity#lib/grape_entity/entity.rb:51
     def included(base); end
   end
@@ -543,22 +541,23 @@ module Grape::Entity::DSL::ClassMethods
   # a block that yields the full Entity DSL (See Grape::Entity),
   # or both.
   #
-  # @example Mixed.
-  #
-  #   class User
-  #   include Grape::Entity::DSL
-  #
-  #   entity :name, :email do
-  #   expose :latest_status, using: Status::Entity, if: :include_status
-  #   expose :new_attribute, if: { version: 'v2' }
-  #   end
-  #   end
   # @example Symbols only.
   #
   #   class User
-  #   include Grape::Entity::DSL
+  #     include Grape::Entity::DSL
   #
-  #   entity :name, :email
+  #     entity :name, :email
+  #   end
+  #
+  # @example Mixed.
+  #
+  #   class User
+  #     include Grape::Entity::DSL
+  #
+  #     entity :name, :email do
+  #       expose :latest_status, using: Status::Entity, if: :include_status
+  #       expose :new_attribute, if: { version: 'v2' }
+  #     end
   #   end
   #
   # pkg:gem/grape-entity#lib/grape_entity/entity.rb:89
@@ -581,23 +580,15 @@ end
 
 # pkg:gem/grape-entity#lib/grape_entity/delegator/base.rb:6
 class Grape::Entity::Delegator::Base
-  # @return [Base] a new instance of Base
-  #
   # pkg:gem/grape-entity#lib/grape_entity/delegator/base.rb:9
   def initialize(object); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/delegator/base.rb:17
   def accepts_options?; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/delegator/base.rb:13
   def delegatable?(_attribute); end
 
-  # Returns the value of attribute object.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/delegator/base.rb:7
   def object; end
 end
@@ -616,8 +607,6 @@ end
 
 # pkg:gem/grape-entity#lib/grape_entity/delegator/plain_object.rb:6
 class Grape::Entity::Delegator::PlainObject < ::Grape::Entity::Delegator::Base
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/delegator/plain_object.rb:11
   def delegatable?(attribute); end
 
@@ -627,8 +616,6 @@ end
 
 # pkg:gem/grape-entity#lib/grape_entity/deprecated.rb:5
 class Grape::Entity::Deprecated < ::StandardError
-  # @return [Deprecated] a new instance of Deprecated
-  #
   # pkg:gem/grape-entity#lib/grape_entity/deprecated.rb:6
   def initialize(msg, spec); end
 end
@@ -666,8 +653,6 @@ end
 
 # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:9
 class Grape::Entity::Exposure::Base
-  # @return [Base] a new instance of Base
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:16
   def initialize(attribute, options, conditions); end
 
@@ -677,35 +662,23 @@ class Grape::Entity::Exposure::Base
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:111
   def attr_path(entity, options); end
 
-  # Returns the value of attribute attribute.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:10
   def attribute; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:99
   def conditional?; end
 
-  # Returns the value of attribute conditions.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:10
   def conditions; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:103
   def conditions_met?(entity, options); end
 
   # if we have any nesting exposures with the same name.
   #
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:52
   def deep_complex_nesting?(entity); end
 
-  # Returns the value of attribute documentation.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:10
   def documentation; end
 
@@ -715,31 +688,21 @@ class Grape::Entity::Exposure::Base
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:34
   def dup_args; end
 
-  # Returns the value of attribute for_merge.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:10
   def for_merge; end
 
-  # Returns the value of attribute is_safe.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:10
   def is_safe; end
 
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:119
   def key(entity = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:47
   def nesting?; end
 
-  # Returns the value of attribute override.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:10
   def override; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:128
   def override?; end
 
@@ -749,26 +712,18 @@ class Grape::Entity::Exposure::Base
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:45
   def setup; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:107
   def should_expose?(entity, options); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:95
   def should_return_key?(options); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:56
   def valid?(entity); end
 
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:88
   def valid_value(entity, options); end
 
-  # @raise [NotImplementedError]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:68
   def value(_entity, _options); end
 
@@ -777,8 +732,6 @@ class Grape::Entity::Exposure::Base
 
   protected
 
-  # Returns the value of attribute options.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:134
   def options; end
 
@@ -793,8 +746,6 @@ class Grape::Entity::Exposure::BlockExposure < ::Grape::Entity::Exposure::Base
   # pkg:gem/grape-entity#lib/grape_entity/exposure/block_exposure.rb:17
   def ==(other); end
 
-  # Returns the value of attribute block.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/block_exposure.rb:7
   def block; end
 
@@ -804,8 +755,6 @@ class Grape::Entity::Exposure::BlockExposure < ::Grape::Entity::Exposure::Base
   # pkg:gem/grape-entity#lib/grape_entity/exposure/block_exposure.rb:25
   def setup(&block); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/block_exposure.rb:21
   def valid?(_entity); end
 
@@ -827,8 +776,6 @@ class Grape::Entity::Exposure::FormatterBlockExposure < ::Grape::Entity::Exposur
   # pkg:gem/grape-entity#lib/grape_entity/exposure/formatter_block_exposure.rb:13
   def dup; end
 
-  # Returns the value of attribute format_with.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/formatter_block_exposure.rb:7
   def format_with; end
 
@@ -847,8 +794,6 @@ class Grape::Entity::Exposure::FormatterExposure < ::Grape::Entity::Exposure::Ba
   # pkg:gem/grape-entity#lib/grape_entity/exposure/formatter_exposure.rb:13
   def dup_args; end
 
-  # Returns the value of attribute format_with.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/formatter_exposure.rb:7
   def format_with; end
 
@@ -867,8 +812,6 @@ class Grape::Entity::Exposure::NestingExposure < ::Grape::Entity::Exposure::Base
   # if we have any nesting exposures with the same name.
   # delegate :deep_complex_nesting?(entity), to: :nested_exposures
   #
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure.rb:59
   def deep_complex_nesting?(entity); end
 
@@ -878,13 +821,9 @@ class Grape::Entity::Exposure::NestingExposure < ::Grape::Entity::Exposure::Base
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure.rb:25
   def find_nested_exposure(attribute); end
 
-  # Returns the value of attribute nested_exposures.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure.rb:7
   def nested_exposures; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure.rb:21
   def nesting?; end
 
@@ -894,8 +833,6 @@ class Grape::Entity::Exposure::NestingExposure < ::Grape::Entity::Exposure::Base
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure.rb:9
   def setup(nested_exposures = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure.rb:29
   def valid?(entity); end
 
@@ -926,8 +863,6 @@ end
 class Grape::Entity::Exposure::NestingExposure::NestedExposures
   include ::Enumerable
 
-  # @return [NestedExposures] a new instance of NestedExposures
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure/nested_exposures.rb:10
   def initialize(exposures); end
 
@@ -950,8 +885,6 @@ class Grape::Entity::Exposure::NestingExposure::NestedExposures
   def count(*args, &block); end
 
   # Determine if we have any nesting exposures with the same name.
-  #
-  # @return [Boolean]
   #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure/nested_exposures.rb:62
   def deep_complex_nesting?(entity); end
@@ -997,8 +930,6 @@ end
 
 # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure/output_builder.rb:7
 class Grape::Entity::Exposure::NestingExposure::OutputBuilder < ::SimpleDelegator
-  # @return [OutputBuilder] a new instance of OutputBuilder
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure/output_builder.rb:8
   def initialize(entity); end
 
@@ -1008,13 +939,9 @@ class Grape::Entity::Exposure::NestingExposure::OutputBuilder < ::SimpleDelegato
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure/output_builder.rb:16
   def add(exposure, result); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure/output_builder.rb:34
   def is_a?(klass); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/nesting_exposure/output_builder.rb:31
   def kind_of?(klass); end
 
@@ -1042,21 +969,15 @@ class Grape::Entity::Exposure::RepresentExposure < ::Grape::Entity::Exposure::Ba
   # pkg:gem/grape-entity#lib/grape_entity/exposure/represent_exposure.rb:9
   def setup(using_class_name, subexposure); end
 
-  # Returns the value of attribute subexposure.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/represent_exposure.rb:7
   def subexposure; end
 
   # pkg:gem/grape-entity#lib/grape_entity/exposure/represent_exposure.rb:34
   def using_class; end
 
-  # Returns the value of attribute using_class_name.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/represent_exposure.rb:7
   def using_class_name; end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/exposure/represent_exposure.rb:30
   def valid?(entity); end
 
@@ -1071,15 +992,13 @@ end
 
 # All supported options.
 #
-# pkg:gem/grape-entity#lib/grape_entity/entity.rb:570
+# pkg:gem/grape-entity#lib/grape_entity/entity.rb:606
 Grape::Entity::OPTIONS = T.let(T.unsafe(nil), Set)
 
 # pkg:gem/grape-entity#lib/grape_entity/options.rb:7
 class Grape::Entity::Options
   extend ::Forwardable
 
-  # @return [Options] a new instance of Options
-  #
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:14
   def initialize(opts_hash = T.unsafe(nil)); end
 
@@ -1113,16 +1032,12 @@ class Grape::Entity::Options
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:65
   def only_fields(for_key = T.unsafe(nil)); end
 
-  # Returns the value of attribute opts_hash.
-  #
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:10
   def opts_hash; end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:34
   def reverse_merge(new_opts); end
 
-  # @return [Boolean]
-  #
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:51
   def should_return_key?(key); end
 

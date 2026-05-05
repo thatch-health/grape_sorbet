@@ -16,15 +16,13 @@ module Mustermann
     #
     # @example
     #   Mustermann[:sinatra] # => Mustermann::Sinatra
-    # @param name [Symbol] a pattern type identifier
+    #
+    # @param [Symbol] name a pattern type identifier
     # @raise [ArgumentError] if the type is not supported
     # @return [Class, #new] pattern factory
     #
     # pkg:gem/mustermann#lib/mustermann.rb:89
     def [](name); end
-
-    # pkg:gem/mustermann#lib/mustermann.rb:120
-    def extend_object(object); end
 
     # Creates a new pattern based on input.
     #
@@ -48,39 +46,47 @@ module Mustermann
     #   Mustermann.new(/.*/)                        # => #<Mustermann::Regular:".*">
     #   Mustermann.new(:name, capture: :word)       # => #<Mustermann::Sinatra:":name">
     #   Mustermann.new("/", "/*.jpg", type: :shell) # => #<Mustermann::Composite:(shell:"/" | shell:"/*.jpg")>
-    # @example enforcing type
-    #   require 'mustermann/sinatra'
     #
-    #   Mustermann::Sinatra.new("/:name")
     # @example using custom #to_pattern
     #   require 'mustermann'
     #
     #   class MyObject
-    #   def to_pattern(**options)
-    #   Mustermann.new("/:name", **options)
-    #   end
+    #     def to_pattern(**options)
+    #       Mustermann.new("/:name", **options)
+    #     end
     #   end
     #
     #   Mustermann.new(MyObject.new, type: :rails) # => #<Mustermann::Rails:"/:name">
-    # @param input [String, Pattern, Regexp, Symbol, #to_pattern, Array<String, Pattern, Regexp, Symbol, #to_pattern>] The representation of the pattern
-    # @param options [Hash] The options hash
-    # @raise [TypeError] if the passed object cannot be converted to a pattern
-    # @raise [ArgumentError] if the type is not supported
-    # @raise [ArgumentError] if some option is not supported
-    # @raise [Mustermann::Error] if the pattern can't be generated from the string
+    #
+    # @example enforcing type
+    #   require 'mustermann/sinatra'
+    #
+    #   Mustermann::Sinatra.new("/:name")
+    #
+    # @param [String, Pattern, Regexp, Symbol, #to_pattern, Array<String, Pattern, Regexp, Symbol, #to_pattern>]
+    #   input The representation of the pattern
+    # @param [Hash] options The options hash
     # @return [Mustermann::Pattern] pattern corresponding to string.
+    # @raise (see [])
+    # @raise (see Mustermann::Pattern.new)
+    # @raise [TypeError] if the passed object cannot be converted to a pattern
     # @see file:README.md#Types_and_Options "Types and Options" in the README
     #
     # pkg:gem/mustermann#lib/mustermann.rb:62
     def new(*input, type: T.unsafe(nil), operator: T.unsafe(nil), **options); end
 
+    # @!visibility private
+    #
     # pkg:gem/mustermann#lib/mustermann.rb:115
     def normalized_type(type); end
 
+    # @!visibility private
+    #
     # pkg:gem/mustermann#lib/mustermann.rb:110
     def register(name, type); end
 
     # @return [LoadError, nil]
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann.rb:101
     def try_require(path); end
@@ -88,21 +94,27 @@ module Mustermann
 end
 
 # @see Mustermann::AST::Pattern
+# @see Mustermann::AST::Pattern
+# @see Mustermann::AST::Pattern
+# @see Mustermann::AST::Pattern
 #
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:3
 module Mustermann::AST; end
 
 # Make sure #start and #stop is set on every node and within its parents #start and #stop.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/ast/boundaries.rb:8
 class Mustermann::AST::Boundaries < ::Mustermann::AST::Translator
   # Checks that a node is within the given boundaries.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/boundaries.rb:38
   def set_boundaries(node, start, stop); end
 
   class << self
     # @return [Mustermann::AST::Node] the ast passed as first argument
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann/ast/boundaries.rb:11
     def set_boundaries(ast, string: T.unsafe(nil), start: T.unsafe(nil), stop: T.unsafe(nil)); end
@@ -117,397 +129,476 @@ class Mustermann::AST::Boundaries::NodeTranslator < ::Mustermann::AST::Translato
   end
 end
 
+# pkg:gem/mustermann#lib/mustermann/ast/converters.rb:7
+Mustermann::AST::CONVERTERS = T.let(T.unsafe(nil), Hash)
+
 # Regexp compilation logic.
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:9
+# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:11
 class Mustermann::AST::Compiler < ::Mustermann::AST::Translator
   # Compiles an AST to a regular expression.
-  #
-  # @param ast [Mustermann::AST::Node] the tree
+  # @param [Mustermann::AST::Node] ast the tree
   # @return [Regexp] corresponding regular expression.
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:151
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:249
   def compile(ast, except: T.unsafe(nil), **options); end
 
   # @return [String] Regular expression for matching the given character in all representations
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:126
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:227
   def encoded(char, uri_decode: T.unsafe(nil), space_matches_plus: T.unsafe(nil), **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:10
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:12
   def error_class; end
 
   class << self
-    # Compiles an AST to a regular expression.
+    # @return [Array<String>] all raw string representations of the character (literal + URI-encoded variants)
+    # @!visibility private
     #
-    # @param ast [Mustermann::AST::Node] the tree
+    # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:212
+    def char_representations(char, uri_decode: T.unsafe(nil), space_matches_plus: T.unsafe(nil)); end
+
+    # Compiles an AST to a regular expression.
+    # @param [Mustermann::AST::Node] ast the tree
     # @return [Regexp] corresponding regular expression.
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:142
+    # @!visibility private
+    #
+    # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:240
     def compile(ast, **options); end
   end
 end
 
 # Capture compilation is complex. :(
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:38
+# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:71
 class Mustermann::AST::Compiler::Capture < ::Mustermann::AST::Compiler::NodeTranslator
   # @return [String] regexp without the named capture
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:49
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:96
   def pattern(capture: T.unsafe(nil), **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:42
-  def translate(**options); end
+  # @!visibility private
+  # When +atomic: true+ is passed (set by the Array translator for captures
+  # that are followed only by a separator or end-of-pattern), the compiled
+  # content is wrapped in an atomic group <tt>(?>…)</tt>.  This prevents
+  # Oniguruma from backtracking into characters the capture has already
+  # consumed, giving a measurable speedup on failing matches without
+  # changing the result for any valid input.
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:81
+  def translate(atomic: T.unsafe(nil), **options); end
 
   private
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:68
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:147
   def default(**options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:64
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:123
   def from_array(array, **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:63
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:141
+  def from_class(klass, **options); end
+
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:119
   def from_hash(hash, **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:67
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:137
   def from_nil(**options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:66
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:133
   def from_string(string, **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:65
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:127
   def from_symbol(symbol, **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:61
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:111
   def qualified(string, greedy: T.unsafe(nil), **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:62
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:115
   def with_lookahead(string, lookahead: T.unsafe(nil), **options); end
 end
 
-# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:9
+# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:11
 class Mustermann::AST::Compiler::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:9
+    # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:11
     def translator; end
   end
 end
 
-# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:72
+# @!visibility private
+#
+# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:151
 class Mustermann::AST::Compiler::Splat < ::Mustermann::AST::Compiler::Capture
   # splats are always non-greedy
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:76
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:155
   def pattern(**options); end
 end
 
-# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:82
+# @!visibility private
+#
+# pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:161
 class Mustermann::AST::Compiler::Variable < ::Mustermann::AST::Compiler::Capture
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:113
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:198
   def default(allow_reserved: T.unsafe(nil), **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:103
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:188
   def parametric(string); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:94
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:179
   def pattern(parametric: T.unsafe(nil), separator: T.unsafe(nil), **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:108
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:193
   def qualified(string, **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:118
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:203
   def register_param(parametric: T.unsafe(nil), split_params: T.unsafe(nil), separator: T.unsafe(nil), **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:86
-  def translate(**options); end
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/compiler.rb:165
+  def translate(atomic: T.unsafe(nil), **options); end
 end
 
 # Looks at an AST, remembers the important bits of information to do an
 # ultra fast expansion.
 #
-# pkg:gem/mustermann#lib/mustermann/ast/expander.rb:12
+# @!visibility private
+#
+# pkg:gem/mustermann#lib/mustermann/ast/expander.rb:11
 class Mustermann::AST::Expander < ::Mustermann::AST::Translator
   # add a tree for expansion
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:79
   def add(ast); end
 
   # Creates the product of two of our secret internal data structures.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:141
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:140
   def add_to(list, result); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:13
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:12
   def error_class; end
 
   # helper method for raising an error for unexpandable values
+  # @!visibility private
   #
-  # @raise [error_class]
-  #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:119
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:118
   def error_for(values); end
 
   # @see Mustermann::AST::Translator#expand
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:126
-  def escape(string, *args, **_arg2); end
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:125
+  def escape(string, *args, **options); end
 
   # @see Mustermann::Pattern#expand
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:95
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:94
   def expand(values); end
 
-  # @return [Boolean]
   # @see Mustermann::Pattern#expandable?
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:105
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:104
   def expandable?(values); end
 
   # @see Mustermann::Expander#with_rest
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:113
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:112
   def expandable_keys(keys); end
 
   # helper method for captures
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:61
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:60
   def for_capture(node, **options); end
 
   # all the known keys
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:74
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:73
   def keys; end
 
   # maps sorted key list to sprintf patterns and filters
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:68
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:67
   def mappings; end
 
   # Turns a sprintf pattern into our secret internal data structure.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:135
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:134
   def pattern(string = T.unsafe(nil), *keys, **filters); end
 
   # helper method for getting a capture's pattern.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:89
+  # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:88
   def pattern_for(node, **options); end
 end
 
-# pkg:gem/mustermann#lib/mustermann/ast/expander.rb:12
+# pkg:gem/mustermann#lib/mustermann/ast/expander.rb:11
 class Mustermann::AST::Expander::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:12
+    # pkg:gem/mustermann#lib/mustermann/ast/expander.rb:11
     def translator; end
   end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:5
 class Mustermann::AST::Node
-  # @return [Node] a new instance of Node
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:43
   def initialize(payload = T.unsafe(nil), **options); end
 
   # Loop through all nodes that don't have child nodes.
-  #
-  # @yield [_self]
-  # @yieldparam _self [Mustermann::AST::Node] the object that the method was called on
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:65
   def each_leaf(&block); end
 
-  # @return [Boolean]
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:49
   def is_a?(type); end
 
   # @return [Integer] length of the substring
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:78
   def length; end
 
   # @return [Integer] minimum size for a node
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:84
   def min_size; end
 
   # Double dispatch helper for reading from the buffer into the payload.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:56
   def parse; end
 
-  # Returns the value of attribute payload.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:7
   def payload; end
 
-  # Sets the attribute payload
-  #
-  # @param value the value to set the attribute payload to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:7
   def payload=(_arg0); end
 
-  # Returns the value of attribute start.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:7
   def start; end
 
-  # Sets the attribute start
-  #
-  # @param value the value to set the attribute start to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:7
   def start=(_arg0); end
 
-  # Returns the value of attribute stop.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:7
   def stop; end
 
-  # Sets the attribute stop
-  #
-  # @param value the value to set the attribute stop to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:7
   def stop=(_arg0); end
 
   # Turns a class name into a node identifier.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:90
   def type; end
 
   class << self
-    # @param name [Symbol] of the node
+    # @!visibility private
+    # @param [Symbol] name of the node
     # @return [Class] factory for the node
     #
     # pkg:gem/mustermann#lib/mustermann/ast/node.rb:12
     def [](name); end
 
-    # @param name [Symbol] of the node
+    # @!visibility private
+    # @param [Symbol] name of the node
     # @return [String] qualified name of factory for the node
     #
     # pkg:gem/mustermann#lib/mustermann/ast/node.rb:29
     def constant_name(name); end
 
     # Helper for creating a new instance and calling #parse on it.
-    #
     # @return [Mustermann::AST::Node]
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann/ast/node.rb:38
     def parse(payload = T.unsafe(nil), **options, &block); end
 
     # Turns a class name into a node identifier.
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann/ast/node.rb:22
     def type; end
   end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:95
 class Mustermann::AST::Node::Capture < ::Mustermann::AST::Node
   # @see Mustermann::AST::Compiler::Capture#default
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:98
   def constraint; end
 
   # @see Mustermann::AST::Compiler::Capture#default
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:98
   def constraint=(_arg0); end
 
   # @see Mustermann::AST::Pattern#map_param
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:106
   def convert; end
 
   # @see Mustermann::AST::Pattern#map_param
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:106
   def convert=(_arg0); end
 
+  # @!visibility private
+  #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:116
   def name; end
 
   # @see Mustermann::AST::Node#parse
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:110
   def parse; end
 
   # @see Mustermann::AST::Compiler::Capture#qualified
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:102
   def qualifier; end
 
   # @see Mustermann::AST::Compiler::Capture#qualified
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:102
   def qualifier=(_arg0); end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:120
 class Mustermann::AST::Node::Char < ::Mustermann::AST::Node
   # @return [Integer] minimum size for a node
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:123
   def min_size; end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:136
 class Mustermann::AST::Node::Composition < ::Mustermann::AST::Node
-  # @return [Composition] a new instance of Composition
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:138
   def initialize(payload = T.unsafe(nil), **options); end
 end
 
 # AST node for template expressions.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:130
 class Mustermann::AST::Node::Expression < ::Mustermann::AST::Node
-  # Returns the value of attribute operator.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:132
   def operator; end
 
-  # Sets the attribute operator
-  #
-  # @param value the value to set the attribute operator to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:132
   def operator=(_arg0); end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:144
 class Mustermann::AST::Node::Group < ::Mustermann::AST::Node::Composition; end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:195
 class Mustermann::AST::Node::NamedSplat < ::Mustermann::AST::Node::Splat
   # @see Mustermann::AST::Node::Capture#name
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:198
   def name; end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:152
 class Mustermann::AST::Node::Optional < ::Mustermann::AST::Node; end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:156
 class Mustermann::AST::Node::Or < ::Mustermann::AST::Node; end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:160
 class Mustermann::AST::Node::Root < ::Mustermann::AST::Node
-  # Returns the value of attribute pattern.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:162
   def pattern; end
 
-  # Sets the attribute pattern
-  #
-  # @param value the value to set the attribute pattern to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:162
   def pattern=(_arg0); end
@@ -516,192 +607,215 @@ class Mustermann::AST::Node::Root < ::Mustermann::AST::Node
     # Will trigger transform.
     #
     # @see Mustermann::AST::Node.parse
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann/ast/node.rb:168
     def parse(string, &block); end
   end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:177
 class Mustermann::AST::Node::Separator < ::Mustermann::AST::Node
   # @return [Integer] minimum size for a node
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:180
   def min_size; end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:186
 class Mustermann::AST::Node::Splat < ::Mustermann::AST::Node::Capture
   # @see Mustermann::AST::Node::Capture#name
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:189
   def name; end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:148
 class Mustermann::AST::Node::Union < ::Mustermann::AST::Node::Composition; end
 
 # AST node for template variables.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:203
 class Mustermann::AST::Node::Variable < ::Mustermann::AST::Node::Capture
-  # Returns the value of attribute explode.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:205
   def explode; end
 
-  # Sets the attribute explode
-  #
-  # @param value the value to set the attribute explode to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:205
   def explode=(_arg0); end
 
-  # Returns the value of attribute prefix.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:205
   def prefix; end
 
-  # Sets the attribute prefix
-  #
-  # @param value the value to set the attribute prefix to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:205
   def prefix=(_arg0); end
 end
 
+# @!visibility private
+#
 # pkg:gem/mustermann#lib/mustermann/ast/node.rb:209
 class Mustermann::AST::Node::WithLookAhead < ::Mustermann::AST::Node
-  # @return [WithLookAhead] a new instance of WithLookAhead
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:214
   def initialize(payload, at_end, **options); end
 
-  # Returns the value of attribute at_end.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:211
   def at_end; end
 
-  # Sets the attribute at_end
-  #
-  # @param value the value to set the attribute at_end to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:211
   def at_end=(_arg0); end
 
-  # Returns the value of attribute head.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:211
   def head; end
 
-  # Sets the attribute head
-  #
-  # @param value the value to set the attribute head to.
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/node.rb:211
   def head=(_arg0); end
 end
 
 # Scans an AST for param converters.
-#
+# @!visibility private
 # @see Mustermann::AST::Pattern#to_templates
 #
-# pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:9
+# pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:10
 class Mustermann::AST::ParamScanner < ::Mustermann::AST::Translator
   class << self
-    # pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:11
-    def scan_params(ast); end
+    # @!visibility private
+    #
+    # pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:12
+    def scan_params(ast, options); end
   end
 end
 
-# pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:9
+# pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:21
+class Mustermann::AST::ParamScanner::Capture < ::Mustermann::AST::ParamScanner::NodeTranslator
+  # pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:30
+  def converter(capture); end
+
+  # pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:24
+  def translate(options); end
+end
+
+# pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:10
 class Mustermann::AST::ParamScanner::NodeTranslator < ::Mustermann::AST::Translator::NodeTranslator
   class << self
-    # pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:9
+    # pkg:gem/mustermann#lib/mustermann/ast/param_scanner.rb:10
     def translator; end
   end
 end
 
 # Simple, StringScanner based parser.
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/parser.rb:12
+# pkg:gem/mustermann#lib/mustermann/ast/parser.rb:11
 class Mustermann::AST::Parser
   extend ::Forwardable
 
-  # @return [Parser] a new instance of Parser
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:49
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:48
   def initialize(pattern: T.unsafe(nil), **options); end
 
-  # Returns the value of attribute buffer.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:43
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:42
   def buffer; end
 
   # Create a node for a character we don't have an explicit rule for.
   #
-  # @param char [String] the character
+  # @param [String] char the character
   # @return [Mustermann::AST::Node] the node
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:79
   def default_node(char); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:46
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:45
   def eos?(*_arg0, **_arg1, &_arg2); end
 
   # Asserts a regular expression matches what's next on the buffer.
   # Will return corresponding MatchData if regexp includes named captures.
   #
-  # @param regexp [Regexp] expected to match
-  # @raise [Mustermann::ParseError] if expectation wasn't met
+  # @param [Regexp] regexp expected to match
   # @return [String, MatchData] the match
+  # @raise [Mustermann::ParseError] if expectation wasn't met
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:141
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:140
   def expect(regexp, char: T.unsafe(nil), **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:46
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:45
   def getch(*_arg0, **_arg1, &_arg2); end
 
   # sets start on node to start if it's not set to a lower value.
   # sets stop on node to stop if it's not set to a higher value.
-  #
   # @return [Mustermann::AST::Node] the node passed as third argument
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:100
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:99
   def min_size(start, stop, node); end
 
   # @example
   #   node(:char, 'x').compile =~ 'x' # => true
-  # @param type [Symbol] node type
+  #
+  # @param [Symbol] type node type
   # @return [Mustermann::AST::Node]
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:68
-  def node(type, *args, **_arg2, &block); end
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:67
+  def node(type, *args, **options, &block); end
 
-  # @param string [String] to be parsed
+  # @param [String] string to be parsed
   # @return [Mustermann::AST::Node] parse tree for string
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:56
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:55
   def parse(string); end
 
-  # Returns the value of attribute pattern.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:43
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:42
   def pattern; end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:46
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:45
   def pos(*_arg0, **_arg1, &_arg2); end
 
   # Reads the next element from the buffer.
-  #
   # @return [Mustermann::AST::Node] next element
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:87
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:86
   def read; end
 
   # Reads an argument string of the format arg1,args2,key:value
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:172
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:171
   def read_args(key_separator, close, separator: T.unsafe(nil), symbol_keys: T.unsafe(nil), **options); end
 
   # Allows to read a string inside brackets. It does not expect the string
@@ -712,50 +826,58 @@ class Mustermann::AST::Parser
   #   read_brackets(?<, ?>) # => "fo<o>"
   #   buffer.rest # => "ba<r>"
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:154
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:153
   def read_brackets(open, close, char: T.unsafe(nil), escape: T.unsafe(nil), quote: T.unsafe(nil), **options); end
 
   # Read a string until a terminating character, ignoring escaped versions of said character.
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:210
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:209
   def read_escaped(close, escape: T.unsafe(nil), **options); end
 
   # Reads a separated list with the ability to quote, escape and add spaces.
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:191
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:190
   def read_list(*close, separator: T.unsafe(nil), escape: T.unsafe(nil), quotes: T.unsafe(nil), ignore: T.unsafe(nil), **options); end
 
   # Checks for a potential suffix on the buffer.
-  #
-  # @param element [Mustermann::AST::Node] node without suffix
+  # @param [Mustermann::AST::Node] element node without suffix
   # @return [Mustermann::AST::Node] node with suffix
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:112
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:111
   def read_suffix(element); end
 
   # Wrapper around {StringScanner#scan} that turns strings into escaped
   # regular expressions and returns a MatchData if the regexp has any
   # named captures.
   #
-  # @param regexp [Regexp, String]
-  # @return [String, MatchData, nil]
+  # @param [Regexp, String] regexp
   # @see StringScanner#scan
+  # @return [String, MatchData, nil]
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:128
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:127
   def scan(regexp); end
 
-  # Returns the value of attribute string.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:43
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:42
   def string; end
 
   # Helper for raising an exception for an unexpected character.
   # Will read character from buffer if buffer is passed in.
   #
-  # @param char [String, nil] the unexpected character
+  # @param [String, nil] char the unexpected character
   # @raise [Mustermann::ParseError, Exception]
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:228
+  # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:227
   def unexpected(char = T.unsafe(nil), exception: T.unsafe(nil)); end
 
   class << self
@@ -764,27 +886,29 @@ class Mustermann::AST::Parser
     # @see Mustermann::Rails
     # @see Mustermann::Sinatra
     # @see Mustermann::Template
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:26
+    # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:25
     def on(*chars, &block); end
 
-    # @param string [String] to be parsed
+    # @param [String] string to be parsed
     # @return [Mustermann::AST::Node] parse tree for string
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:16
+    # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:15
     def parse(string, **options); end
 
     # Defines another grammar rule for a suffix.
     #
     # @see Mustermann::Sinatra
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:36
+    # pkg:gem/mustermann#lib/mustermann/ast/parser.rb:35
     def suffix(pattern = T.unsafe(nil), after: T.unsafe(nil), &block); end
   end
 end
 
 # Superclass for pattern styles that parse an AST from the string pattern.
-#
 # @abstract
 #
 # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:18
@@ -797,33 +921,36 @@ class Mustermann::AST::Pattern < ::Mustermann::RegexpBased
   # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:23
   def compiler(*_arg0, **_arg1, &_arg2); end
 
+  # Returns a regexp that matches strings excluded by the +except+ option,
+  # or +nil+ if no +except+ constraint was given. Used by the trie matcher
+  # to filter out excluded strings at leaf nodes.
+  # @return [Regexp, nil]
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:96
+  def except_regexp; end
+
   # All AST-based pattern implementations support expanding.
   #
-  # @example Checking if a pattern supports expanding
-  #   if pattern.respond_to? :expand
-  #   pattern.expand(name: "foo")
-  #   else
-  #   warn "does not support expanding"
-  #   end
-  # @example Expanding a pattern
-  #   pattern = Mustermann.new('/:name(.:ext)?')
-  #   pattern.expand(name: 'hello')             # => "/hello"
-  #   pattern.expand(name: 'hello', ext: 'png') # => "/hello.png"
-  # @param behavior [Symbol] What to do with additional key/value pairs not present in the values hash.
-  #   Possible options: :raise, :ignore, :append.
-  # @param values [Hash{Symbol: #to_s, Array<#to_s>}] Values to use for expansion.
-  # @raise [NotImplementedError] raised if expand is not supported.
-  # @raise [Mustermann::ExpandError] raised if a value is missing or unknown
-  # @return [String] expanded string
-  # @see Mustermann::Expander
+  # @example (see Mustermann::Pattern#expand)
+  # @param (see Mustermann::Pattern#expand)
+  # @return (see Mustermann::Pattern#expand)
+  # @raise (see Mustermann::Pattern#expand)
   # @see Mustermann::Pattern#expand
+  # @see Mustermann::Expander
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:106
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:122
   def expand(behavior = T.unsafe(nil), values = T.unsafe(nil)); end
 
+  # @api private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:151
+  def identity_params?(params); end
+
+  # @!visibility private
   # @see Mustermann::Pattern#map_param
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:123
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:139
   def map_param(key, value); end
 
   # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:23
@@ -836,31 +963,19 @@ class Mustermann::AST::Pattern < ::Mustermann::RegexpBased
   def template_generator(*_arg0, **_arg1, &_arg2); end
 
   # Internal AST representation of pattern.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:88
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:103
   def to_ast; end
 
   # All AST-based pattern implementations support generating templates.
   #
-  # @example Checking if a pattern supports expanding
-  #   if pattern.respond_to? :to_templates
-  #   pattern.to_templates
-  #   else
-  #   warn "does not support template generation"
-  #   end
-  # @example generating templates
-  #   Mustermann.new("/:name").to_templates                   # => ["/{name}"]
-  #   Mustermann.new("/:foo(@:bar)?/*baz").to_templates       # => ["/{foo}@{bar}/{+baz}", "/{foo}/{+baz}"]
-  #   Mustermann.new("/{name}", type: :template).to_templates # => ["/{name}"]
-  # @example generating templates from composite patterns
-  #   pattern  = Mustermann.new('/:name')
-  #   pattern |= Mustermann.new('/{name}', type: :template)
-  #   pattern |= Mustermann.new('/example/*nested')
-  #   pattern.to_templates # => ["/{name}", "/example/{+nested}"]
-  # @return [Array<String>] list of URI templates
+  # @example (see Mustermann::Pattern#to_templates)
+  # @param (see Mustermann::Pattern#to_templates)
+  # @return (see Mustermann::Pattern#to_templates)
   # @see Mustermann::Pattern#to_templates
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:117
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:133
   def to_templates; end
 
   # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:23
@@ -871,13 +986,17 @@ class Mustermann::AST::Pattern < ::Mustermann::RegexpBased
 
   private
 
-  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:79
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:84
   def compile(**options); end
 
   # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:24
   def generate_templates(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:129
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:146
   def param_converters; end
 
   # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:24
@@ -897,15 +1016,22 @@ class Mustermann::AST::Pattern < ::Mustermann::RegexpBased
 
   class << self
     # @api private
-    # @return [#set_boundaries] translator making sure start and stop is set on all nodes
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:46
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:28
+    def ast_cache; end
+
+    # @api private
+    # @return [#set_boundaries] translator making sure start and stop is set on all nodes
+    # @!visibility private
+    #
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:51
     def boundaries; end
 
     # @api private
     # @return [#compile] compiler object for pattern
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:39
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:44
     def compiler; end
 
     # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:22
@@ -913,14 +1039,16 @@ class Mustermann::AST::Pattern < ::Mustermann::RegexpBased
 
     # @api private
     # @return [#scan_params] param scanner for pattern
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:74
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:79
     def param_scanner; end
 
     # @api private
     # @return [#parse] parser object for pattern
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:30
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:35
     def parser; end
 
     # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:22
@@ -928,31 +1056,36 @@ class Mustermann::AST::Pattern < ::Mustermann::RegexpBased
 
     # @api private
     # @return [#generate_templates] generates URI templates for pattern
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:67
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:72
     def template_generator; end
 
     # @api private
     # @return [#transform] transformer object for pattern
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:53
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:58
     def transformer; end
 
     # @api private
     # @return [#validate] validation object for pattern
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:60
+    # pkg:gem/mustermann#lib/mustermann/ast/pattern.rb:65
     def validation; end
   end
 end
 
 # Turns an AST into an Array of URI templates representing the AST.
-#
+# @!visibility private
 # @see Mustermann::AST::Pattern#to_templates
 #
 # pkg:gem/mustermann#lib/mustermann/ast/template_generator.rb:9
 class Mustermann::AST::TemplateGenerator < ::Mustermann::AST::Translator
   class << self
+    # @!visibility private
+    #
     # pkg:gem/mustermann#lib/mustermann/ast/template_generator.rb:11
     def generate_templates(ast); end
   end
@@ -967,15 +1100,16 @@ class Mustermann::AST::TemplateGenerator::NodeTranslator < ::Mustermann::AST::Tr
 end
 
 # Takes a tree, turns it into an even better tree.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:8
 class Mustermann::AST::Transformer < ::Mustermann::AST::Translator
   class << self
     # Transforms a tree.
-    #
     # @note might mutate handed in tree instead of creating a new one
-    # @param tree [Mustermann::AST::Node] to be transformed
+    # @param [Mustermann::AST::Node] tree to be transformed
     # @return [Mustermann::AST::Node] transformed tree
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:15
     def transform(tree); end
@@ -983,132 +1117,152 @@ class Mustermann::AST::Transformer < ::Mustermann::AST::Translator
 end
 
 # Inserts with_look_ahead nodes wherever appropriate
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:105
+# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:112
 class Mustermann::AST::Transformer::ArrayTransform < ::Mustermann::AST::Transformer::NodeTranslator
   # turn look ahead buffer into look ahead node
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:142
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:149
   def create_lookahead(elements, *args); end
 
   # can the current element deal with a look-ahead?
+  # @!visibility private
   #
-  # @return [Boolean]
-  #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:166
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:173
   def expect_lookahead?(element); end
 
   # helper method for deciding where to put an element for now
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:173
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:180
   def list_for(element); end
 
   # can the given element be used in a look-ahead?
+  # @!visibility private
   #
-  # @return [Boolean]
-  #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:149
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:156
   def lookahead?(element, in_lookahead = T.unsafe(nil)); end
 
   # buffer for potential look ahead
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:116
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:123
   def lookahead_buffer; end
 
   # does the list of elements look look-ahead-ish to you?
+  # @!visibility private
   #
-  # @return [Boolean]
-  #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:159
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:166
   def lookahead_payload?(payload, in_lookahead); end
 
   # the new array
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:110
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:117
   def payload; end
 
   # handle a single element from the array
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:129
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:136
   def track(element); end
 
   # transform the array
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:122
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:129
   def translate; end
 end
 
 # URI expression transformations depending on operator
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:76
+# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:83
 class Mustermann::AST::Transformer::ExpressionTransform < ::Mustermann::AST::Transformer::NodeTranslator
   # Sets operator and inserts separators in between variables.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:93
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:100
   def translate; end
 end
 
-# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:84
+# Operators available for expressions.
+# @!visibility private
+#
+# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:91
 Mustermann::AST::Transformer::ExpressionTransform::OPERATORS = T.let(T.unsafe(nil), Hash)
 
-# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+# @!visibility private
+#
+# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
 class Mustermann::AST::Transformer::ExpressionTransform::Operator < ::Struct
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def allow_reserved; end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def allow_reserved=(_); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def parametric; end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def parametric=(_); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def prefix; end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def prefix=(_); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def separator; end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
   def separator=(_); end
 
   class << self
-    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
     def [](*_arg0); end
 
-    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
     def inspect; end
 
-    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
     def keyword_init?; end
 
-    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
     def members; end
 
-    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:80
+    # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:87
     def new(*_arg0); end
   end
 end
 
 # turn a group containing or nodes into a union
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:30
+# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:37
 class Mustermann::AST::Transformer::GroupTransformer < ::Mustermann::AST::Transformer::NodeTranslator
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:48
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:55
   def group(elements); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:55
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:62
   def split_payload; end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:34
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:41
   def translate; end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:42
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:49
   def union; end
 end
 
@@ -1121,38 +1275,40 @@ class Mustermann::AST::Transformer::NodeTranslator < ::Mustermann::AST::Translat
 end
 
 # inject a union node right inside the root node if it contains or nodes
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:64
+# pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:71
 class Mustermann::AST::Transformer::RootTransformer < ::Mustermann::AST::Transformer::GroupTransformer
-  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:68
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/transformer.rb:75
   def union; end
 end
 
 # Implements translator pattern
 #
 # @abstract
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/translator.rb:13
+# pkg:gem/mustermann#lib/mustermann/ast/translator.rb:12
 class Mustermann::AST::Translator
-  # @param node [Mustermann::AST::Node, Object] to translate
-  # @raise [error_class]
-  # @return decorator encapsulating translation
-  #
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:108
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:112
   def decorator_for(node); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:70
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:69
   def error_class; end
 
   # @return [String] escaped character
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:124
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:128
   def escape(char, parser: T.unsafe(nil), escape: T.unsafe(nil), also_escape: T.unsafe(nil)); end
 
   # Start the translation dance for a (sub)tree.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:116
-  def translate(node, *args, **_arg2, &block); end
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:120
+  def translate(node, *args, **options, &block); end
 
   class << self
     # Enables quick creation of a translator object.
@@ -1162,86 +1318,109 @@ class Mustermann::AST::Translator
     #   require 'mustermann/ast/translator'
     #
     #   translator = Mustermann::AST::Translator.create do
-    #   translate(:node)  { [type, *t(payload)].flatten.compact }
-    #   translate(Array)  { map { |e| t(e) } }
-    #   translate(Object) { }
+    #     translate(:node)  { [type, *t(payload)].flatten.compact }
+    #     translate(Array)  { map { |e| t(e) } }
+    #     translate(Object) { }
     #   end
     #
     #   ast = Mustermann.new('/:name').to_ast
     #   translator.translate(ast) # => [:root, :separator, :capture]
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:98
+    # @!visibility private
+    #
+    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:97
     def create(&block); end
 
     # maps types to translations
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:54
+    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:53
     def dispatch_table; end
 
-    # some magic sauce so {NodeTranslator}s know whom to talk to for {#register}
+    # @param [Mustermann::AST::Node, Object] node to translate
+    # @return decorator encapsulating translation
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:60
+    # @!visibility private
+    #
+    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:107
+    def factory_for(node_class); end
+
+    # some magic sauce so {NodeTranslator}s know whom to talk to for {#register}
+    # @!visibility private
+    #
+    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:59
     def inherited(subclass); end
 
     # DSL-ish method for specifying the exception class to use.
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:69
+    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:68
     def raises(error); end
 
     # DSL method for defining single method translations.
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:75
+    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:74
     def translate(*types, &block); end
   end
 end
 
 # Encapsulates a single node translation
+# @!visibility private
 #
-# pkg:gem/mustermann#lib/mustermann/ast/translator.rb:19
+# pkg:gem/mustermann#lib/mustermann/ast/translator.rb:18
 class Mustermann::AST::Translator::NodeTranslator
   # @param node [Mustermann::AST::Node, Object]
   # @param translator [Mustermann::AST::Translator]
-  # @return [NodeTranslator] a new instance of NodeTranslator
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:33
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:32
   def initialize(node, translator); end
 
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:49
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:48
   def node; end
 
   # shorthand for translating a nested object
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:43
-  def t(*args, **_arg1, &block); end
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:42
+  def t(*args, **options, &block); end
 
-  # Returns the value of attribute translator.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:39
+  # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:38
   def translator; end
 
   class << self
-    # @param types [Array<Symbol, Class>] list of types to register for.
+    # @param [Array<Symbol, Class>] types list of types to register for.
+    # @!visibility private
     #
-    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:22
+    # pkg:gem/mustermann#lib/mustermann/ast/translator.rb:21
     def register(*types); end
   end
 end
 
-# pkg:gem/mustermann#lib/mustermann/ast/translator.rb:15
+# pkg:gem/mustermann#lib/mustermann/ast/translator.rb:14
 Mustermann::AST::Translator::URI_PARSER = T.let(T.unsafe(nil), URI::RFC2396_Parser)
 
 # Checks the AST for certain validations, like correct capture names.
 #
 # Internally a poor man's visitor (abusing translator to not have to implement a visitor).
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/ast/validation.rb:10
 class Mustermann::AST::Validation < ::Mustermann::AST::Translator
   # @raise [Mustermann::CompileError] if name is not acceptable
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/validation.rb:30
   def check_name(name, forbidden: T.unsafe(nil)); end
 
   # @return [Array<String>] list of capture names in tree
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/ast/validation.rb:40
   def names; end
@@ -1249,9 +1428,10 @@ class Mustermann::AST::Validation < ::Mustermann::AST::Translator
   class << self
     # Runs validations.
     #
-    # @param ast [Mustermann::AST::Node] to be validated
-    # @raise [Mustermann::AST::CompileError] if validation fails
+    # @param [Mustermann::AST::Node] ast to be validated
     # @return [Mustermann::AST::Node] the validated ast
+    # @raise [Mustermann::AST::CompileError] if validation fails
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann/ast/validation.rb:17
     def validate(ast); end
@@ -1272,227 +1452,195 @@ end
 #   caster = Mustermann::Caster.new
 #   caster.register(:foo) { |value| { bar: value.upcase } }
 #   caster.cast(foo: "hello", baz: "world") # => { bar: "HELLO", baz: "world" }
+#
 # @see Mustermann::Expander#cast
+#
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/caster.rb:15
 class Mustermann::Caster
-  # @param types [Array<Symbol, Regexp, #cast, #===>] identifier for cast type (some need block)
-  # @return [Caster] a new instance of Caster
+  # @param (see #register)
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:18
   def initialize(*types, &block); end
 
   # Transforms a Hash.
-  #
-  # @param hash [Hash] pre-transform Hash
+  # @param [Hash] hash pre-transform Hash
   # @return [Hash] post-transform Hash
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:45
   def cast(hash); end
 
-  # @param type [Symbol, Regexp, #cast, #===] identifier for cast type (some need block)
+  # @param [Symbol, Regexp, #cast, #===] type identifier for cast type (some need block)
   # @return [#cast] specific cast operation
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:34
   def caster_for(type, &block); end
 
-  # @param types [Array<Symbol, Regexp, #cast, #===>] identifier for cast type (some need block)
+  # @param [Array<Symbol, Regexp, #cast, #===>] types identifier for cast type (some need block)
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:25
   def register(*types, &block); end
 end
 
 # Class for block based casts that are triggered for every key/value pair.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/caster.rb:58
 class Mustermann::Caster::Any
-  # @return [Any] a new instance of Any
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:60
   def initialize(&block); end
 
   # @see Mustermann::Caster#cast
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:66
   def cast(key, value); end
 end
 
 # Class for block based casts that are triggered for key/value pairs with a matching key.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/caster.rb:94
 class Mustermann::Caster::Key < ::Mustermann::Caster::Any
-  # @param type [#===] used for matching keys
-  # @return [Key] a new instance of Key
+  # @param [#===] type used for matching keys
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:97
   def initialize(type, &block); end
 
   # @see Mustermann::Caster#cast
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:104
   def cast(key, value); end
 end
 
 # Class for block based casts that are triggered for key/value pairs with a matching value.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/caster.rb:77
 class Mustermann::Caster::Value < ::Mustermann::Caster::Any
-  # @param type [#===] used for matching values
-  # @return [Value] a new instance of Value
+  # @param [#===] type used for matching values
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:80
   def initialize(type, &block); end
 
   # @see Mustermann::Caster#cast
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/caster.rb:87
   def cast(key, value); end
 end
 
-# Raised if anything goes wrong while compiling a {Pattern}.
+# Raised if anything goes wrong while generating a {Pattern}.
 #
 # pkg:gem/mustermann#lib/mustermann/error.rb:5
 class Mustermann::CompileError < ::Mustermann::Error; end
 
 # Class for pattern objects composed of multiple patterns using binary logic.
-#
 # @see Mustermann::Pattern#&
-# @see Mustermann::Pattern#^
 # @see Mustermann::Pattern#|
+# @see Mustermann::Pattern#^
 #
 # pkg:gem/mustermann#lib/mustermann/composite.rb:7
 class Mustermann::Composite < ::Mustermann::Pattern
-  # @return [Composite] a new instance of Composite
-  #
   # pkg:gem/mustermann#lib/mustermann/composite.rb:27
   def initialize(patterns, operator: T.unsafe(nil), **options); end
 
   # @see Mustermann::Pattern#==
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:33
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:38
   def ==(pattern); end
 
   # @see Mustermann::Pattern#===
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:48
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:53
   def ===(string); end
 
-  # @return [Boolean]
   # @see Mustermann::Pattern#eql?
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:38
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:43
   def eql?(pattern); end
 
-  # Expanding is supported by almost all patterns (notable exceptions are {Mustermann::Shell},
-  # {Mustermann::Regular} and {Mustermann::Simple}).
+  # (see Mustermann::Pattern#expand)
   #
-  # Union {Mustermann::Composite} patterns (with the | operator) support expanding if all
-  # patterns they are composed of also support it.
-  #
-  # @example Checking if a pattern supports expanding
-  #   if pattern.respond_to? :expand
-  #   pattern.expand(name: "foo")
-  #   else
-  #   warn "does not support expanding"
-  #   end
-  # @example Expanding a pattern
-  #   pattern = Mustermann.new('/:name(.:ext)?')
-  #   pattern.expand(name: 'hello')             # => "/hello"
-  #   pattern.expand(name: 'hello', ext: 'png') # => "/hello.png"
-  # @note This method is only implemented by certain subclasses.
-  # @param behavior [Symbol] What to do with additional key/value pairs not present in the values hash.
-  #   Possible options: :raise, :ignore, :append.
-  # @param values [Hash{Symbol: #to_s, Array<#to_s>}] Values to use for expansion.
-  # @raise [NotImplementedError] raised if expand is not supported.
-  # @raise [Mustermann::ExpandError] raised if a value is missing or unknown
-  # @return [String] expanded string
-  # @see Mustermann::Expander
-  #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:69
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:74
   def expand(behavior = T.unsafe(nil), values = T.unsafe(nil)); end
 
   # @see Mustermann::Pattern#hash
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:43
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:48
   def hash; end
 
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:87
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:90
   def inspect; end
 
   # @see Mustermann::Pattern#match
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:58
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:63
   def match(string); end
 
-  # Returns the value of attribute operator.
+  # @see Mustermann::Pattern#names
   #
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:33
+  def names; end
+
   # pkg:gem/mustermann#lib/mustermann/composite.rb:8
   def operator; end
 
   # @see Mustermann::Pattern#params
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:53
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:58
   def params(string); end
 
-  # Returns the value of attribute patterns.
-  #
   # pkg:gem/mustermann#lib/mustermann/composite.rb:8
   def patterns; end
 
-  # @return [Boolean]
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:63
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:100
+  def pretty_print(q); end
+
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:68
   def respond_to_special?(method); end
 
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:92
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:95
   def simple_inspect; end
 
   # @return [String] the string representation of the pattern
   #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:82
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:87
   def to_s; end
 
-  # Generates a list of URI template strings representing the pattern.
+  # (see Mustermann::Pattern#to_templates)
   #
-  # Note that this transformation is lossy and the strings matching these
-  # templates might not match the pattern (and vice versa).
-  #
-  # This comes in quite handy since URI templates are not made for pattern matching.
-  # That way you can easily use a more precise template syntax and have it automatically
-  # generate hypermedia links for you.
-  #
-  # Template generation is supported by almost all patterns (notable exceptions are
-  # {Mustermann::Shell}, {Mustermann::Regular} and {Mustermann::Simple}).
-  # Union {Mustermann::Composite} patterns (with the | operator) support template generation
-  # if all patterns they are composed of also support it.
-  #
-  # @example Checking if a pattern supports expanding
-  #   if pattern.respond_to? :to_templates
-  #   pattern.to_templates
-  #   else
-  #   warn "does not support template generation"
-  #   end
-  # @example generating templates
-  #   Mustermann.new("/:name").to_templates                   # => ["/{name}"]
-  #   Mustermann.new("/:foo(@:bar)?/*baz").to_templates       # => ["/{foo}@{bar}/{+baz}", "/{foo}/{+baz}"]
-  #   Mustermann.new("/{name}", type: :template).to_templates # => ["/{name}"]
-  # @example generating templates from composite patterns
-  #   pattern  = Mustermann.new('/:name')
-  #   pattern |= Mustermann.new('/{name}', type: :template)
-  #   pattern |= Mustermann.new('/example/*nested')
-  #   pattern.to_templates # => ["/{name}", "/example/{+nested}"]
-  # @note This method is only implemented by certain subclasses.
-  # @return [Array<String>] list of URI templates
-  #
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:76
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:81
   def to_templates; end
 
   private
 
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:105
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:124
   def patterns_from(pattern, **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/composite.rb:98
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/composite.rb:117
   def with_matching(string, method); end
 
   class << self
@@ -1501,7 +1649,6 @@ class Mustermann::Composite < ::Mustermann::Pattern
     # pkg:gem/mustermann#lib/mustermann/composite.rb:18
     def new(*patterns, **options); end
 
-    # @return [Boolean]
     # @see Mustermann::Pattern.supported?
     #
     # pkg:gem/mustermann#lib/mustermann/composite.rb:12
@@ -1510,14 +1657,12 @@ class Mustermann::Composite < ::Mustermann::Pattern
 end
 
 # Class for pattern objects that are a concatenation of other patterns.
-#
 # @see Mustermann::Pattern#+
 #
 # pkg:gem/mustermann#lib/mustermann/concat.rb:5
 class Mustermann::Concat < ::Mustermann::Composite
   # Should not be used directly.
-  #
-  # @return [Concat] a new instance of Concat
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/concat.rb:43
   def initialize(*_arg0, **_arg1); end
@@ -1527,32 +1672,9 @@ class Mustermann::Concat < ::Mustermann::Composite
   # pkg:gem/mustermann#lib/mustermann/concat.rb:55
   def ===(string); end
 
-  # Expanding is supported by almost all patterns (notable exceptions are {Mustermann::Shell},
-  # {Mustermann::Regular} and {Mustermann::Simple}).
+  # (see Mustermann::Pattern#expand)
   #
-  # Union {Mustermann::Composite} patterns (with the | operator) support expanding if all
-  # patterns they are composed of also support it.
-  #
-  # @example Checking if a pattern supports expanding
-  #   if pattern.respond_to? :expand
-  #   pattern.expand(name: "foo")
-  #   else
-  #   warn "does not support expanding"
-  #   end
-  # @example Expanding a pattern
-  #   pattern = Mustermann.new('/:name(.:ext)?')
-  #   pattern.expand(name: 'hello')             # => "/hello"
-  #   pattern.expand(name: 'hello', ext: 'png') # => "/hello.png"
-  # @note This method is only implemented by certain subclasses.
-  # @param behavior [Symbol] What to do with additional key/value pairs not present in the values hash.
-  #   Possible options: :raise, :ignore, :append.
-  # @param values [Hash{Symbol: #to_s, Array<#to_s>}] Values to use for expansion.
-  # @raise [NotImplementedError] raised if expand is not supported.
-  # @raise [Mustermann::ExpandError] raised if a value is missing or unknown
-  # @return [String] expanded string
-  # @see Mustermann::Expander
-  #
-  # pkg:gem/mustermann#lib/mustermann/concat.rb:90
+  # pkg:gem/mustermann#lib/mustermann/concat.rb:101
   def expand(behavior = T.unsafe(nil), values = T.unsafe(nil)); end
 
   # @see Mustermann::Pattern#match
@@ -1560,8 +1682,8 @@ class Mustermann::Concat < ::Mustermann::Composite
   # pkg:gem/mustermann#lib/mustermann/concat.rb:60
   def match(string); end
 
-  # @return [Symbol] always :+
   # @see Mustermann::Composite#operator
+  # @return [Symbol] always :+
   #
   # pkg:gem/mustermann#lib/mustermann/concat.rb:50
   def operator; end
@@ -1578,7 +1700,7 @@ class Mustermann::Concat < ::Mustermann::Composite
 
   # @see Mustermann::Pattern#peek_params
   #
-  # pkg:gem/mustermann#lib/mustermann/concat.rb:85
+  # pkg:gem/mustermann#lib/mustermann/concat.rb:96
   def peek_params(string); end
 
   # @see Mustermann::Pattern#peek_size
@@ -1586,85 +1708,62 @@ class Mustermann::Concat < ::Mustermann::Composite
   # pkg:gem/mustermann#lib/mustermann/concat.rb:72
   def peek_size(string); end
 
-  # @return [Boolean]
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/concat.rb:103
+  # pkg:gem/mustermann#lib/mustermann/concat.rb:114
   def respond_to_special?(method); end
 
-  # Generates a list of URI template strings representing the pattern.
+  # (see Mustermann::Pattern#to_templates)
   #
-  # Note that this transformation is lossy and the strings matching these
-  # templates might not match the pattern (and vice versa).
-  #
-  # This comes in quite handy since URI templates are not made for pattern matching.
-  # That way you can easily use a more precise template syntax and have it automatically
-  # generate hypermedia links for you.
-  #
-  # Template generation is supported by almost all patterns (notable exceptions are
-  # {Mustermann::Shell}, {Mustermann::Regular} and {Mustermann::Simple}).
-  # Union {Mustermann::Composite} patterns (with the | operator) support template generation
-  # if all patterns they are composed of also support it.
-  #
-  # @example Checking if a pattern supports expanding
-  #   if pattern.respond_to? :to_templates
-  #   pattern.to_templates
-  #   else
-  #   warn "does not support template generation"
-  #   end
-  # @example generating templates
-  #   Mustermann.new("/:name").to_templates                   # => ["/{name}"]
-  #   Mustermann.new("/:foo(@:bar)?/*baz").to_templates       # => ["/{foo}@{bar}/{+baz}", "/{foo}/{+baz}"]
-  #   Mustermann.new("/{name}", type: :template).to_templates # => ["/{name}"]
-  # @example generating templates from composite patterns
-  #   pattern  = Mustermann.new('/:name')
-  #   pattern |= Mustermann.new('/{name}', type: :template)
-  #   pattern |= Mustermann.new('/example/*nested')
-  #   pattern.to_templates # => ["/{name}", "/example/{+nested}"]
-  # @note This method is only implemented by certain subclasses.
-  # @return [Array<String>] list of URI templates
-  #
-  # pkg:gem/mustermann#lib/mustermann/concat.rb:97
+  # pkg:gem/mustermann#lib/mustermann/concat.rb:108
   def to_templates; end
 
   private
 
   # generates one big AST from all patterns
   # will not check if patterns support AST generation
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/concat.rb:129
+  # pkg:gem/mustermann#lib/mustermann/concat.rb:140
   def combined_ast; end
 
   # used to generate results for various methods by scanning through an input string
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/concat.rb:110
+  # pkg:gem/mustermann#lib/mustermann/concat.rb:121
   def pump(string, inject_with: T.unsafe(nil), initial: T.unsafe(nil), with_size: T.unsafe(nil)); end
 end
 
 # Mixin for patterns to support native concatenation.
+# @!visibility private
 #
 # pkg:gem/mustermann#lib/mustermann/concat.rb:8
 module Mustermann::Concat::Native
   # @see Mustermann::Pattern#+
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/concat.rb:11
   def +(other); end
 
+  # @!visibility private
+  #
   # pkg:gem/mustermann#lib/mustermann/concat.rb:23
   def look_ahead(other); end
 
   private
 
+  # @!visibility private
+  #
   # pkg:gem/mustermann#lib/mustermann/concat.rb:29
   def native_concat(other); end
 
-  # @return [Boolean]
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/concat.rb:34
   def native_concat?(other); end
 end
 
 # Type to use if no type is given.
-#
 # @api private
 #
 # pkg:gem/mustermann#lib/mustermann.rb:13
@@ -1677,30 +1776,27 @@ Mustermann::DEFAULT_TYPE = T.let(T.unsafe(nil), Symbol)
 #
 # @example
 #   class ExpensiveComputation
-#   @map = Mustermann::EqualityMap.new
+#     @map = Mustermann::EqualityMap.new
 #
-#   def self.new(*args)
-#   @map.fetch(args) { super }
+#     def self.new(*args)
+#       @map.fetch(args) { super }
+#     end
 #   end
-#   end
+#
 # @see #fetch
 #
 # pkg:gem/mustermann#lib/mustermann/equality_map.rb:18
 class Mustermann::EqualityMap
-  # @return [EqualityMap] a new instance of EqualityMap
-  #
   # pkg:gem/mustermann#lib/mustermann/equality_map.rb:25
   def initialize; end
 
-  # @param key [#hash] for caching
-  # @return value stored in map or result of block
+  # @param [#hash] key for caching
   # @yield block that will be called to populate entry if missing (has to be idempotent)
+  # @return value stored in map or result of block
   #
   # pkg:gem/mustermann#lib/mustermann/equality_map.rb:33
   def fetch(key); end
 
-  # Returns the value of attribute map.
-  #
   # pkg:gem/mustermann#lib/mustermann/equality_map.rb:19
   def map; end
 
@@ -1708,14 +1804,14 @@ class Mustermann::EqualityMap
 
   # Finalizer proc needs to be generated in different scope so it doesn't keep a reference to the object.
   #
-  # @param hash [Integer] for key
+  # @param [Integer] hash for key
   # @return [Proc] finalizer callback
   #
   # pkg:gem/mustermann#lib/mustermann/equality_map.rb:60
   def finalizer(hash); end
 
-  # @param key [#hash] for identifying the object
-  # @param object [Object] to be stored
+  # @param [#hash] key for identifying the object
+  # @param [Object] object to be stored
   # @return [Object] same as the second parameter
   #
   # pkg:gem/mustermann#lib/mustermann/equality_map.rb:49
@@ -1727,12 +1823,10 @@ class Mustermann::EqualityMap
   end
 end
 
-# Raised if anything goes wrong while generating a {Pattern}.
-#
 # pkg:gem/mustermann#lib/mustermann/error.rb:4
 class Mustermann::Error < ::StandardError; end
 
-# Raised if anything goes wrong while expanding a {Pattern}.
+# Raised if anything goes wrong while parsing a {Pattern}.
 #
 # pkg:gem/mustermann#lib/mustermann/error.rb:7
 class Mustermann::ExpandError < ::Mustermann::Error; end
@@ -1748,29 +1842,19 @@ class Mustermann::ExpandError < ::Mustermann::Error; end
 #
 # pkg:gem/mustermann#lib/mustermann/expander.rb:15
 class Mustermann::Expander
-  # @param additional_values [Symbol] behavior when encountering additional values, see {#expand}.
-  # @param options [Hash] used when creating/expanding patterns, see {Mustermann.new}.
-  # @param patterns [Array<#to_str, Mustermann::Pattern>] list of patterns to expand, see {#add}.
-  # @return [Expander] a new instance of Expander
+  # @param [Array<#to_str, Mustermann::Pattern>] patterns list of patterns to expand, see {#add}.
+  # @param [Symbol] additional_values behavior when encountering additional values, see {#expand}.
+  # @param [Hash] options used when creating/expanding patterns, see {Mustermann.new}.
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:21
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:24
   def initialize(*patterns, additional_values: T.unsafe(nil), **options, &block); end
 
-  # Add patterns to expand.
-  #
-  # @example
-  #   expander = Mustermann::Expander.new
-  #   expander.add("/:a.jpg", "/:b.png")
-  #   expander.expand(a: "pony") # => "/pony.jpg"
-  # @param patterns [Array<#to_str, Mustermann::Pattern>] list of to add for expansion, Strings will be compiled to patterns.
-  # @return [Mustermann::Expander] the expander
-  #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:57
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:62
   def <<(*patterns); end
 
   # @see Object#==
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:158
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:180
   def ==(other); end
 
   # Add patterns to expand.
@@ -1779,260 +1863,449 @@ class Mustermann::Expander
   #   expander = Mustermann::Expander.new
   #   expander.add("/:a.jpg", "/:b.png")
   #   expander.expand(a: "pony") # => "/pony.jpg"
-  # @param patterns [Array<#to_str, Mustermann::Pattern>] list of to add for expansion, Strings will be compiled to patterns.
+  #
+  # @param [Array<#to_str, Mustermann::Pattern>] patterns list of to add for expansion, Strings will be compiled to patterns.
   # @return [Mustermann::Expander] the expander
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:43
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:44
   def add(*patterns); end
 
-  # Returns the value of attribute additional_values.
-  #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:16
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:19
   def additional_values; end
 
   # Register a block as simple hash transformation that runs before expanding the pattern.
-  #
-  # @overload cast
-  # @overload cast
-  # @overload cast
   # @return [Mustermann::Expander] the expander
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:115
+  # @overload cast
+  #   Register a block as simple hash transformation that runs before expanding the pattern for all entries.
+  #
+  #   @example casting everything that implements to_param to param
+  #     expander.cast { |o| o.to_param if o.respond_to? :to_param }
+  #
+  #   @yield every key/value pair
+  #   @yieldparam key [Symbol] omitted if block takes less than 2
+  #   @yieldparam value [Object] omitted if block takes no arguments
+  #   @yieldreturn [Hash{Symbol: Object}] will replace key/value pair with returned hash
+  #   @yieldreturn [nil, false] will keep key/value pair in hash
+  #   @yieldreturn [Object] will replace value with returned object
+  #
+  # @overload cast(*type_matchers)
+  #   Register a block as simple hash transformation that runs before expanding the pattern for certain entries.
+  #
+  #   @example convert user to user_id
+  #     expander = Mustermann::Expander.new('/users/:user_id')
+  #     expand.cast(:user) { |user| { user_id: user.id } }
+  #
+  #     expand.expand(user: User.current) # => "/users/42"
+  #
+  #   @example convert user, page, image to user_id, page_id, image_id
+  #     expander = Mustermann::Expander.new('/users/:user_id', '/pages/:page_id', '/:image_id.jpg')
+  #     expand.cast(:user, :page, :image) { |key, value| { "#{key}_id".to_sym => value.id } }
+  #
+  #     expand.expand(user: User.current) # => "/users/42"
+  #
+  #   @example casting to multiple key/value pairs
+  #     expander = Mustermann::Expander.new('/users/:user_id/:image_id.:format')
+  #     expander.cast(:image) { |i| { user_id: i.owner.id, image_id: i.id, format: i.format } }
+  #
+  #     expander.expander(image: User.current.avatar) # => "/users/42/avatar.jpg"
+  #
+  #   @example casting all ActiveRecord objects to param
+  #     expander.cast(ActiveRecord::Base, &:to_param)
+  #
+  #   @param [Array<Symbol, Regexp, #===>] type_matchers
+  #     To identify key/value pairs to match against.
+  #     Regexps and Symbols match against key, everything else matches against value.
+  #
+  #   @yield every key/value pair
+  #   @yieldparam key [Symbol] omitted if block takes less than 2
+  #   @yieldparam value [Object] omitted if block takes no arguments
+  #   @yieldreturn [Hash{Symbol: Object}] will replace key/value pair with returned hash
+  #   @yieldreturn [nil, false] will keep key/value pair in hash
+  #   @yieldreturn [Object] will replace value with returned object
+  #
+  # @overload cast(*cast_objects)
+  #
+  #   @param [Array<#cast>] cast_objects
+  #     Before expanding, will call #cast on these objects for each key/value pair.
+  #     Return value will be treated same as block return values described above.
+  #
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:120
   def cast(*types, &block); end
 
-  # @return [Boolean]
   # @see Object#eql?
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:164
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:186
   def eql?(other); end
 
   # @example Expanding a pattern
   #   pattern = Mustermann::Expander.new('/:name', '/:name.:ext')
   #   pattern.expand(name: 'hello')             # => "/hello"
   #   pattern.expand(name: 'hello', ext: 'png') # => "/hello.png"
+  #
   # @example Handling additional values
   #   pattern = Mustermann::Expander.new('/:name', '/:name.:ext')
   #   pattern.expand(:ignore, name: 'hello', ext: 'png', scale: '2x') # => "/hello.png"
   #   pattern.expand(:append, name: 'hello', ext: 'png', scale: '2x') # => "/hello.png?scale=2x"
   #   pattern.expand(:raise,  name: 'hello', ext: 'png', scale: '2x') # raises Mustermann::ExpandError
+  #
   # @example Setting additional values behavior for the expander object
   #   pattern = Mustermann::Expander.new('/:name', '/:name.:ext', additional_values: :append)
   #   pattern.expand(name: 'hello', ext: 'png', scale: '2x') # => "/hello.png?scale=2x"
-  # @param behavior [Symbol] What to do with additional key/value pairs not present in the values hash.
+  #
+  # @param [Symbol] behavior
+  #   What to do with additional key/value pairs not present in the values hash.
   #   Possible options: :raise, :ignore, :append.
-  # @param values [Hash{Symbol: #to_s, Array<#to_s>}] Values to use for expansion.
+  #
+  # @param [Hash{Symbol: #to_s, Array<#to_s>}] values
+  #   Values to use for expansion.
+  #
+  # @return [String] expanded string
   # @raise [NotImplementedError] raised if expand is not supported.
   # @raise [Mustermann::ExpandError] raised if a value is missing or unknown
-  # @return [String] expanded string
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:145
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:150
   def expand(behavior = T.unsafe(nil), values = T.unsafe(nil)); end
 
-  # @return [Boolean]
-  #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:174
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:196
   def expandable?(values); end
 
   # @see Object#hash
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:170
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:192
   def hash; end
 
-  # Returns the value of attribute patterns.
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:16
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:163
+  def inspect; end
+
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:19
   def patterns; end
+
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:169
+  def pretty_print(q); end
 
   private
 
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:195
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:217
   def append(uri, values); end
 
-  # Returns the value of attribute caster.
-  #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:16
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:19
   def caster; end
 
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:201
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:223
   def map_values(values); end
 
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:191
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:213
   def slice(hash, keys); end
 
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:185
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:207
   def split_values(values); end
 
-  # @yield [expand(:raise, slice(values, expandable)), slice(values, non_expandable)]
-  #
-  # pkg:gem/mustermann#lib/mustermann/expander.rb:180
+  # pkg:gem/mustermann#lib/mustermann/expander.rb:202
   def with_rest(values); end
 end
 
-# Raised if anything goes wrong while parsing a {Pattern}.
+# @!visibility private
+#
+# pkg:gem/mustermann#lib/mustermann/expander.rb:17
+Mustermann::Expander::ADDITIONAL_VALUES = T.let(T.unsafe(nil), Array)
+
+# The return value of {Mustermann::Pattern#match}, {Mustermann::Pattern#peek_match}, {Mustermann::Set#match}, and similar methods.
+# Mimics large parts of the MatchData API, but also provides access to the pattern and params hash.
+#
+# pkg:gem/mustermann#lib/mustermann/match.rb:6
+class Mustermann::Match
+  # @overload initialize(pattern, string, **options)
+  #   @param pattern [Mustermann::Pattern] the pattern that produced the match
+  #   @param string [String] the string that was matched
+  #
+  # @overload initialize(match, **options)
+  #   @param match [Mustermann::Match] the match to copy pattern and string from
+  #
+  # @overload initialize(pattern, match, **options)
+  #   @param match [Mustermann::Match, MatchData] the match to copy string from
+  #
+  # @option options [Array]  :captures the captures array
+  # @option options [Hash]   :named_captures the named captures hash
+  # @option options [String] :matched the matched substring (defaults to string for full matches)
+  # @option options [Hash]   :params the params hash
+  # @option options [Regexp] :regexp the regular expression that produced the match
+  # @option options [String] :post_match the post match string
+  # @option options [String] :pre_match the pre match string
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:48
+  def initialize(pattern_or_match, string_or_match = T.unsafe(nil), matched: T.unsafe(nil), params: T.unsafe(nil), post_match: T.unsafe(nil), pre_match: T.unsafe(nil), captures: T.unsafe(nil), named_captures: T.unsafe(nil), regexp: T.unsafe(nil)); end
+
+  # pkg:gem/mustermann#lib/mustermann/match.rb:133
+  def ==(other); end
+
+  # @overload [](key)
+  #   Access named captures by key.
+  #   @param key [String, Symbol] the key to access
+  #   @return the value of the named capture, or nil if not found
+  #
+  # @overload [](index)
+  #   Access captures by index.
+  #   @param index [Integer] the index to access
+  #   @return the value of the capture, or nil if not found
+  #
+  # @overload [](start, length)
+  #   Access multiple captures by index and length.
+  #   @param start [Integer] the starting index to access
+  #   @param length [Integer] the number of captures to access
+  #   @return [Array] the values of the captures
+  #
+  # @overload [](range)
+  #   Access multiple captures by range.
+  #   @param range [Range] the range of indices to access
+  #   @return [Array] the values of the captures
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:100
+  def [](key, length = T.unsafe(nil)); end
+
+  # @return [Array] the captures array
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:17
+  def captures; end
+
+  # Deconstructs the match into a hash of the given keys. Useful for pattern matching.
+  # @param keys [Array] the keys to deconstruct
+  # @return [Hash] a hash of the given keys and their corresponding values
+  # @see https://docs.ruby-lang.org/en/4.0/syntax/pattern_matching_rdoc.html
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:114
+  def deconstruct_keys(keys); end
+
+  # @see Object#eql?
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:120
+  def eql?(other); end
+
+  # @see Object#hash
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:117
+  def hash; end
+
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:137
+  def inspect; end
+
+  # @return [Hash] the named captures hash, usually identical to {#params}
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:20
+  def named_captures; end
+
+  # @return [Array<String>] the names of the named captures
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:78
+  def names; end
+
+  # @return [Hash] the params hash
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:14
+  def params; end
+
+  # @return [Mustermann::Pattern] the pattern that produced the match
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:8
+  def pattern; end
+
+  # @return [String] the post match string
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:23
+  def post_match; end
+
+  # @return [String] the pre match string
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:26
+  def pre_match; end
+
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:143
+  def pretty_print(q); end
+
+  # @return [Regexp, nil] the regular expression that produced the match, if available
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:29
+  def regexp; end
+
+  # @return [String] the string that was matched
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:11
+  def string; end
+
+  # pkg:gem/mustermann#lib/mustermann/match.rb:134
+  def to_h; end
+
+  # @return [String] the matched substring (like MatchData#to_s)
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:131
+  def to_s; end
+
+  # Returns the values of the given keys as an array.
+  # @params keys [Array<Symbol, String>] the keys to access
+  # @return [Array] the values of the given keys
+  #
+  # pkg:gem/mustermann#lib/mustermann/match.rb:128
+  def values_at(*keys); end
+end
+
+# Raised if anything goes wrong while compiling a {Pattern}.
 #
 # pkg:gem/mustermann#lib/mustermann/error.rb:6
 class Mustermann::ParseError < ::Mustermann::Error; end
 
 # Superclass for all pattern implementations.
-#
 # @abstract
 #
 # pkg:gem/mustermann#lib/mustermann/pattern.rb:10
 class Mustermann::Pattern
   include ::Mustermann
 
-  # @overload initialize
-  # @param options [Hash] options for fine-tuning the pattern behavior
-  # @param string [String] the string representation of the pattern
+  # @overload initialize(string, **options)
+  # @param [String] string the string representation of the pattern
+  # @param [Hash] options options for fine-tuning the pattern behavior
   # @raise [Mustermann::Error] if the pattern can't be generated from the string
-  # @return [Pattern] a new instance of Pattern
-  # @see Mustermann.new
   # @see file:README.md#Types_and_Options "Types and Options" in the README
+  # @see Mustermann.new
   #
   # pkg:gem/mustermann#lib/mustermann/pattern.rb:75
   def initialize(string, uri_decode: T.unsafe(nil), **options); end
 
-  # @overload &
-  # @overload ^
-  # @overload |
-  # @param other [Mustermann::Pattern, String] the other pattern
-  # @return [Mustermann::Pattern] a composite pattern
-  #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:319
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:299
   def &(other); end
 
+  # @example
+  #   require 'mustermann'
+  #   prefix = Mustermann.new("/:prefix")
+  #   about  = prefix + "/about"
+  #   about.params("/main/about") # => {"prefix" => "main"}
+  #
   # Creates a concatenated pattern by combingin self with the other pattern supplied.
   # Patterns of different types can be mixed. The availability of `to_templates` and
   # `expand` depends on the patterns being concatenated.
   #
   # String input is treated as identity pattern.
   #
-  # @example
-  #   require 'mustermann'
-  #   prefix = Mustermann.new("/:prefix")
-  #   about  = prefix + "/about"
-  #   about.params("/main/about") # => {"prefix" => "main"}
-  # @param other [Mustermann::Pattern, String] pattern to be appended
+  # @param [Mustermann::Pattern, String] other pattern to be appended
   # @return [Mustermann::Pattern] concatenated pattern
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:336
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:316
   def +(other); end
 
   # Two patterns are considered equal if they are of the same type, have the same pattern string
   # and the same options.
-  #
   # @return [true, false]
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:119
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:120
   def ==(other); end
 
-  # @note Needs to be overridden by subclass.
-  # @param string [String] The string to match against
-  # @raise [NotImplementedError]
+  # @param [String] string The string to match against
   # @return [Boolean] Whether or not the pattern matches the given string
+  # @note Needs to be overridden by subclass.
   # @see http://ruby-doc.org/core-2.0/Regexp.html#method-i-3D-3D-3D Regexp#===
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:106
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:107
   def ===(string); end
 
-  # @param string [String] The string to match against
+  # @param [String] string The string to match against
   # @return [Integer, nil] nil if pattern does not match the string, zero if it does.
   # @see http://ruby-doc.org/core-2.0/Regexp.html#method-i-3D-7E Regexp#=~
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:98
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:99
   def =~(string); end
 
-  # @overload &
-  # @overload ^
-  # @overload |
-  # @param other [Mustermann::Pattern, String] the other pattern
-  # @return [Mustermann::Pattern] a composite pattern
-  #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:320
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:300
   def ^(other); end
 
-  # @return [Boolean]
+  # @!visibility private
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:391
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:379
   def always_array?(key); end
 
   # Two patterns are considered equal if they are of the same type, have the same pattern string
   # and the same options.
-  #
   # @return [true, false]
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:126
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:127
   def eql?(other); end
 
+  # @note This method is only implemented by certain subclasses.
+  #
+  # @example Expanding a pattern
+  #   pattern = Mustermann.new('/:name(.:ext)?')
+  #   pattern.expand(name: 'hello')             # => "/hello"
+  #   pattern.expand(name: 'hello', ext: 'png') # => "/hello.png"
+  #
+  # @example Checking if a pattern supports expanding
+  #   if pattern.respond_to? :expand
+  #     pattern.expand(name: "foo")
+  #   else
+  #     warn "does not support expanding"
+  #   end
+  #
   # Expanding is supported by almost all patterns (notable exceptions are {Mustermann::Shell},
   # {Mustermann::Regular} and {Mustermann::Simple}).
   #
   # Union {Mustermann::Composite} patterns (with the | operator) support expanding if all
   # patterns they are composed of also support it.
   #
-  # @example Checking if a pattern supports expanding
-  #   if pattern.respond_to? :expand
-  #   pattern.expand(name: "foo")
-  #   else
-  #   warn "does not support expanding"
-  #   end
-  # @example Expanding a pattern
-  #   pattern = Mustermann.new('/:name(.:ext)?')
-  #   pattern.expand(name: 'hello')             # => "/hello"
-  #   pattern.expand(name: 'hello', ext: 'png') # => "/hello.png"
-  # @note This method is only implemented by certain subclasses.
-  # @param behavior [Symbol] What to do with additional key/value pairs not present in the values hash.
-  #   Possible options: :raise, :ignore, :append.
-  # @param values [Hash{Symbol: #to_s, Array<#to_s>}] Values to use for expansion.
+  # @param (see Mustermann::Expander#expand)
+  # @return [String] expanded string
   # @raise [NotImplementedError] raised if expand is not supported.
   # @raise [Mustermann::ExpandError] raised if a value is missing or unknown
-  # @return [String] expanded string
   # @see Mustermann::Expander
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:240
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:220
   def expand(behavior = T.unsafe(nil), values = T.unsafe(nil)); end
 
   # Used by Ruby internally for hashing.
-  #
   # @return [Integer] same has value for patterns that are equal
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:112
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:113
   def hash; end
 
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:366
+  # @api private
+  # Returns true if params can be used as-is without calling map_param.
+  # Used by Set::Trie to skip building a redundant copy of the params hash.
+  #
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:386
+  def identity_params?(params); end
+
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:353
   def inspect; end
 
-  # @param string [String] The string to match against
-  # @return [MatchData, Mustermann::SimpleMatch, nil] MatchData or similar object if the pattern matches.
-  # @see Mustermann::SimpleMatch
-  # @see http://ruby-doc.org/core-2.0/MatchData.html MatchData
-  # @see http://ruby-doc.org/core-2.0/Regexp.html#method-i-match Regexp#match
+  # @param [String] string The string to match against
+  # @return [Mustermann::Match, nil] the match object if the pattern matches.
+  # @see Mustermann::Match
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:91
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:89
   def match(string); end
 
-  # @return [Hash{String: Array<Integer>}] capture names mapped to capture index.
-  # @see http://ruby-doc.org/core-2.0/Regexp.html#method-i-named_captures Regexp#named_captures
+  # @return [Array<String>] list of named captures in the pattern
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:192
-  def named_captures; end
-
-  # @return [Array<String>] capture names.
-  # @see http://ruby-doc.org/core-2.0/Regexp.html#method-i-names Regexp#names
-  #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:198
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:94
   def names; end
 
   # options hash passed to new (with unsupported options removed)
+  # @!visibility private
   #
   # pkg:gem/mustermann#lib/mustermann/pattern.rb:67
   def options; end
 
-  # @param string [String] the string to match against
+  # @param [String] string the string to match against
   # @return [Hash{String: String, Array<String>}, nil] Sinatra style params if pattern matches.
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:204
-  def params(string = T.unsafe(nil), captures: T.unsafe(nil), offset: T.unsafe(nil)); end
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:193
+  def params(string = T.unsafe(nil)); end
 
   # Tries to match the pattern against the beginning of the string (as opposed to the full string).
   # Will return the substring if it matches.
@@ -2040,10 +2313,11 @@ class Mustermann::Pattern
   # @example
   #   pattern = Mustermann.new('/:name')
   #   pattern.peek("/Frank/Sinatra") # => "/Frank"
-  # @param string [String] The string to match against
+  #
+  # @param [String] string The string to match against
   # @return [String, nil] matched subsctring
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:153
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:154
   def peek(string); end
 
   # Tries to match the pattern against the beginning of the string (as opposed to the full string).
@@ -2052,11 +2326,12 @@ class Mustermann::Pattern
   # @example
   #   pattern = Mustermann.new('/:name')
   #   pattern.peek("/Frank/Sinatra") # => #<MatchData "/Frank" name:"Frank">
-  # @param string [String] The string to match against
-  # @return [MatchData, Mustermann::SimpleMatch, nil] MatchData or similar object if the pattern matches.
+  #
+  # @param [String] string The string to match against
+  # @return [Mustermann::Match, nil] MatchData or similar object if the pattern matches.
   # @see #peek_params
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:168
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:169
   def peek_match(string); end
 
   # Tries to match the pattern against the beginning of the string (as opposed to the full string).
@@ -2068,10 +2343,11 @@ class Mustermann::Pattern
   #   params, _ = pattern.peek_params("/Frank/Sinatra")
   #
   #   puts "Hello, #{params['name']}!" # Hello, Frank!
-  # @param string [String] The string to match against
+  #
+  # @param [String] string The string to match against
   # @return [Array<Hash, Integer>, nil] Array with params hash and length of substing if matched, nil otherwise
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:185
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:186
   def peek_params(string); end
 
   # Tries to match the pattern against the beginning of the string (as opposed to the full string).
@@ -2080,28 +2356,38 @@ class Mustermann::Pattern
   # @example
   #   pattern = Mustermann.new('/:name')
   #   pattern.size("/Frank/Sinatra") # => 6
-  # @param string [String] The string to match against
+  #
+  # @param [String] string The string to match against
   # @return [Integer, nil] the number of characters that match
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:139
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:140
   def peek_size(string); end
 
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:346
+  def pretty_print(q); end
+
+  # @!visibility private
   # @return [Boolean]
   # @see Object#respond_to?
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:353
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:333
   def respond_to?(method, *args); end
 
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:371
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:358
   def simple_inspect; end
 
   # @example
   #   pattern = Mustermann.new('/:a/:b')
   #   strings = ["foo/bar", "/foo/bar", "/foo/bar/"]
   #   strings.detect(&pattern) # => "/foo/bar"
+  #
   # @return [Proc] proc wrapping {#===}
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:346
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:326
   def to_proc; end
 
   # @return [String] the string representation of the pattern
@@ -2109,6 +2395,8 @@ class Mustermann::Pattern
   # pkg:gem/mustermann#lib/mustermann/pattern.rb:82
   def to_s; end
 
+  # @note This method is only implemented by certain subclasses.
+  #
   # Generates a list of URI template strings representing the pattern.
   #
   # Note that this transformation is lossy and the strings matching these
@@ -2118,6 +2406,17 @@ class Mustermann::Pattern
   # That way you can easily use a more precise template syntax and have it automatically
   # generate hypermedia links for you.
   #
+  # @example generating templates
+  #   Mustermann.new("/:name").to_templates                   # => ["/{name}"]
+  #   Mustermann.new("/:foo(@:bar)?/*baz").to_templates       # => ["/{foo}@{bar}/{+baz}", "/{foo}/{+baz}"]
+  #   Mustermann.new("/{name}", type: :template).to_templates # => ["/{name}"]
+  #
+  # @example generating templates from composite patterns
+  #   pattern  = Mustermann.new('/:name')
+  #   pattern |= Mustermann.new('/{name}', type: :template)
+  #   pattern |= Mustermann.new('/example/*nested')
+  #   pattern.to_templates # => ["/{name}", "/example/{+nested}"]
+  #
   # Template generation is supported by almost all patterns (notable exceptions are
   # {Mustermann::Shell}, {Mustermann::Regular} and {Mustermann::Simple}).
   # Union {Mustermann::Composite} patterns (with the | operator) support template generation
@@ -2125,60 +2424,79 @@ class Mustermann::Pattern
   #
   # @example Checking if a pattern supports expanding
   #   if pattern.respond_to? :to_templates
-  #   pattern.to_templates
+  #     pattern.to_templates
   #   else
-  #   warn "does not support template generation"
+  #     warn "does not support template generation"
   #   end
-  # @example generating templates
-  #   Mustermann.new("/:name").to_templates                   # => ["/{name}"]
-  #   Mustermann.new("/:foo(@:bar)?/*baz").to_templates       # => ["/{foo}@{bar}/{+baz}", "/{foo}/{+baz}"]
-  #   Mustermann.new("/{name}", type: :template).to_templates # => ["/{name}"]
-  # @example generating templates from composite patterns
-  #   pattern  = Mustermann.new('/:name')
-  #   pattern |= Mustermann.new('/{name}', type: :template)
-  #   pattern |= Mustermann.new('/example/*nested')
-  #   pattern.to_templates # => ["/{name}", "/example/{+nested}"]
-  # @note This method is only implemented by certain subclasses.
-  # @raise [NotImplementedError]
+  #
   # @return [Array<String>] list of URI templates
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:279
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:259
   def to_templates; end
 
-  # Returns the value of attribute uri_decode.
-  #
   # pkg:gem/mustermann#lib/mustermann/pattern.rb:63
   def uri_decode; end
 
-  # @overload &
-  # @overload ^
-  # @overload |
-  # @param other [Mustermann::Pattern, String] the other pattern
+  # @overload |(other)
+  #   Creates a pattern that matches any string matching either one of the patterns.
+  #   If a string is supplied, it is treated as an identity pattern.
+  #
+  #   @example
+  #     pattern = Mustermann.new('/foo/:name') | Mustermann.new('/:first/:second')
+  #     pattern === '/foo/bar' # => true
+  #     pattern === '/fox/bar' # => true
+  #     pattern === '/foo'     # => false
+  #
+  # @overload &(other)
+  #   Creates a pattern that matches any string matching both of the patterns.
+  #   If a string is supplied, it is treated as an identity pattern.
+  #
+  #   @example
+  #     pattern = Mustermann.new('/foo/:name') & Mustermann.new('/:first/:second')
+  #     pattern === '/foo/bar' # => true
+  #     pattern === '/fox/bar' # => false
+  #     pattern === '/foo'     # => false
+  #
+  # @overload ^(other)
+  #   Creates a pattern that matches any string matching exactly one of the patterns.
+  #   If a string is supplied, it is treated as an identity pattern.
+  #
+  #   @example
+  #     pattern = Mustermann.new('/foo/:name') ^ Mustermann.new('/:first/:second')
+  #     pattern === '/foo/bar' # => false
+  #     pattern === '/fox/bar' # => true
+  #     pattern === '/foo'     # => false
+  #
+  # @param [Mustermann::Pattern, String] other the other pattern
   # @return [Mustermann::Pattern] a composite pattern
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:315
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:295
   def |(other); end
 
   private
 
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:377
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:364
   def map_param(key, value); end
 
+  # @!visibility private
   # @return [Boolean]
   # @see #respond_to?
   #
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:361
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:341
   def respond_to_special?(method); end
 
-  # pkg:gem/mustermann#lib/mustermann/pattern.rb:382
+  # @!visibility private
+  #
+  # pkg:gem/mustermann#lib/mustermann/pattern.rb:369
   def unescape(string, decode = T.unsafe(nil)); end
 
   class << self
-    # @overload new
-    # @param options [Hash] options for fine-tuning the pattern behavior
-    # @param string [String] the string representation of the pattern
+    # @overload new(string, **options)
+    # @param (see #initialize)
+    # @raise (see #initialize)
     # @raise [ArgumentError] if some option is not supported
-    # @raise [Mustermann::Error] if the pattern can't be generated from the string
     # @return [Mustermann::Pattern] a new instance of Mustermann::Pattern
     # @see #initialize
     #
@@ -2186,13 +2504,13 @@ class Mustermann::Pattern
     def new(string, ignore_unknown_options: T.unsafe(nil), **options); end
 
     # Registers the pattern with Mustermann.
-    #
     # @see Mustermann.register
+    # @!visibility private
     #
     # pkg:gem/mustermann#lib/mustermann/pattern.rb:34
     def register(*names); end
 
-    # @param option [Symbol] The option to check.
+    # @param [Symbol] option The option to check.
     # @return [Boolean] Whether or not option is supported.
     #
     # pkg:gem/mustermann#lib/mustermann/pattern.rb:40
@@ -2201,60 +2519,75 @@ class Mustermann::Pattern
     # List of supported options.
     #
     # @overload supported_options
-    # @overload supported_options
+    #   @return [Array<Symbol>] list of supported options
+    # @overload supported_options(*list)
+    #   Adds options to the list.
+    #
+    #   @api private
+    #   @param [Symbol] *list adds options to the list of supported options
+    #   @return [Array<Symbol>] list of supported options
     #
     # pkg:gem/mustermann#lib/mustermann/pattern.rb:24
     def supported_options(*list); end
   end
 end
 
-# pkg:gem/mustermann#lib/mustermann/pattern.rb:388
+# @!visibility private
+#
+# pkg:gem/mustermann#lib/mustermann/pattern.rb:376
 Mustermann::Pattern::ALWAYS_ARRAY = T.let(T.unsafe(nil), Array)
 
 # Superclass for patterns that internally compile to a regular expression.
-#
-# @abstract
 # @see Mustermann::Pattern
+# @abstract
 #
 # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:9
 class Mustermann::RegexpBased < ::Mustermann::Pattern
   extend ::Forwardable
 
-  # @param options [Hash] options for fine-tuning the pattern behavior
-  # @param string [String] the string representation of the pattern
-  # @return [Pattern] a new instance of Pattern
-  # @see Mustermann.new
-  # @see file:README.md#Types_and_Options "Types and Options" in the README
+  # @param (see Mustermann::Pattern#initialize)
+  # @return (see Mustermann::Pattern#initialize)
+  # @see (see Mustermann::Pattern#initialize)
   #
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:17
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:20
   def initialize(string, **options); end
 
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:40
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:75
   def ===(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:40
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:75
   def =~(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:40
-  def match(*_arg0, **_arg1, &_arg2); end
+  # @param (see Mustermann::Pattern#match)
+  # @return (see Mustermann::Pattern#match)
+  # @see (see Mustermann::Pattern#match)
+  #
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:63
+  def match(string); end
 
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:40
-  def named_captures(*_arg0, **_arg1, &_arg2); end
-
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:40
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:75
   def names(*_arg0, **_arg1, &_arg2); end
 
-  # @param string [String] The string to match against
-  # @return [MatchData, Mustermann::SimpleMatch, nil] MatchData or similar object if the pattern matches.
-  # @see #peek_params
+  # Extracts params directly from the regexp without allocating a Match object or
+  # populating the match cache — significant GC savings when called in hot loops.
+  # @param (see Mustermann::Pattern#params)
+  # @return (see Mustermann::Pattern#params)
   #
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:35
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:69
+  def params(string = T.unsafe(nil)); end
+
+  # @param (see Mustermann::Pattern#peek_match)
+  # @return (see Mustermann::Pattern#peek_match)
+  # @see (see Mustermann::Pattern#peek_match)
+  #
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:58
   def peek_match(string); end
 
-  # @param string [String] The string to match against
-  # @return [Integer, nil] the number of characters that match
+  # @param (see Mustermann::Pattern#peek_size)
+  # @return (see Mustermann::Pattern#peek_size)
+  # @see (see Mustermann::Pattern#peek_size)
   #
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:27
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:50
   def peek_size(string); end
 
   # @return [Regexp] regular expression equivalent to the pattern.
@@ -2262,56 +2595,25 @@ class Mustermann::RegexpBased < ::Mustermann::Pattern
   # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:11
   def regexp; end
 
-  # @return [Regexp] regular expression equivalent to the pattern.
-  #
   # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:12
   def to_regexp; end
 
   private
 
-  # @raise [NotImplementedError]
-  #
-  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:42
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:88
+  def build_match(regexp, string); end
+
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:93
+  def build_params(match); end
+
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:79
+  def cache_match(cache, regexp, string); end
+
+  # pkg:gem/mustermann#lib/mustermann/regexp_based.rb:107
   def compile(**options); end
 end
 
-# Fakes MatchData for patterns that do not support capturing.
+# Raised if anything goes wrong while expanding a {Pattern}.
 #
-# @see http://ruby-doc.org/core-2.0/MatchData.html MatchData
-#
-# pkg:gem/mustermann#lib/mustermann/simple_match.rb:5
-class Mustermann::SimpleMatch
-  # @api private
-  # @return [SimpleMatch] a new instance of SimpleMatch
-  #
-  # pkg:gem/mustermann#lib/mustermann/simple_match.rb:7
-  def initialize(string = T.unsafe(nil), names: T.unsafe(nil), captures: T.unsafe(nil)); end
-
-  # pkg:gem/mustermann#lib/mustermann/simple_match.rb:38
-  def +(other); end
-
-  # @return [nil] imitates MatchData interface
-  #
-  # pkg:gem/mustermann#lib/mustermann/simple_match.rb:29
-  def [](*args); end
-
-  # @return [Array<String>] empty array for imitating MatchData interface
-  #
-  # pkg:gem/mustermann#lib/mustermann/simple_match.rb:24
-  def captures; end
-
-  # @return [String] string representation
-  #
-  # pkg:gem/mustermann#lib/mustermann/simple_match.rb:45
-  def inspect; end
-
-  # @return [Array<String>] empty array for imitating MatchData interface
-  #
-  # pkg:gem/mustermann#lib/mustermann/simple_match.rb:19
-  def names; end
-
-  # @return [String] the string that was matched against
-  #
-  # pkg:gem/mustermann#lib/mustermann/simple_match.rb:14
-  def to_s; end
-end
+# pkg:gem/mustermann#lib/mustermann/error.rb:8
+class Mustermann::TrieError < ::Mustermann::CompileError; end
