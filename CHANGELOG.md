@@ -1,3 +1,7 @@
+## 0.1.2 (2026-05-14)
+
+- Bump dependencies and update GitHub Actions workflows (#37)
+
 ## 0.1.1 (2026-05-05)
 
 - Bump dependencies and drop support for Ruby 3.2 (#36)
