@@ -1487,8 +1487,6 @@ module ERB::Util
   # pkg:gem/erb#lib/erb/util.rb:74
   def u(s); end
 
-  # cgi.gem <= v0.3.2
-  #
   # A utility method for encoding the String _s_ as a URL.
   #
   #   require "erb"
@@ -1499,6 +1497,8 @@ module ERB::Util
   # _Generates_
   #
   #   Programming%20Ruby%3A%20%20The%20Pragmatic%20Programmer%27s%20Guide
+  #
+  # cgi.gem <= v0.3.2
   #
   # pkg:gem/erb#lib/erb/util.rb:64
   def url_encode(s); end
@@ -1513,8 +1513,6 @@ module ERB::Util
     # pkg:gem/erb#lib/erb/util.rb:75
     def u(s); end
 
-    # cgi.gem <= v0.3.2
-    #
     # A utility method for encoding the String _s_ as a URL.
     #
     #   require "erb"
@@ -1525,6 +1523,8 @@ module ERB::Util
     # _Generates_
     #
     #   Programming%20Ruby%3A%20%20The%20Pragmatic%20Programmer%27s%20Guide
+    #
+    # cgi.gem <= v0.3.2
     #
     # pkg:gem/erb#lib/erb/util.rb:76
     def url_encode(s); end

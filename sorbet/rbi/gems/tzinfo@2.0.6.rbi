@@ -33,7 +33,7 @@ end
 #
 # @private
 #
-# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:129
+# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:120
 class TZInfo::AbsoluteDayOfYearTransitionRule < ::TZInfo::DayOfYearTransitionRule
   # Initializes a new {AbsoluteDayOfYearTransitionRule}.
   #
@@ -2061,7 +2061,7 @@ end
 #
 # @private
 #
-# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:339
+# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:323
 class TZInfo::DayOfMonthTransitionRule < ::TZInfo::DayOfWeekTransitionRule
   # Initializes a new {DayOfMonthTransitionRule}.
   #
@@ -2129,7 +2129,7 @@ end
 # @abstract
 # @private
 #
-# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:273
+# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:261
 class TZInfo::DayOfWeekTransitionRule < ::TZInfo::TransitionRule
   # Initializes a new {DayOfWeekTransitionRule}.
   #
@@ -2195,7 +2195,7 @@ end
 # @abstract
 # @private
 #
-# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:81
+# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:73
 class TZInfo::DayOfYearTransitionRule < ::TZInfo::TransitionRule
   # Initializes a new {DayOfYearTransitionRule}.
   #
@@ -2248,7 +2248,7 @@ module TZInfo::Format1; end
 #
 # @private
 #
-# pkg:gem/tzinfo#lib/tzinfo/format1/country_definer.rb:11
+# pkg:gem/tzinfo#lib/tzinfo/format1/country_definer.rb:10
 class TZInfo::Format1::CountryDefiner < ::TZInfo::Format2::CountryDefiner
   # Initializes a new {CountryDefiner}.
   #
@@ -2892,7 +2892,7 @@ class TZInfo::InvalidTimezoneIdentifier < ::StandardError; end
 #
 # @private
 #
-# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:185
+# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:184
 class TZInfo::JulianDayOfYearTransitionRule < ::TZInfo::DayOfYearTransitionRule
   # Initializes a new {JulianDayOfYearTransitionRule}.
   #
@@ -2968,7 +2968,7 @@ TZInfo::JulianDayOfYearTransitionRule::YEAR = T.let(T.unsafe(nil), Integer)
 #
 # @private
 #
-# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:408
+# pkg:gem/tzinfo#lib/tzinfo/transition_rule.rb:396
 class TZInfo::LastDayOfMonthTransitionRule < ::TZInfo::DayOfWeekTransitionRule
   # Initializes a new {LastDayOfMonthTransitionRule}.
   #
@@ -3113,11 +3113,11 @@ class TZInfo::PeriodNotFound < ::StandardError; end
 # pkg:gem/tzinfo#lib/tzinfo/ruby_core_support.rb:6
 module TZInfo::RubyCoreSupport
   class << self
-    # Untaints and returns the supplied `Object`.
+    # Returns the supplied `Object`
     #
     # @param o [Object] the `Object` to untaint.
     # @return [Object] `o`.
-    # Returns the supplied `Object`
+    # Untaints and returns the supplied `Object`.
     #
     # @param o [Object] the `Object` to untaint.
     # @return [Object] `o`.

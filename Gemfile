@@ -2,9 +2,7 @@
 
 source "https://rubygems.org"
 
-git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
-
-# Specify your gem's dependencies in grape_sorbet.gemspec
+# Specify your gem's dependencies in sorbet_operation.gemspec
 gemspec
 
 gem "rake", "~> 13.0"
@@ -23,6 +21,8 @@ group :development do
   gem "rubocop-rake", require: false
   gem "rubocop-shopify", require: false
   gem "rubocop-sorbet", require: false
+
+  gem "bundler-audit", require: false
 end
 
 group :test do
