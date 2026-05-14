@@ -1165,7 +1165,7 @@ Minitest::Reportable::BASE_DIR = T.let(T.unsafe(nil), String)
 
 # AbstractReportera
 #
-# pkg:gem/minitest#lib/minitest.rb:750
+# pkg:gem/minitest#lib/minitest.rb:748
 class Minitest::Reporter < ::Minitest::AbstractReporter
   # pkg:gem/minitest#lib/minitest.rb:759
   def initialize(io = T.unsafe(nil), options = T.unsafe(nil)); end
@@ -1275,26 +1275,26 @@ class Minitest::Runnable
   # pkg:gem/minitest#lib/minitest.rb:519
   def marshal_load(ary); end
 
-  # Sets metadata, mainly used for +Result.from+.
-  #
   # Metadata you attach to the test results that get sent to the reporter.
   #
   # Lazily initializes to a hash, to keep memory down.
   #
   # NOTE: this data *must* be plain (read: marshal-able) data!
   # Hashes! Arrays! Strings!
+  #
+  # Sets metadata, mainly used for +Result.from+.
   #
   # pkg:gem/minitest#lib/minitest.rb:542
   def metadata; end
 
-  # Sets metadata, mainly used for +Result.from+.
-  #
   # Metadata you attach to the test results that get sent to the reporter.
   #
   # Lazily initializes to a hash, to keep memory down.
   #
   # NOTE: this data *must* be plain (read: marshal-able) data!
   # Hashes! Arrays! Strings!
+  #
+  # Sets metadata, mainly used for +Result.from+.
   #
   # pkg:gem/minitest#lib/minitest.rb:549
   def metadata=(_arg0); end

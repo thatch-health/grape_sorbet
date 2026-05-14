@@ -1349,16 +1349,16 @@ class SimpleCov::Result
   # pkg:gem/simplecov#lib/simplecov/result.rb:28
   def initialize(original_result, command_name: T.unsafe(nil), created_at: T.unsafe(nil)); end
 
+  # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   # The command name that launched this result.
   # Delegated to SimpleCov.command_name if not set manually
-  # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:61
   def command_name; end
 
+  # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   # The command name that launched this result.
   # Delegated to SimpleCov.command_name if not set manually
-  # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:21
   def command_name=(_arg0); end
@@ -1384,14 +1384,14 @@ class SimpleCov::Result
   # pkg:gem/simplecov#lib/simplecov/result.rb:23
   def covered_strength(*_arg0, **_arg1, &_arg2); end
 
-  # Defines when this result has been created. Defaults to Time.now
   # Explicitly set the Time this result has been created
+  # Defines when this result has been created. Defaults to Time.now
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:55
   def created_at; end
 
-  # Defines when this result has been created. Defaults to Time.now
   # Explicitly set the Time this result has been created
+  # Defines when this result has been created. Defaults to Time.now
   #
   # pkg:gem/simplecov#lib/simplecov/result.rb:19
   def created_at=(_arg0); end
