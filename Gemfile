@@ -26,7 +26,7 @@ group :development do
 end
 
 group :test do
-  gem "minitest", "~> 5.0"
+  gem "minitest", "~> 6.0"
   gem "minitest-reporters", "~> 1.4"
 
   gem "simplecov", require: false
