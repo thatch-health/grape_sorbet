@@ -1,5 +1,7 @@
 --dir
 .
 --ignore=tmp/
+--enable-experimental-requires-ancestor
+--enable-experimental-rbs-comments
 --ignore=vendor/
 --parser=prism
