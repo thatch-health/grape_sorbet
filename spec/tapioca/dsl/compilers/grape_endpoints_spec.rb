@@ -32,8 +32,8 @@ module Tapioca
 
           describe "decorate" do
             it "generates proper classes and modules" do
-              add_ruby_file("twitter_api.rb", <<~RUBY)
-                class TwitterAPI < Grape::API::Instance
+              add_ruby_file("base_api.rb", <<~RUBY)
+                class BaseAPI < Grape::API::Instance
                   version 'v1', using: :header, vendor: 'twitter'
                   format :json
                   prefix :api
@@ -48,7 +48,13 @@ module Tapioca
                     end
                   end
                   helpers Helpers
+                end
+              RUBY
 
+              add_ruby_file("twitter_api.rb", <<~RUBY)
+                require_relative "./base_api"
+
+                class TwitterAPI < BaseAPI
                   resource :statuses do
                     desc 'Return a public timeline.'
                     get :public_timeline do
@@ -133,14 +139,14 @@ module Tapioca
                     def segment(space = nil, requirements: nil, **options, &block); end
                   end
 
-                  class PrivateAPIInstance < ::Grape::API::Instance
+                  class PrivateAPIInstance < BaseAPI
                     extend GeneratedCallbacksMethods
                     extend GeneratedRequestResponseMethods
                     extend GeneratedRoutingMethods
                   end
 
                   class PrivateEndpoint < ::Grape::Endpoint
-                    include TwitterAPI::Helpers
+                    include BaseAPI::Helpers
                   end
                 end
               RUBY
@@ -246,7 +252,7 @@ module Tapioca
                     def segment(space = nil, requirements: nil, **options, &block); end
                   end
 
-                  class PrivateAPIInstance < ::Grape::API::Instance
+                  class PrivateAPIInstance < Grape::API::Instance
                     extend GeneratedCallbacksMethods
                     extend GeneratedRequestResponseMethods
                     extend GeneratedRoutingMethods

@@ -128,7 +128,7 @@ module Tapioca
 
         sig { params(api: RBI::Scope).void }
         def create_api_class(api)
-          superclass = "::Grape::API::Instance"
+          superclass = superclass_of(constant)&.name || "::Grape::API::Instance"
 
           api.create_class(APIInstanceClassName, superclass_name: superclass) do |klass|
             klass.create_extend(CallbacksMethodsModuleName)
