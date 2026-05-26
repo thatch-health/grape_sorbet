@@ -1,3 +1,7 @@
+## 0.1.3 (2026-05-26)
+
+- Fix endpoint compiler to respect API superclass (#44)
+
 ## 0.1.2 (2026-05-14)
 
 - Bump dependencies and update GitHub Actions workflows (#37)
