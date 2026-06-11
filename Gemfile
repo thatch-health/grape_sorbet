@@ -28,6 +28,7 @@ end
 group :test do
   gem "minitest", "~> 6.0"
   gem "minitest-reporters", "~> 1.4"
+  gem "mocha"
 
   gem "simplecov", require: false
 

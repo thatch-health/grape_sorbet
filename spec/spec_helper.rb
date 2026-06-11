@@ -8,6 +8,8 @@ require "minitest/autorun"
 require "minitest/spec"
 require "minitest/reporters"
 
+require "mocha/minitest"
+
 require "tapioca/helpers/test/content"
 require "tapioca/helpers/test/template"
 require "tapioca/helpers/test/isolation"
