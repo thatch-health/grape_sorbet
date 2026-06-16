@@ -1905,8 +1905,8 @@ end
 # pkg:gem/grape#lib/grape.rb:56
 Grape::HTTP_SUPPORTED_METHODS = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/grape#lib/grape/json.rb:5
-Grape::Json = MultiJson
+# pkg:gem/grape#lib/grape/json.rb:7
+Grape::Json = JSON
 
 # pkg:gem/grape#lib/grape.rb:92
 module Grape::Middleware; end
