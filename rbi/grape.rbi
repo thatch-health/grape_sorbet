@@ -7,11 +7,12 @@ module Grape
       sig do
         params(
           description: String,
+          legacy_options: T::Hash[Symbol, T.untyped],
           options: T::Hash[Symbol, T.untyped],
           config_block: T.nilable(T.proc.bind(Grape::Util::ApiDescription).void),
         ).void
       end
-      def desc(description, options = {}, &config_block); end
+      def desc(description, *legacy_options, **options, &config_block); end
     end
 
     module Helpers
@@ -55,86 +56,81 @@ module Grape
     end
 
     module RequestResponse
+      # Grape 3.3.0 declares explicit keyword arguments, and Sorbet doesn't
+      # support keyword arguments in overloaded functions
       sig do
         params(
-          args: Symbol,
-          # Sorbet doesn't support keyword arguments in overloaded functions :(
-          # options: T.untyped,
+          args: T.untyped,
+          with: T.untyped,
+          rescue_subclasses: T.untyped,
+          backtrace: T.untyped,
+          original_exception: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).params(e: Exception).void),
         ).void
       end
-      sig do
-        type_parameters(:E)
-          .params(
-            args: T::Class[T.all(Exception, T.type_parameter(:E))],
-            options: T.untyped,
-            block: T.proc.bind(Grape::Endpoint).params(e: T.type_parameter(:E)).void,
-          )
-          .void
-      end
-      def rescue_from(*args, **options, &block); end
+      def rescue_from(*args, with: T.unsafe(nil), rescue_subclasses: T.unsafe(nil), backtrace: T.unsafe(nil), original_exception: T.unsafe(nil), &block); end
     end
 
     module Routing
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L182-L187
+      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.0/lib/grape/dsl/routing.rb#L204
       sig do
         params(
-          args: T.untyped,
+          path: T.untyped,
           options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
-      def delete(*args, **options, &block); end
+      def delete(path = T.unsafe(nil), **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L182-L187
+      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.0/lib/grape/dsl/routing.rb#L204
       sig do
         params(
-          args: T.untyped,
+          path: T.untyped,
           options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
-      def get(*args, **options, &block); end
+      def get(path = T.unsafe(nil), **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L182-L187
+      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.0/lib/grape/dsl/routing.rb#L204
       sig do
         params(
-          args: T.untyped,
+          path: T.untyped,
           options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
-      def options(*args, **options, &block); end
+      def options(path = T.unsafe(nil), **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L182-L187
+      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.0/lib/grape/dsl/routing.rb#L204
       sig do
         params(
-          args: T.untyped,
+          path: T.untyped,
           options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
-      def patch(*args, **options, &block); end
+      def patch(path = T.unsafe(nil), **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L182-L187
+      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.0/lib/grape/dsl/routing.rb#L204
       sig do
         params(
-          args: T.untyped,
+          path: T.untyped,
           options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
-      def post(*args, **options, &block); end
+      def post(path = T.unsafe(nil), **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L182-L187
+      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.0/lib/grape/dsl/routing.rb#L204
       sig do
         params(
-          args: T.untyped,
+          path: T.untyped,
           options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
-      def put(*args, **options, &block); end
+      def put(path = T.unsafe(nil), **options, &block); end
 
       sig do
         params(
