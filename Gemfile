@@ -23,6 +23,8 @@ group :development do
   gem "rubocop-sorbet", require: false
 
   gem "bundler-audit", require: false
+
+  gem "rubydex", require: false if RUBY_VERSION >= "3.2" && RUBY_ENGINE == "ruby"
 end
 
 group :test do
