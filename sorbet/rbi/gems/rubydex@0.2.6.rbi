@@ -11,6 +11,11 @@
 # pkg:gem/rubydex#lib/rubydex/version.rb:3
 module Rubydex; end
 
+# Raised when `MethodAliasDefinition#target` walks an alias chain that loops back on itself.
+#
+# pkg:gem/rubydex#lib/rubydex/errors.rb:7
+class Rubydex::AliasCycleError < ::Rubydex::Error; end
+
 # pkg:gem/rubydex#lib/rubydex.rb:11
 class Rubydex::AttrAccessorDefinition < ::Rubydex::Definition; end
 
@@ -174,6 +179,14 @@ class Rubydex::Definition
   def deprecated?; end
 
   # pkg:gem/rubydex#lib/rubydex.rb:11
+  sig { returns(T::Array[Rubydex::Definition]) }
+  def lexical_nesting; end
+
+  # pkg:gem/rubydex#lib/rubydex.rb:11
+  sig { returns(T.nilable(Rubydex::Definition)) }
+  def lexical_owner; end
+
+  # pkg:gem/rubydex#lib/rubydex.rb:11
   sig { returns(Rubydex::Location) }
   def location; end
 
@@ -215,23 +228,29 @@ end
 # A one based location intended for display purposes. This is what should be used when displaying a location to users,
 # like in CLIs
 #
-# pkg:gem/rubydex#lib/rubydex/location.rb:70
+# pkg:gem/rubydex#lib/rubydex/location.rb:83
 class Rubydex::DisplayLocation < ::Rubydex::Location
   # Normalize to zero-based for comparison with Location
   #
-  # pkg:gem/rubydex#lib/rubydex/location.rb:81
+  # pkg:gem/rubydex#lib/rubydex/location.rb:105
   sig { returns([String, Integer, Integer, Integer, Integer]) }
   def comparable_values; end
 
   # Returns itself
   #
-  # pkg:gem/rubydex#lib/rubydex/location.rb:74
+  # pkg:gem/rubydex#lib/rubydex/location.rb:98
   sig { returns(Rubydex::DisplayLocation) }
   def to_display; end
 
-  # pkg:gem/rubydex#lib/rubydex/location.rb:86
+  # pkg:gem/rubydex#lib/rubydex/location.rb:110
   sig { returns(String) }
   def to_s; end
+
+  class << self
+    # pkg:gem/rubydex#lib/rubydex/location.rb:86
+    sig { params(prism_location: Prism::Location, uri: String).returns(T.noreturn) }
+    def from_prism(prism_location, uri:); end
+  end
 end
 
 # pkg:gem/rubydex#lib/rubydex.rb:11
@@ -242,6 +261,10 @@ class Rubydex::Document
   # pkg:gem/rubydex#lib/rubydex.rb:11
   sig { returns(T::Enumerable[Rubydex::Definition]) }
   def definitions; end
+
+  # pkg:gem/rubydex#lib/rubydex.rb:11
+  sig { returns(T::Enumerable[Rubydex::MethodReference]) }
+  def method_references; end
 
   # pkg:gem/rubydex#lib/rubydex.rb:11
   sig { returns(String) }
@@ -255,7 +278,8 @@ class Rubydex::Document
   end
 end
 
-class Rubydex::Error < StandardError; end
+# pkg:gem/rubydex#lib/rubydex/errors.rb:4
+class Rubydex::Error < ::StandardError; end
 
 # Represents `extend SomeModule`
 #
@@ -292,7 +316,7 @@ class Rubydex::GlobalVariableDefinition < ::Rubydex::Definition; end
 #
 # pkg:gem/rubydex#lib/rubydex.rb:11
 class Rubydex::Graph
-  # pkg:gem/rubydex#lib/rubydex/graph.rb:24
+  # pkg:gem/rubydex#lib/rubydex/graph.rb:26
   sig { params(workspace_path: T.nilable(String)).void }
   def initialize(workspace_path: nil); end
 
@@ -366,7 +390,7 @@ class Rubydex::Graph
 
   # Index all files and dependencies of the workspace that exists in `@workspace_path`
   #
-  # pkg:gem/rubydex#lib/rubydex/graph.rb:32
+  # pkg:gem/rubydex#lib/rubydex/graph.rb:34
   sig { returns(T::Array[String]) }
   def index_workspace; end
 
@@ -397,18 +421,18 @@ class Rubydex::Graph
   sig { params(query: String).returns(T::Enumerable[Rubydex::Declaration]) }
   def search(query); end
 
-  # pkg:gem/rubydex#lib/rubydex/graph.rb:21
+  # pkg:gem/rubydex#lib/rubydex/graph.rb:23
   sig { returns(String) }
   def workspace_path; end
 
-  # pkg:gem/rubydex#lib/rubydex/graph.rb:21
+  # pkg:gem/rubydex#lib/rubydex/graph.rb:23
   sig { params(workspace_path: String).returns(String) }
   def workspace_path=(workspace_path); end
 
   # Returns all workspace paths that should be indexed, excluding directories that we don't need to descend into such
   # as `.git`, `node_modules`. Also includes any top level Ruby files
   #
-  # pkg:gem/rubydex#lib/rubydex/graph.rb:40
+  # pkg:gem/rubydex#lib/rubydex/graph.rb:42
   sig { returns(T::Array[String]) }
   def workspace_paths; end
 
@@ -418,19 +442,22 @@ class Rubydex::Graph
   # to the list of paths. This method does not require `rbs` to be a part of the bundle. It searches for whatever
   # latest installation of `rbs` exists in the system and fails silently if we can't find one
   #
-  # pkg:gem/rubydex#lib/rubydex/graph.rb:87
+  # pkg:gem/rubydex#lib/rubydex/graph.rb:89
   sig { params(paths: T::Array[String]).void }
   def add_core_rbs_definition_paths(paths); end
 
   # Gathers the paths we have to index for all workspace dependencies
   #
-  # pkg:gem/rubydex#lib/rubydex/graph.rb:63
+  # pkg:gem/rubydex#lib/rubydex/graph.rb:65
   sig { params(paths: T::Array[String]).void }
   def add_workspace_dependency_paths(paths); end
 end
 
 # pkg:gem/rubydex#lib/rubydex/graph.rb:8
 Rubydex::Graph::IGNORED_DIRECTORIES = T.let(T.unsafe(nil), Array)
+
+# pkg:gem/rubydex#lib/rubydex/graph.rb:20
+Rubydex::Graph::INDEXABLE_EXTENSIONS = T.let(T.unsafe(nil), Array)
 
 # Represents `include SomeModule`
 #
@@ -483,15 +510,15 @@ end
 class Rubydex::Location
   include ::Comparable
 
-  # pkg:gem/rubydex#lib/rubydex/location.rb:18
+  # pkg:gem/rubydex#lib/rubydex/location.rb:31
   sig { params(uri: String, start_line: Integer, end_line: Integer, start_column: Integer, end_column: Integer).void }
   def initialize(uri:, start_line:, end_line:, start_column:, end_column:); end
 
-  # pkg:gem/rubydex#lib/rubydex/location.rb:38
+  # pkg:gem/rubydex#lib/rubydex/location.rb:51
   sig { params(other: T.untyped).returns(T.nilable(Integer)) }
   def <=>(other); end
 
-  # pkg:gem/rubydex#lib/rubydex/location.rb:45
+  # pkg:gem/rubydex#lib/rubydex/location.rb:58
   sig { returns([String, Integer, Integer, Integer, Integer]) }
   def comparable_values; end
 
@@ -513,21 +540,27 @@ class Rubydex::Location
 
   # Turns this zero based location into a one based location for display purposes.
   #
-  # pkg:gem/rubydex#lib/rubydex/location.rb:52
+  # pkg:gem/rubydex#lib/rubydex/location.rb:65
   sig { returns(Rubydex::DisplayLocation) }
   def to_display; end
 
-  # pkg:gem/rubydex#lib/rubydex/location.rb:27
+  # pkg:gem/rubydex#lib/rubydex/location.rb:40
   sig { returns(String) }
   def to_file_path; end
 
-  # pkg:gem/rubydex#lib/rubydex/location.rb:63
+  # pkg:gem/rubydex#lib/rubydex/location.rb:76
   sig { returns(String) }
   def to_s; end
 
   # pkg:gem/rubydex#lib/rubydex/location.rb:12
   sig { returns(String) }
   def uri; end
+
+  class << self
+    # pkg:gem/rubydex#lib/rubydex/location.rb:19
+    sig { params(prism_location: Prism::Location, uri: String).returns(Rubydex::Location) }
+    def from_prism(prism_location, uri:); end
+  end
 end
 
 # pkg:gem/rubydex#lib/rubydex/location.rb:7
@@ -549,6 +582,10 @@ end
 class Rubydex::MethodAliasDefinition < ::Rubydex::Definition
   # pkg:gem/rubydex#lib/rubydex.rb:11
   def signatures; end
+
+  # pkg:gem/rubydex#lib/rubydex.rb:11
+  sig { returns(T.nilable(Rubydex::Method)) }
+  def target; end
 end
 
 # pkg:gem/rubydex#lib/rubydex.rb:11
@@ -619,6 +656,10 @@ class Rubydex::Namespace < ::Rubydex::Declaration
 
   # pkg:gem/rubydex#lib/rubydex.rb:11
   def find_member(*_arg0); end
+
+  # pkg:gem/rubydex#lib/rubydex/declaration.rb:25
+  sig { params(ancestor_names: String).returns(T::Boolean) }
+  def has_ancestor?(*ancestor_names); end
 
   # pkg:gem/rubydex#lib/rubydex.rb:11
   sig { params(name: String).returns(T.nilable(Rubydex::Declaration)) }
@@ -752,7 +793,11 @@ class Rubydex::Signature::RestKeywordParameter < ::Rubydex::Signature::Parameter
 class Rubydex::Signature::RestPositionalParameter < ::Rubydex::Signature::Parameter; end
 
 # pkg:gem/rubydex#lib/rubydex.rb:11
-class Rubydex::SingletonClass < ::Rubydex::Namespace; end
+class Rubydex::SingletonClass < ::Rubydex::Namespace
+  # pkg:gem/rubydex#lib/rubydex/declaration.rb:40
+  sig { returns(Rubydex::Declaration) }
+  def attached_class; end
+end
 
 # pkg:gem/rubydex#lib/rubydex.rb:11
 class Rubydex::SingletonClassDefinition < ::Rubydex::Definition
