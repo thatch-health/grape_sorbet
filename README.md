@@ -7,7 +7,7 @@ grape_sorbet is a gem that provides hand written signatures and a Tapioca DSL co
 
 ## Requirements
 
-As of 0.1.0, grape_sorbet targets Grape >= 3.0.
+As of 0.2.0, grape_sorbet targets Grape >= 3.3.0.
 
 ## Installation
 

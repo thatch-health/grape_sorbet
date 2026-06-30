@@ -97,19 +97,19 @@ module Tapioca
           end
         end
 
-        # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/callbacks.rb#L12-L16
+        # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/callbacks.rb#L12-L22
         CALLBACKS_METHODS = T.let(
           [:before, :before_validation, :after_validation, :after, :finally].freeze,
           T::Array[Symbol],
         )
 
-        # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape.rb#L56-L64
+        # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape.rb#L56-L64
         HTTP_VERB_METHODS = T.let(
           [:get, :post, :put, :patch, :delete, :head, :options].freeze,
           T::Array[Symbol],
         )
 
-        # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L189-L214
+        # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L209-L234
         NAMESPACE_METHODS = T.let(
           [:namespace, :group, :resource, :resources, :segment].freeze,
           T::Array[Symbol],
@@ -153,7 +153,7 @@ module Tapioca
         sig { params(api: RBI::Scope).void }
         def create_callbacks_methods(api)
           api.create_module(CallbacksMethodsModuleName) do |mod|
-            # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/callbacks.rb#L12-L16
+            # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/callbacks.rb#L12-L22
             CALLBACKS_METHODS.each do |callback|
               mod.create_method(
                 callback.to_s,
@@ -169,22 +169,32 @@ module Tapioca
         sig { params(api: RBI::Scope).void }
         def create_request_response_methods(api)
           api.create_module(RequestResponseMethodsModuleName) do |mod|
-            # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/request_response.rb#L76-L127
+            # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/request_response.rb#L85-L128
             mod.create_method("rescue_from") do |method|
               method.add_rest_param("args")
-              method.add_kw_rest_param("options")
+              method.add_kw_opt_param("with", "nil")
+              method.add_kw_opt_param("rescue_subclasses", "true")
+              method.add_kw_opt_param("backtrace", "false")
+              method.add_kw_opt_param("original_exception", "false")
               method.add_block_param("block")
 
               method.add_sig do |sig|
                 sig.add_param("args", "Symbol")
                 # Sorbet doesn't support keyword arguments in overloaded functions :(
-                # sig.add_param("options", "T.untyped")
+                # sig.add_param("with", "T.untyped")
+                # sig.add_param("rescue_subclasses", "T::Boolean")
+                # sig.add_param("backtrace", "T::Boolean")
+                # sig.add_param("original_exception", "T::Boolean")
                 sig.add_param("block", "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: Exception).void)")
                 sig.return_type = "void"
               end
+
               method.add_sig(type_params: ["E"]) do |sig|
                 sig.add_param("args", "T::Class[T.all(::Exception, T.type_parameter(:E))]")
-                sig.add_param("options", "T.untyped")
+                sig.add_param("with", "T.untyped")
+                sig.add_param("rescue_subclasses", "T::Boolean")
+                sig.add_param("backtrace", "T::Boolean")
+                sig.add_param("original_exception", "T::Boolean")
                 sig.add_param(
                   "block",
                   "T.nilable(T.proc.bind(#{EndpointClassName}).params(e: T.type_parameter(:E)).void)",
@@ -198,24 +208,24 @@ module Tapioca
         sig { params(api: RBI::Scope).void }
         def create_routing_methods(api)
           api.create_module(RoutingMethodsModuleName) do |routing_methods_module|
-            # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L148-L180
+            # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L169-L201
             routing_methods_module.create_method(
               "route",
               parameters: [
-                create_param("methods", type: "T.untyped"),
-                create_opt_param("paths", type: "T.untyped", default: "['/']"),
+                create_param("methods", type: "T.any(Symbol, String, T::Array[String])"),
+                create_opt_param("paths", type: "T.nilable(T.any(String, T::Array[String]))", default: "['/']"),
                 create_opt_param("route_options", type: "T::Hash[Symbol, T.untyped]", default: "{}"),
                 create_block_param("block", type: "T.nilable(T.proc.bind(#{EndpointClassName}).void)"),
               ],
               return_type: "void",
             )
 
-            # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L182-L187
+            # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L203-L207
             HTTP_VERB_METHODS.each do |verb|
               routing_methods_module.create_method(
                 verb.to_s,
                 parameters: [
-                  create_rest_param("args", type: "T.untyped"),
+                  create_opt_param("path", type: "String", default: "'/'"),
                   create_kw_rest_param("options", type: "T.untyped"),
                   create_block_param("block", type: "T.nilable(T.proc.bind(#{EndpointClassName}).void)"),
                 ],
@@ -223,7 +233,7 @@ module Tapioca
               )
             end
 
-            # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L189-L214
+            # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L209-L234
             NAMESPACE_METHODS.each do |namespace_method|
               routing_methods_module.create_method(
                 namespace_method.to_s,
@@ -237,7 +247,7 @@ module Tapioca
               )
             end
 
-            # https://github.com/ruby-grape/grape/blob/v3.2.0/lib/grape/dsl/routing.rb#L221-L234
+            # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L241-L254
             routing_methods_module.create_method(
               "route_param",
               parameters: [
