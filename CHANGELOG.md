@@ -1,3 +1,11 @@
+## 0.2.0 (2026-06-30)
+
+⚠️ This release is a BREAKING CHANGE. ⚠️
+
+grape_sorbet now targets grape >= 3.3 and is no longer compatible with older grape versions.
+
+- Update signatures for grape 3.3 (#61)
+
 ## 0.1.3 (2026-05-26)
 
 - Fix endpoint compiler to respect API superclass (#44)
