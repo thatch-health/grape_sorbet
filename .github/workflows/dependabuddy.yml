@@ -1,0 +1,93 @@
+name: Dependabuddy
+
+on:
+  pull_request:
+
+permissions:
+  pull-requests: read
+
+jobs:
+  fetch-dependabot-metadata:
+    runs-on: ubuntu-latest
+
+    # We only want to check the metadata on pull_request events from Dependabot
+    # itself, any subsequent pushes to the PR should just skip this step so we
+    # don't go into a loop on commits created by the other jobs.
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]' }}
+    outputs:
+      package-ecosystem: ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
+      dependency-names: ${{ steps.dependabot-metadata.outputs.dependency-names }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+  bundler:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    needs: [fetch-dependabot-metadata]
+    if: needs.fetch-dependabot-metadata.outputs.package-ecosystem == 'bundler'
+
+    steps:
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ vars.THATCH_DEPENDABUDDY_CLIENT_ID }}
+          private-key: ${{ secrets.THATCH_DEPENDABUDDY_PRIVATE_KEY }}
+          permission-contents: write
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: true
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure git author
+        run: |
+          git config user.name "thatch-dependabuddy[bot]"
+          git config user.email "300683223+thatch-dependabuddy[bot]@users.noreply.github.com"
+        shell: bash
+
+      - uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
+        with:
+          bundler-cache: true
+
+      - name: Regenerate gem RBIs
+        run: bin/tapioca gem
+
+      - name: Commit changes to sorbet/rbi/gems (if any)
+        id: commit-tapioca-gem
+        run: |
+          git add sorbet/rbi/gems
+          if git diff --staged --quiet; then
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "[dependabot skip] Update gem RBIs"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
+      - name: Autocorrect RuboCop offenses (only when it's safe)
+        if: ${{ contains(needs.fetch-dependabot-metadata.outputs.dependency-names, 'rubocop') }}
+        run: bin/rubocop --parallel --autocorrect
+
+      - name: Commit Rubocop autocorrects (if any)
+        id: commit-rubocop-autocorrect
+        if: ${{ contains(needs.fetch-dependabot-metadata.outputs.dependency-names, 'rubocop') }}
+        run: |
+          git add -u
+          if git diff --staged --quiet; then
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "[dependabot skip] AutoCorrect RuboCop offenses"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
+      - name: Push changes
+        if: steps.commit-tapioca-gem.outputs.committed == 'true' || steps.commit-rubocop-autocorrect.outputs.committed == 'true'
+        run: git push
