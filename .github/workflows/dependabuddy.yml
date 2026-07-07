@@ -73,7 +73,7 @@ jobs:
 
       - name: Autocorrect RuboCop offenses (only when it's safe)
         if: ${{ contains(needs.fetch-dependabot-metadata.outputs.dependency-names, 'rubocop') }}
-        run: bin/rubocop --parallel --autocorrect
+        run: bundle exec rubocop --parallel --autocorrect
 
       - name: Commit Rubocop autocorrects (if any)
         id: commit-rubocop-autocorrect
