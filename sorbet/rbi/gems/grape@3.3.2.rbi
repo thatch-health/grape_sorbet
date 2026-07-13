@@ -2364,7 +2364,7 @@ class Grape::Middleware::Base
   # Called after the application is called in the middleware lifecycle.
   # @return [Response, nil] a Rack SPEC response or nil to call the application afterwards.
   #
-  # pkg:gem/grape#lib/grape/middleware/base.rb:60
+  # pkg:gem/grape#lib/grape/middleware/base.rb:58
   def after; end
 
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
@@ -2373,19 +2373,19 @@ class Grape::Middleware::Base
   # @abstract
   # Called before the application is called in the middleware lifecycle.
   #
-  # pkg:gem/grape#lib/grape/middleware/base.rb:55
+  # pkg:gem/grape#lib/grape/middleware/base.rb:53
   def before; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:30
+  # pkg:gem/grape#lib/grape/middleware/base.rb:28
   def call(env); end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:34
+  # pkg:gem/grape#lib/grape/middleware/base.rb:32
   def call!(env); end
 
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
   def config; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:66
+  # pkg:gem/grape#lib/grape/middleware/base.rb:64
   def context; end
 
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
@@ -2394,24 +2394,37 @@ class Grape::Middleware::Base
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
   def options; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:76
+  # pkg:gem/grape#lib/grape/middleware/base.rb:74
   def query_params; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:62
+  # pkg:gem/grape#lib/grape/middleware/base.rb:60
   def rack_request; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:70
+  # pkg:gem/grape#lib/grape/middleware/base.rb:68
   def response; end
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:93
+  # Same idea as {#options_data_class} for the legacy DEFAULT_OPTIONS Hash.
+  #
+  # pkg:gem/grape#lib/grape/middleware/base.rb:108
+  def default_options_constant; end
+
+  # pkg:gem/grape#lib/grape/middleware/base.rb:91
   def merge_default_options(options); end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:84
+  # pkg:gem/grape#lib/grape/middleware/base.rb:82
   def merge_headers(response); end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:100
+  # self.class::Options honours middleware inheritance (e.g. Versioner::Path
+  # → Versioner::Base) and, unlike const_defined?, never resolves a
+  # top-level ::Options on Object. Absent an own/inherited Options class,
+  # the lookup raises NameError and we fall back to the legacy path.
+  #
+  # pkg:gem/grape#lib/grape/middleware/base.rb:101
+  def options_data_class; end
+
+  # pkg:gem/grape#lib/grape/middleware/base.rb:114
   def try_scrub(obj); end
 end
 
