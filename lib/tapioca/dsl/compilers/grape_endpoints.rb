@@ -98,22 +98,13 @@ module Tapioca
         end
 
         # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/callbacks.rb#L12-L22
-        CALLBACKS_METHODS = T.let(
-          [:before, :before_validation, :after_validation, :after, :finally].freeze,
-          T::Array[Symbol],
-        )
+        CALLBACKS_METHODS = [:before, :before_validation, :after_validation, :after, :finally].freeze
 
         # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape.rb#L56-L64
-        HTTP_VERB_METHODS = T.let(
-          [:get, :post, :put, :patch, :delete, :head, :options].freeze,
-          T::Array[Symbol],
-        )
+        HTTP_VERB_METHODS = [:get, :post, :put, :patch, :delete, :head, :options].freeze
 
         # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L209-L234
-        NAMESPACE_METHODS = T.let(
-          [:namespace, :group, :resource, :resources, :segment].freeze,
-          T::Array[Symbol],
-        )
+        NAMESPACE_METHODS = [:namespace, :group, :resource, :resources, :segment].freeze
 
         private
 
