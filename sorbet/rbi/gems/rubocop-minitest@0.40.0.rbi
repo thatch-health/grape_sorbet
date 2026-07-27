@@ -1412,10 +1412,13 @@ class RuboCop::Cop::Minitest::NonExecutableTestMethod < ::RuboCop::Cop::Base
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:47
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:48
+  def inside_test_class?(node); end
+
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:52
   def possible_test_class?(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:41
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/non_executable_test_method.rb:42
   def use_test_class?; end
 end
 
