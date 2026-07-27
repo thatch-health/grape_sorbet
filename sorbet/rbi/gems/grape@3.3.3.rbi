@@ -34,23 +34,25 @@ end
 #
 # pkg:gem/grape#lib/grape/api.rb:6
 class Grape::API
+  extend ::Grape::Mountable
+
   class << self
-    # pkg:gem/grape#lib/grape/api.rb:26
+    # pkg:gem/grape#lib/grape/api.rb:29
     def base_instance; end
 
-    # pkg:gem/grape#lib/grape/api.rb:26
+    # pkg:gem/grape#lib/grape/api.rb:29
     def base_instance=(_arg0); end
 
-    # pkg:gem/grape#lib/grape/api.rb:35
+    # pkg:gem/grape#lib/grape/api.rb:38
     def call(*_arg0, **_arg1, &_arg2); end
 
-    # pkg:gem/grape#lib/grape/api.rb:35
+    # pkg:gem/grape#lib/grape/api.rb:38
     def change!(*_arg0, **_arg1, &_arg2); end
 
-    # pkg:gem/grape#lib/grape/api.rb:35
+    # pkg:gem/grape#lib/grape/api.rb:38
     def compile!(*_arg0, **_arg1, &_arg2); end
 
-    # pkg:gem/grape#lib/grape/api.rb:35
+    # pkg:gem/grape#lib/grape/api.rb:38
     def configuration(*_arg0, **_arg1, &_arg2); end
 
     # Configure an API from the outside. If a block is given, it'll pass a
@@ -59,22 +61,22 @@ class Grape::API
     # The configuration set here is accessible from inside an API with
     # `configuration` as normal.
     #
-    # pkg:gem/grape#lib/grape/api.rb:60
+    # pkg:gem/grape#lib/grape/api.rb:63
     def configure; end
 
     # Initialize the instance variables on the remountable class, and the base_instance
     # an instance that will be used to create the set up but will not be mounted
     #
-    # pkg:gem/grape#lib/grape/api.rb:39
+    # pkg:gem/grape#lib/grape/api.rb:42
     def initial_setup(base_instance_parent); end
 
-    # pkg:gem/grape#lib/grape/api.rb:26
+    # pkg:gem/grape#lib/grape/api.rb:29
     def instances; end
 
-    # pkg:gem/grape#lib/grape/api.rb:26
+    # pkg:gem/grape#lib/grape/api.rb:29
     def instances=(_arg0); end
 
-    # pkg:gem/grape#lib/grape/api.rb:28
+    # pkg:gem/grape#lib/grape/api.rb:31
     def method_missing(method, *_arg1, **_arg2, &_arg3); end
 
     # The remountable class can have a configuration hash to provide some dynamic class-level variables.
@@ -82,78 +84,78 @@ class Grape::API
     # depending on where the endpoint is mounted. Use with care, if you find yourself using configuration
     # too much, you may actually want to provide a new API rather than remount it.
     #
-    # pkg:gem/grape#lib/grape/api.rb:72
+    # pkg:gem/grape#lib/grape/api.rb:75
     def mount_instance(configuration: T.unsafe(nil)); end
 
-    # pkg:gem/grape#lib/grape/api.rb:35
+    # pkg:gem/grape#lib/grape/api.rb:38
     def new(*_arg0, **_arg1, &_arg2); end
 
     # Redefines all methods so that are forwarded to add_setup and be recorded
     #
-    # pkg:gem/grape#lib/grape/api.rb:47
+    # pkg:gem/grape#lib/grape/api.rb:50
     def override_all_methods!; end
 
-    # pkg:gem/grape#lib/grape/api.rb:35
+    # pkg:gem/grape#lib/grape/api.rb:38
     def recognize_path(*_arg0, **_arg1, &_arg2); end
 
-    # pkg:gem/grape#lib/grape/api.rb:28
+    # pkg:gem/grape#lib/grape/api.rb:31
     def respond_to_missing?(name, include_private = T.unsafe(nil)); end
 
-    # pkg:gem/grape#lib/grape/api.rb:35
+    # pkg:gem/grape#lib/grape/api.rb:38
     def routes(*_arg0, **_arg1, &_arg2); end
 
     private
 
     # Adds a new stage to the set up require to get a Grape::API up and running
     #
-    # pkg:gem/grape#lib/grape/api.rb:100
+    # pkg:gem/grape#lib/grape/api.rb:103
     def add_setup(**step); end
 
-    # pkg:gem/grape#lib/grape/api.rb:142
+    # pkg:gem/grape#lib/grape/api.rb:145
     def any_lazy?(args); end
 
-    # pkg:gem/grape#lib/grape/api.rb:146
+    # pkg:gem/grape#lib/grape/api.rb:149
     def evaluate_arguments(configuration, *args); end
 
     # When inherited, will create a list of all instances (times the API was mounted)
     # It will listen to the setup required to mount that endpoint, and replicate it on any new instance
     #
-    # pkg:gem/grape#lib/grape/api.rb:84
+    # pkg:gem/grape#lib/grape/api.rb:87
     def inherited(api); end
 
     # Updating all previously mounted classes in the case that new methods have been executed.
     #
-    # pkg:gem/grape#lib/grape/api.rb:112
+    # pkg:gem/grape#lib/grape/api.rb:115
     def refresh_mount_step; end
 
     # Replays the set up to produce an API as defined in this class, can be called
     # on classes that inherit from Grape::API
     #
-    # pkg:gem/grape#lib/grape/api.rb:93
+    # pkg:gem/grape#lib/grape/api.rb:96
     def replay_setup_on(instance); end
 
-    # pkg:gem/grape#lib/grape/api.rb:124
+    # pkg:gem/grape#lib/grape/api.rb:127
     def replay_step_on(instance, method:, args:, kwargs:, block:); end
 
     # Skips steps that contain arguments to be lazily executed (on re-mount time)
     #
-    # pkg:gem/grape#lib/grape/api.rb:137
+    # pkg:gem/grape#lib/grape/api.rb:140
     def skip_immediate_run?(instance, args, kwargs); end
   end
 end
 
-# pkg:gem/grape#lib/grape/api.rb:12
+# pkg:gem/grape#lib/grape/api.rb:15
 class Grape::API::Boolean
   class << self
-    # pkg:gem/grape#lib/grape/api.rb:16
+    # pkg:gem/grape#lib/grape/api.rb:19
     def build(val); end
   end
 end
 
-# pkg:gem/grape#lib/grape/api.rb:13
+# pkg:gem/grape#lib/grape/api.rb:16
 Grape::API::Boolean::VALUES = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/grape#lib/grape/api.rb:10
+# pkg:gem/grape#lib/grape/api.rb:13
 Grape::API::Helpers = Grape::DSL::Helpers::BaseHelper
 
 # The API Instance class, is the engine behind Grape::API. Each class that inherits
@@ -161,6 +163,7 @@ Grape::API::Helpers = Grape::DSL::Helpers::BaseHelper
 #
 # pkg:gem/grape#lib/grape/api/instance.rb:7
 class Grape::API::Instance
+  extend ::Grape::Mountable
   extend ::Grape::DSL::Settings
   extend ::Grape::DSL::Desc
   extend ::Grape::DSL::Validations
@@ -175,12 +178,12 @@ class Grape::API::Instance
   # Builds the routes from the defined endpoints, effectively compiling
   # this API into a usable form.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:102
+  # pkg:gem/grape#lib/grape/api/instance.rb:104
   def initialize; end
 
   # Handle a request. See Rack documentation for what `env` is.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:114
+  # pkg:gem/grape#lib/grape/api/instance.rb:116
   def call(env); end
 
   # Some requests may return a HTTP 404 error if grape cannot find a matching
@@ -192,10 +195,10 @@ class Grape::API::Instance
   # errors from reaching upstream. This is effectivelly done by unsetting
   # X-Cascade. Default :cascade is true.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:132
+  # pkg:gem/grape#lib/grape/api/instance.rb:134
   def cascade?; end
 
-  # pkg:gem/grape#lib/grape/api/instance.rb:98
+  # pkg:gem/grape#lib/grape/api/instance.rb:100
   def router; end
 
   private
@@ -205,23 +208,17 @@ class Grape::API::Instance
   # will return an HTTP 405 response for any HTTP method that the resource
   # cannot handle.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:148
+  # pkg:gem/grape#lib/grape/api/instance.rb:150
   def add_head_not_allowed_methods_and_options_methods; end
 
-  # pkg:gem/grape#lib/grape/api/instance.rb:158
-  def collect_route_config_per_pattern(all_routes); end
-
-  # Allows definition of endpoints that ignore the versioning configuration
-  # used by the rest of your API.
-  #
-  # pkg:gem/grape#lib/grape/api/instance.rb:183
-  def without_root_prefix_and_versioning; end
+  # pkg:gem/grape#lib/grape/api/instance.rb:166
+  def collect_route_config_per_pattern(all_routes, namespace_inheritable); end
 
   class << self
-    # pkg:gem/grape#lib/grape/api/instance.rb:28
+    # pkg:gem/grape#lib/grape/api/instance.rb:30
     def base=(grape_api); end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:33
+    # pkg:gem/grape#lib/grape/api/instance.rb:35
     def base_instance?; end
 
     # This is the interface point between Rack and Grape; it accepts a request
@@ -229,57 +226,57 @@ class Grape::API::Instance
     # the headers, and the body. See [the rack specification]
     # (http://www.rubydoc.info/github/rack/rack/master/file/SPEC) for more.
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:52
+    # pkg:gem/grape#lib/grape/api/instance.rb:54
     def call(env); end
 
     # Wipe the compiled API so we can recompile after changes were made.
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:70
+    # pkg:gem/grape#lib/grape/api/instance.rb:72
     def change!; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:57
+    # pkg:gem/grape#lib/grape/api/instance.rb:59
     def compile!; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:24
+    # pkg:gem/grape#lib/grape/api/instance.rb:26
     def configuration; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:24
+    # pkg:gem/grape#lib/grape/api/instance.rb:26
     def configuration=(_arg0); end
 
     # see Grape::Router#recognize_path
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:64
+    # pkg:gem/grape#lib/grape/api/instance.rb:66
     def recognize_path(path); end
 
     # Clears all defined routes, endpoints, etc., on this API.
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:42
+    # pkg:gem/grape#lib/grape/api/instance.rb:44
     def reset!; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:26
+    # pkg:gem/grape#lib/grape/api/instance.rb:28
     def to_s(*_arg0, **_arg1, &_arg2); end
 
     protected
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:76
+    # pkg:gem/grape#lib/grape/api/instance.rb:78
     def inherit_settings(other_settings); end
 
     private
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:91
+    # pkg:gem/grape#lib/grape/api/instance.rb:93
     def inherited(subclass); end
   end
 end
 
-# pkg:gem/grape#lib/grape/api/instance.rb:19
+# pkg:gem/grape#lib/grape/api/instance.rb:21
 Grape::API::Instance::Boolean = Grape::API::Boolean
 
-# pkg:gem/grape#lib/grape/api/instance.rb:178
+# pkg:gem/grape#lib/grape/api/instance.rb:185
 Grape::API::Instance::ROOT_PREFIX_VERSIONING_KEYS = T.let(T.unsafe(nil), Array)
 
 # Class methods that we want to call on the API rather than on the API object
 #
-# pkg:gem/grape#lib/grape/api.rb:8
+# pkg:gem/grape#lib/grape/api.rb:11
 Grape::API::NON_OVERRIDABLE = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/grape#lib/grape/content_types.rb:4
@@ -289,12 +286,30 @@ module Grape::ContentTypes
   # pkg:gem/grape#lib/grape/content_types.rb:18
   def content_types_for(from_settings); end
 
+  # The media type of a content-type header: the part before any `;`
+  # parameters, with surrounding whitespace removed
+  # (e.g. `'text/html'` for `'text/html; charset=utf-8'`). Returns nil for a
+  # nil content type. Skips the split (and its allocation) when there are no
+  # parameters, which is the common case.
+  #
+  # pkg:gem/grape#lib/grape/content_types.rb:33
+  def media_type(content_type); end
+
   # pkg:gem/grape#lib/grape/content_types.rb:22
   def mime_types_for(from_settings); end
 
   class << self
     # pkg:gem/grape#lib/grape/content_types.rb:18
     def content_types_for(from_settings); end
+
+    # The media type of a content-type header: the part before any `;`
+    # parameters, with surrounding whitespace removed
+    # (e.g. `'text/html'` for `'text/html; charset=utf-8'`). Returns nil for a
+    # nil content type. Skips the split (and its allocation) when there are no
+    # parameters, which is the common case.
+    #
+    # pkg:gem/grape#lib/grape/content_types.rb:33
+    def media_type(content_type); end
 
     # pkg:gem/grape#lib/grape/content_types.rb:22
     def mime_types_for(from_settings); end
@@ -345,7 +360,7 @@ end
 # pkg:gem/grape#lib/grape/cookies.rb:7
 Grape::Cookies::DELETED_COOKIES_ATTRS = T.let(T.unsafe(nil), Hash)
 
-# pkg:gem/grape#lib/grape/api.rb:10
+# pkg:gem/grape#lib/grape/api.rb:13
 module Grape::DSL; end
 
 # pkg:gem/grape#lib/grape/dsl/callbacks.rb:5
@@ -1125,7 +1140,7 @@ module Grape::DSL::Routing
   # pkg:gem/grape#lib/grape/dsl/routing.rb:18
   def cascade(value = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:204
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:206
   def delete(path = T.unsafe(nil), **options, &block); end
 
   # pkg:gem/grape#lib/grape/dsl/routing.rb:122
@@ -1144,16 +1159,16 @@ module Grape::DSL::Routing
   # pkg:gem/grape#lib/grape/dsl/routing.rb:6
   def endpoints; end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:204
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:206
   def get(path = T.unsafe(nil), **options, &block); end
 
   # pkg:gem/grape#lib/grape/dsl/routing.rb:8
   def given(conditional_option, &_arg1); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:231
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:233
   def group(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:204
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:206
   def head(path = T.unsafe(nil), **options, &block); end
 
   # pkg:gem/grape#lib/grape/dsl/routing.rb:118
@@ -1178,16 +1193,16 @@ module Grape::DSL::Routing
   #       end
   #     end
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:221
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:223
   def namespace(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:204
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:206
   def options(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:204
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:206
   def patch(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:204
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:206
   def post(path = T.unsafe(nil), **options, &block); end
 
   # Define a root URL prefix for your entire API.
@@ -1195,13 +1210,13 @@ module Grape::DSL::Routing
   # pkg:gem/grape#lib/grape/dsl/routing.rb:88
   def prefix(prefix = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:204
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:206
   def put(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:232
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:234
   def resource(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:233
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:235
   def resources(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
 
   # Defines a route that will be recognized
@@ -1217,7 +1232,7 @@ module Grape::DSL::Routing
   #     end
   #   end
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:181
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:183
   def route(methods, paths = T.unsafe(nil), route_options = T.unsafe(nil), &_arg3); end
 
   # This method allows you to quickly define a parameter route segment
@@ -1226,12 +1241,12 @@ module Grape::DSL::Routing
   # @param param [Symbol] The name of the parameter you wish to declare.
   # @option options [Regexp] You may supply a regular expression that the declared parameter must meet.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:246
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:248
   def route_param(param, requirements: T.unsafe(nil), type: T.unsafe(nil), **_arg3, &_arg4); end
 
   # An array of API routes.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:237
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:239
   def routes; end
 
   # Create a scope without affecting the URL.
@@ -1242,7 +1257,7 @@ module Grape::DSL::Routing
   # pkg:gem/grape#lib/grape/dsl/routing.rb:98
   def scope(_name = T.unsafe(nil), &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:234
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:236
   def segment(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
 
   # Specify an API version.
@@ -1290,30 +1305,30 @@ module Grape::DSL::Routing
 
   # @return array of defined versions
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:257
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:259
   def versions; end
 
   private
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:290
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:292
   def evaluate_as_instance_with_configuration(block, lazy: T.unsafe(nil)); end
 
   # Execute first the provided block, then each of the
   # block passed in. Allows for simple 'before' setups
   # of settings stack pushes.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:281
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:283
   def nest(*blocks, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:273
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:275
   def refresh_mounted_api(mounts, *opts); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:269
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:271
   def reset_endpoints!; end
 
   # Remove all defined routes.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:264
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:266
   def reset_routes!; end
 end
 
@@ -1668,22 +1683,29 @@ class Grape::Endpoint
 
   private
 
+  # True when a bare Rack app (anything that isn't a Grape app) is mounted at
+  # this endpoint. Such an app is called directly and matched by path prefix
+  # rather than an anchored route.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:301
+  def bare_rack_app?; end
+
   # pkg:gem/grape#lib/grape/endpoint.rb:232
   def before_filter_passed; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:380
+  # pkg:gem/grape#lib/grape/endpoint.rb:388
   def build_helpers; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:387
+  # pkg:gem/grape#lib/grape/endpoint.rb:408
   def build_response_cookies; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:327
+  # pkg:gem/grape#lib/grape/endpoint.rb:335
   def build_stack; end
 
   # pkg:gem/grape#lib/grape/endpoint.rb:262
   def compile!; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:360
+  # pkg:gem/grape#lib/grape/endpoint.rb:368
   def error_middleware_options(format, content_types); end
 
   # pkg:gem/grape#lib/grape/endpoint.rb:244
@@ -1703,26 +1725,40 @@ class Grape::Endpoint
   # pkg:gem/grape#lib/grape/endpoint.rb:250
   def instrument_run_validators(validators, request, &_arg2); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:396
+  # pkg:gem/grape#lib/grape/endpoint.rb:417
   def lint?; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:309
+  # Merge a reverse-stackable handler map (as written by +rescue_from+) into a
+  # single Hash. The reverse store lists child-scope handlers before inherited
+  # ones, and the first-wins merge keeps the child's handler for a given
+  # class, so a nested +rescue_from+ overrides an outer one.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:425
+  def merged_reverse_stackable(key); end
+
+  # pkg:gem/grape#lib/grape/endpoint.rb:317
   def prepare_default_path_settings; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:297
+  # pkg:gem/grape#lib/grape/endpoint.rb:305
   def prepare_default_route_attributes(route_options); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:315
+  # pkg:gem/grape#lib/grape/endpoint.rb:323
   def prepare_routes_requirements(route_options_requirements); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:321
+  # pkg:gem/grape#lib/grape/endpoint.rb:329
   def prepare_version(namespace_inheritable_version); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:400
-  def rescue_handlers; end
-
-  # pkg:gem/grape#lib/grape/endpoint.rb:274
+  # pkg:gem/grape#lib/grape/endpoint.rb:275
   def to_routes; end
+
+  # A bare Rack app mounted with +mount+ is called directly (see +compile!+):
+  # it does not go through +build_stack+, so the API's authentication
+  # middleware never runs and the mount is reachable unauthenticated. Mounted
+  # Grape APIs are unaffected because they rebuild their own stack from the
+  # inherited settings. Warn so this bypass isn't silent.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:400
+  def warn_unauthenticated_mounted_app; end
 
   class << self
     # pkg:gem/grape#lib/grape/endpoint.rb:28
@@ -2247,7 +2283,7 @@ Grape::Json = JSON
 # pkg:gem/grape#lib/grape.rb:92
 module Grape::Middleware; end
 
-# pkg:gem/grape#lib/grape/api/instance.rb:17
+# pkg:gem/grape#lib/grape/api/instance.rb:19
 module Grape::Middleware::Auth; end
 
 # pkg:gem/grape#lib/grape/middleware/auth/base.rb:6
@@ -2494,26 +2530,37 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:99
+  # pkg:gem/grape#lib/grape/middleware/error.rb:110
   def default_rescue_handler(exception); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:193
+  # pkg:gem/grape#lib/grape/middleware/error.rb:204
   def error!(message, status = T.unsafe(nil), headers = T.unsafe(nil), backtrace = T.unsafe(nil), original_exception = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:202
+  # pkg:gem/grape#lib/grape/middleware/error.rb:213
   def error?(response); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:85
+  # pkg:gem/grape#lib/grape/middleware/error.rb:96
   def error_response(error = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:78
+  # pkg:gem/grape#lib/grape/middleware/error.rb:89
   def find_handler(klass); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:65
+  # pkg:gem/grape#lib/grape/middleware/error.rb:76
   def format_message(error); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:189
+  # pkg:gem/grape#lib/grape/middleware/error.rb:200
   def framework_default(endpoint); end
+
+  # Escaping must key off the media type only, case-insensitively. Comparing
+  # the raw header against 'text/html' would let a parameterized value such
+  # as 'text/html; charset=utf-8' (or a differently-cased 'Text/HTML', which
+  # browsers still treat as HTML) skip escaping and reflect an unescaped
+  # message into an HTML response. Such a header can be set from several
+  # places (a registered content type, or a custom Content-Type passed to
+  # error!/rescue_from), but they all render here.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:72
+  def html_content_type?(content_type); end
 
   # pkg:gem/grape#lib/grape/middleware/error.rb:60
   def rack_response(status, headers, message); end
@@ -2531,22 +2578,22 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   #   in via +rescue_from :internal_grape_exceptions+ or, failing
   #   that, applies the framework default.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:163
+  # pkg:gem/grape#lib/grape/middleware/error.rb:174
   def redispatch(error, endpoint, already_redispatched); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:109
+  # pkg:gem/grape#lib/grape/middleware/error.rb:120
   def registered_rescue_handler(klass); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:130
+  # pkg:gem/grape#lib/grape/middleware/error.rb:141
   def rescue_handler_for_any_class(klass); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:122
+  # pkg:gem/grape#lib/grape/middleware/error.rb:133
   def rescue_handler_for_grape_exception(klass); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:114
+  # pkg:gem/grape#lib/grape/middleware/error.rb:125
   def rescue_handler_from(handlers); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:137
+  # pkg:gem/grape#lib/grape/middleware/error.rb:148
   def run_rescue_handler(handler, error, endpoint, redispatched: T.unsafe(nil)); end
 
   # The unrecognised-error path. Exposes the original exception on
@@ -2558,7 +2605,7 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # message. The framework deliberately does no logging of its own
   # here; that's the application's call.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:182
+  # pkg:gem/grape#lib/grape/middleware/error.rb:193
   def safe_default(error, endpoint); end
 end
 
@@ -3158,6 +3205,26 @@ class Grape::Middleware::Versioner::Path < ::Grape::Middleware::Versioner::Base
   def before; end
 end
 
+# Marker module for a mountable Grape application. Both {Grape::API} (the
+# remountable user-facing class) and {Grape::API::Instance} (the compiled
+# engine) extend it, so a mounted Grape app can be told apart from a bare
+# Rack app with `is_a?(Grape::Mountable)` — a single, explicit predicate
+# rather than duck-typing on an incidental internal method such as
+# `inheritable_setting`.
+#
+# `Grape::API` and `Grape::API::Instance` are not related by inheritance and
+# do not even respond to the same methods (the former to `mount_instance`,
+# the latter to `inheritable_setting`/`endpoints`), so there is no common
+# ancestor to key an `is_a?` check on without this marker.
+#
+# It answers identity only ("is this a Grape app?"). Capability checks that
+# go on to call a stage-specific method — e.g. `respond_to?(:endpoints)`
+# before reading `endpoints` — must stay as they are, since a `Mountable`
+# does not necessarily respond to every such method.
+#
+# pkg:gem/grape#lib/grape/mountable.rb:20
+module Grape::Mountable; end
+
 # A container for endpoints or other namespaces, which allows for both
 # logical grouping of endpoints as well as sharing common configuration.
 # May also be referred to as group, segment, or resource.
@@ -3432,55 +3499,55 @@ class Grape::Router
   # pkg:gem/grape#lib/grape/router.rb:13
   def initialize; end
 
-  # pkg:gem/grape#lib/grape/router.rb:35
+  # pkg:gem/grape#lib/grape/router.rb:40
   def append(route); end
 
-  # pkg:gem/grape#lib/grape/router.rb:39
+  # pkg:gem/grape#lib/grape/router.rb:44
   def associate_routes(greedy_route); end
 
-  # pkg:gem/grape#lib/grape/router.rb:44
+  # pkg:gem/grape#lib/grape/router.rb:49
   def call(env); end
 
-  # pkg:gem/grape#lib/grape/router.rb:20
+  # pkg:gem/grape#lib/grape/router.rb:23
   def compile!; end
 
-  # pkg:gem/grape#lib/grape/router.rb:53
+  # pkg:gem/grape#lib/grape/router.rb:58
   def recognize_path(input); end
 
   private
 
-  # pkg:gem/grape#lib/grape/router.rb:149
+  # pkg:gem/grape#lib/grape/router.rb:154
   def cascade?(response); end
 
-  # pkg:gem/grape#lib/grape/router.rb:137
+  # pkg:gem/grape#lib/grape/router.rb:142
   def default_response; end
 
-  # pkg:gem/grape#lib/grape/router.rb:145
+  # pkg:gem/grape#lib/grape/router.rb:150
   def greedy_match?(input); end
 
   # Returns true if `response` should be returned as-is from the enclosing
   # transaction. Closes the body as a side effect when the response is
   # cascading so callers can safely try the next match.
   #
-  # pkg:gem/grape#lib/grape/router.rb:116
+  # pkg:gem/grape#lib/grape/router.rb:121
   def halt?(response); end
 
-  # pkg:gem/grape#lib/grape/router.rb:65
+  # pkg:gem/grape#lib/grape/router.rb:70
   def identity(input, method, env); end
 
-  # pkg:gem/grape#lib/grape/router.rb:141
+  # pkg:gem/grape#lib/grape/router.rb:146
   def match?(input, method); end
 
-  # pkg:gem/grape#lib/grape/router.rb:124
+  # pkg:gem/grape#lib/grape/router.rb:129
   def process_route(route, input, env, include_allow_header: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/router.rb:74
+  # pkg:gem/grape#lib/grape/router.rb:79
   def rotation(input, method, env, exact_route); end
 
-  # pkg:gem/grape#lib/grape/router.rb:86
+  # pkg:gem/grape#lib/grape/router.rb:91
   def transaction(input, method, env); end
 
-  # pkg:gem/grape#lib/grape/router.rb:132
+  # pkg:gem/grape#lib/grape/router.rb:137
   def with_optimization; end
 
   class << self
@@ -3611,10 +3678,10 @@ class Grape::Router::BaseRoute::CaptureIndexCache < ::Grape::Util::Cache
   def initialize; end
 end
 
-# pkg:gem/grape#lib/grape/router.rb:61
+# pkg:gem/grape#lib/grape/router.rb:66
 Grape::Router::DEFAULT_RESPONSE_BODY = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/grape#lib/grape/router.rb:60
+# pkg:gem/grape#lib/grape/router.rb:65
 Grape::Router::DEFAULT_RESPONSE_HEADERS = T.let(T.unsafe(nil), Rack::Headers)
 
 # pkg:gem/grape#lib/grape/router/greedy_route.rb:8
@@ -4360,9 +4427,7 @@ Grape::Util::Translation::FALLBACK_LOCALE = T.let(T.unsafe(nil), Symbol)
 # pkg:gem/grape#lib/grape/util/translation.rb:12
 Grape::Util::Translation::MISSING = T.let(T.unsafe(nil), T.untyped)
 
-# The current version of Grape.
-#
-# pkg:gem/grape#lib/grape/version.rb:5
+# pkg:gem/grape#lib/grape/version.rb:4
 Grape::VERSION = T.let(T.unsafe(nil), String)
 
 # pkg:gem/grape#lib/grape/validations.rb:4
