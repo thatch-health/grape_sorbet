@@ -12322,7 +12322,7 @@ class ActiveSupport::TestCase < ::Minitest::Test
   def assert_not_in_epsilon(exp, act, epsilon = T.unsafe(nil), msg = T.unsafe(nil)); end
 
   # pkg:gem/activesupport#lib/active_support/test_case.rb:269
-  def assert_not_includes(collection, obj, msg = T.unsafe(nil)); end
+  def assert_not_includes(obj, sub, msg = T.unsafe(nil)); end
 
   # pkg:gem/activesupport#lib/active_support/test_case.rb:280
   def assert_not_instance_of(cls, obj, msg = T.unsafe(nil)); end
@@ -14691,7 +14691,7 @@ ActiveSupport::VERSION::MAJOR = T.let(T.unsafe(nil), Integer)
 ActiveSupport::VERSION::MINOR = T.let(T.unsafe(nil), Integer)
 
 # pkg:gem/activesupport#lib/active_support/gem_version.rb:13
-ActiveSupport::VERSION::PRE = T.let(T.unsafe(nil), T.untyped)
+ActiveSupport::VERSION::PRE = T.let(T.unsafe(nil), String)
 
 # pkg:gem/activesupport#lib/active_support/gem_version.rb:15
 ActiveSupport::VERSION::STRING = T.let(T.unsafe(nil), String)

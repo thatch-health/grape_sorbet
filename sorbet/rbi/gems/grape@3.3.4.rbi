@@ -5680,22 +5680,22 @@ class Grape::Validations::ValidationsSpec
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:105
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:110
   def build_validator_entries(raw); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:82
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:87
   def check_incompatible_option_values(default, values, except_values); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:128
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:133
   def extract_value_and_message(opt); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:138
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:143
   def guess_coerce_type(coerce_type, *values_list); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:111
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:116
   def parse_coerce(raw); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:134
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:139
   def resolve_value(opt); end
 
   # Cross-field consistency checks on the parsed declaration. Run at
@@ -5703,10 +5703,15 @@ class Grape::Validations::ValidationsSpec
   # or +values+ whose elements don't match +type+) can never exist —
   # callers no longer have to remember to invoke these separately.
   #
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:77
+  # NB. +@guessed_coerce_type+ is used only for this check, never for
+  # +coerce_options+ — a bare +type: Array+ combined with scalar
+  # +values:+ must still coerce to +Array+ at runtime (only the elements
+  # are scalar), so the real +@coerce_type+ is never overwritten by it.
+  #
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:82
   def validate!; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:92
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:97
   def validate_value_coercion(coerce_type, *values_list); end
 
   class << self
