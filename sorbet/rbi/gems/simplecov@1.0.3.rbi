@@ -786,21 +786,22 @@ module SimpleCov::Combine::MethodsCombiner
   #
   # Method coverage maps `[class, name, start_line, start_col, end_line,
   # end_col]` keys to hit counts. Keys are matched on their SOURCE
-  # identity — (name, location), ignoring the class element — because
-  # Ruby records one entry per receiver: the same `define_method` block
-  # defined onto different classes in different processes arrives with
-  # different (normalized) receivers for the same source method, and
-  # matching on the full key would keep both, letting a never-called
-  # receiver's 0 shadow a covered method after merge (issue #1234).
-  # Combining sums the hit counts for matching methods and preserves
-  # methods that only appear in one result.
+  # identity — the location, ignoring the class and name elements —
+  # because Ruby records one entry per defined method: the same
+  # `define_method` block defined onto different classes, or under
+  # different names, in different processes arrives with different
+  # receivers or names for the same source method, and matching on the
+  # full key would keep both, letting a never-called copy's 0 shadow a
+  # covered method after merge (issue #1234). Combining sums the hit
+  # counts for matching methods and preserves methods that only appear
+  # in one result.
   #
   # @return [Hash]
   #
-  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:30
+  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:31
   def combine(coverage_a, coverage_b); end
 
-  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:43
+  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:44
   def source_identity(key); end
 
   class << self
@@ -808,21 +809,22 @@ module SimpleCov::Combine::MethodsCombiner
     #
     # Method coverage maps `[class, name, start_line, start_col, end_line,
     # end_col]` keys to hit counts. Keys are matched on their SOURCE
-    # identity — (name, location), ignoring the class element — because
-    # Ruby records one entry per receiver: the same `define_method` block
-    # defined onto different classes in different processes arrives with
-    # different (normalized) receivers for the same source method, and
-    # matching on the full key would keep both, letting a never-called
-    # receiver's 0 shadow a covered method after merge (issue #1234).
-    # Combining sums the hit counts for matching methods and preserves
-    # methods that only appear in one result.
+    # identity — the location, ignoring the class and name elements —
+    # because Ruby records one entry per defined method: the same
+    # `define_method` block defined onto different classes, or under
+    # different names, in different processes arrives with different
+    # receivers or names for the same source method, and matching on the
+    # full key would keep both, letting a never-called copy's 0 shadow a
+    # covered method after merge (issue #1234). Combining sums the hit
+    # counts for matching methods and preserves methods that only appear
+    # in one result.
     #
     # @return [Hash]
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:30
+    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:31
     def combine(coverage_a, coverage_b); end
 
-    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:43
+    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:44
     def source_identity(key); end
   end
 end
@@ -1054,7 +1056,7 @@ module SimpleCov::Configuration
   # renders ANSI in its own terminal (parallel_tests with
   # `--combine-stderr`, log multiplexers, some CI runners). See #1157.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:59
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:65
   def color(value = T.unsafe(nil)); end
 
   # The name of the command (a.k.a. Test Suite) currently running.
@@ -1177,7 +1179,7 @@ module SimpleCov::Configuration
   # markers without emitting the public-API deprecation warning. Will
   # be removed alongside the deprecated `nocov_token` setter.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:123
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:129
   def current_nocov_token(value = T.unsafe(nil)); end
 
   # Remove `criterion` from the set of enabled coverage criteria.
@@ -1243,21 +1245,31 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:80
   def finalize_merge?; end
 
-  # Gets or sets the configured formatter. Pass `false` (or `nil`) to
-  # opt out of formatting entirely — worker processes in big parallel
-  # CI setups (see #964) only need their `.resultset.json` on disk so
-  # a final `SimpleCov.collate` job can produce the report; running
-  # them without a formatter saves the per-job HTML/multi-formatter
+  # Gets or sets the configured formatter. Accepts a formatter class
+  # (instantiated fresh for every report) or a ready-built instance,
+  # which is how constructor options are passed — e.g.
+  # `formatter SimpleCov::Formatter::HTMLFormatter.new(silent: true)`
+  # to suppress the "Coverage report generated" status line (see
+  # #1240). Pass `false` (or `nil`) to opt out of formatting
+  # entirely — worker processes in big parallel CI setups (see #964)
+  # only need their `.resultset.json` on disk so a final
+  # `SimpleCov.collate` job can produce the report; running them
+  # without a formatter saves the per-job HTML/multi-formatter
   # overhead.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:19
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:24
   def formatter(formatter = T.unsafe(nil)); end
 
-  # Gets or sets the configured formatter. Pass `false` (or `nil`) to
-  # opt out of formatting entirely — worker processes in big parallel
-  # CI setups (see #964) only need their `.resultset.json` on disk so
-  # a final `SimpleCov.collate` job can produce the report; running
-  # them without a formatter saves the per-job HTML/multi-formatter
+  # Gets or sets the configured formatter. Accepts a formatter class
+  # (instantiated fresh for every report) or a ready-built instance,
+  # which is how constructor options are passed — e.g.
+  # `formatter SimpleCov::Formatter::HTMLFormatter.new(silent: true)`
+  # to suppress the "Coverage report generated" status line (see
+  # #1240). Pass `false` (or `nil`) to opt out of formatting
+  # entirely — worker processes in big parallel CI setups (see #964)
+  # only need their `.resultset.json` on disk so a final
+  # `SimpleCov.collate` job can produce the report; running them
+  # without a formatter saves the per-job HTML/multi-formatter
   # overhead.
   #
   # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:9
@@ -1266,14 +1278,15 @@ module SimpleCov::Configuration
   # Sets the configured formatters. Pass `[]` to opt out of
   # formatting entirely; see `formatter` for the rationale.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:30
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:35
   def formatters(formatters = T.unsafe(nil)); end
 
   # Sets the configured formatters. Equivalent to `formatters [...]`.
   # Accepts a single formatter as well as an Array, matching the pre-1.0 behavior
-  # where `MultiFormatter.new` normalized its input.
+  # where `MultiFormatter.new` normalized its input. Elements may be
+  # formatter classes or ready-built instances; see `formatter`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:44
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:50
   def formatters=(formatters); end
 
   # Define a display group for files. Same matcher grammar as `skip`,
@@ -1404,7 +1417,7 @@ module SimpleCov::Configuration
   # SimpleCov::Directive). The `# :nocov:` toggle and this hook will
   # be removed in a future release.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:113
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:119
   def nocov_token(nocov_token = T.unsafe(nil)); end
 
   # Get or set whether SimpleCov should auto-require the
@@ -1430,7 +1443,7 @@ module SimpleCov::Configuration
 
   # DEPRECATED: alias for `print_errors`. Same value, same behavior.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:101
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:107
   def print_error_status; end
 
   # DEPRECATED: alias for `print_errors`. Same value, same behavior.
@@ -1444,7 +1457,7 @@ module SimpleCov::Configuration
   # previous-error notices. Defaults to true. Set to false to silence
   # SimpleCov entirely when parsing tooling output (see issue #1155).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:72
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:78
   def print_errors(value = T.unsafe(nil)); end
 
   # Returns the hash of available profiles
@@ -1488,7 +1501,7 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:98
   def skip(filter_argument = T.unsafe(nil), &_arg1); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:118
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:124
   def skip_token(nocov_token = T.unsafe(nil)); end
 
   # Get or set whether `coverage.json` includes the full source-text
@@ -1506,7 +1519,7 @@ module SimpleCov::Configuration
   #       source_in_json false
   #     end
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:94
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:100
   def source_in_json(value = T.unsafe(nil)); end
 
   # DEPRECATED: prefer `cover`, which both includes unloaded files (the
@@ -2480,7 +2493,17 @@ end
 # TODO: Documentation on how to build your own formatters
 #
 # pkg:gem/simplecov#lib/simplecov/formatter/multi_formatter.rb:4
-module SimpleCov::Formatter; end
+module SimpleCov::Formatter
+  class << self
+    # Formatters can be configured either as classes (instantiated
+    # fresh for every report) or as ready-built instances — the only
+    # way to reach constructor options like
+    # `HTMLFormatter.new(silent: true)`. See #1240.
+    #
+    # pkg:gem/simplecov#lib/simplecov/formatter.rb:13
+    def instance_for(formatter); end
+  end
+end
 
 # @api private
 #
@@ -3518,7 +3541,7 @@ class SimpleCov::ResultAdapter
   # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:32
   def adapt_one(file_name, cover_statistic); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:112
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:144
   def adapt_oneshot_lines_if_needed(file_name, cover_statistic); end
 
   # Ruby's eval coverage records a fresh set of branch entries for every
@@ -3533,28 +3556,48 @@ class SimpleCov::ResultAdapter
   # on location identity. Regular (non-eval) source can never produce two
   # conditions at the same location, so this is a no-op outside eval.
   #
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:105
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:137
   def aggregate_duplicated_branches(cover_statistic); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:121
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:153
   def build_line_stub(file_name, oneshot_lines); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:86
+  # Rendering a class name can execute user code: a singleton class's
+  # `to_s` renders its attached object via `#inspect`, which a module can
+  # shadow with an incompatible signature (Liquid::Utils defines
+  # `inspect(value, max_depth = 2)` as a module_function, so rendering
+  # `#<Class:Liquid::Utils>` raises ArgumentError). A coverage report
+  # must never crash the host suite over that, so on failure rebuild the
+  # singleton wrapper from `Module#name` via bound methods (which cannot
+  # be shadowed), falling back to the address form, which
+  # ADDRESS_PATTERN then normalizes. See issue #1236.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:107
+  def class_display_name(klass); end
+
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:90
   def normalize_method_key(key); end
 
-  # Ruby's method coverage records one entry per RECEIVER, not per source
-  # location: a block handed to `define_method` / `define_singleton_method`
-  # from a shared code path (a module's `included` hook, a builder) yields
-  # a separate `[receiver, name, location]` entry for every class it's
-  # defined on, all pointing at the same source. A file-based report can
-  # only express "was the method at this location ever executed", so
-  # entries are aggregated by (name, location), summing hits — otherwise
-  # each receiver whose copy never ran shows as a phantom uncovered method
-  # on a line whose line coverage is 100% (issue #1234). The first entry's
-  # (normalized) receiver is kept for display.
+  # Ruby's method coverage records one entry per DEFINED METHOD, not per
+  # source location: a block handed to `define_method` /
+  # `define_singleton_method` from a shared code path yields a separate
+  # `[receiver, name, location]` entry for every class it's defined on
+  # (a module's `included` hook defining onto each descendant) AND for
+  # every name it's defined under (a builder looping `define_method key`
+  # over a container), all pointing at the same source. A file-based
+  # report can only express "was the method at this location ever
+  # executed", so entries are aggregated by location alone, summing
+  # hits — otherwise each receiver or name whose generated copy never
+  # ran shows as a phantom uncovered method on a line whose line
+  # coverage is 100%. Regular `def`s map one location to one name, so
+  # they are unaffected. The first entry's (normalized) key is kept for
+  # display. See issue #1234.
   #
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:73
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:77
   def normalize_method_keys(cover_statistic); end
+
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:113
+  def singleton_wrapper_name(klass); end
 
   class << self
     # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:14
@@ -4387,22 +4430,38 @@ module SimpleCov::SourceFile::RubyDataParser
   # Tests use the real data structures (except for integration tests)
   # so no need to put them through here.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:18
+  # String parses are memoized: `Combine::BranchesCombiner` and
+  # `Combine::MethodsCombiner` derive a merge identity from every key of
+  # both sides on every pairwise merge, so collating N resultsets parses
+  # each key string N-1 times — and Ripper dominates the wall time of a
+  # large collate.
+  # Key strings repeat across folds and within report building, while the
+  # set of unique keys is bounded by the project's branch and method
+  # count, so a permanent cache stays small. Cached arrays are frozen
+  # element-wise (String class names included, not just the tuple):
+  # every caller destructures without mutating, and sharing one array
+  # across callers must stay that way. The cache key needs no such
+  # care — `Hash#[]=` dups and freezes String keys on its own.
+  #
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:31
   def call(structure); end
 
   # Parse a string like '[:if, 0, 3, 4, 3, 21]' or
   # '["ClassName", :method1, 2, 2, 5, 5]' back into a Ruby array.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:26
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:44
   def parse_array_string(str); end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:40
-  def parse_element(node); end
-
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:54
-  def parse_integer_node(node); end
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:38
+  def parse_cache; end
 
   # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:58
+  def parse_element(node); end
+
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:72
+  def parse_integer_node(node); end
+
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:76
   def parse_symbol_node(node); end
 
   # Method coverage keys can contain inspect-format class references
@@ -4410,42 +4469,58 @@ module SimpleCov::SourceFile::RubyDataParser
   # syntax. Wrap them in quotes so Ripper can parse the surrounding
   # array literal; downstream we treat them as opaque strings.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:83
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:101
   def quote_inspected_class_segments(str); end
 
   # Concatenate the text fragments of a `:string_content` node. Ripper
   # may emit zero, one, or many `:@tstring_content` children depending
   # on the literal.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:69
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:87
   def string_literal_text(string_content); end
 
   # Undo the same backslash-prefix escapes the previous hand-rolled
   # parser undid: `\X` → `X` for any X.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:75
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:93
   def unescape_ruby(raw); end
 
   class << self
     # Tests use the real data structures (except for integration tests)
     # so no need to put them through here.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:18
+    # String parses are memoized: `Combine::BranchesCombiner` and
+    # `Combine::MethodsCombiner` derive a merge identity from every key of
+    # both sides on every pairwise merge, so collating N resultsets parses
+    # each key string N-1 times — and Ripper dominates the wall time of a
+    # large collate.
+    # Key strings repeat across folds and within report building, while the
+    # set of unique keys is bounded by the project's branch and method
+    # count, so a permanent cache stays small. Cached arrays are frozen
+    # element-wise (String class names included, not just the tuple):
+    # every caller destructures without mutating, and sharing one array
+    # across callers must stay that way. The cache key needs no such
+    # care — `Hash#[]=` dups and freezes String keys on its own.
+    #
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:31
     def call(structure); end
 
     # Parse a string like '[:if, 0, 3, 4, 3, 21]' or
     # '["ClassName", :method1, 2, 2, 5, 5]' back into a Ruby array.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:26
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:44
     def parse_array_string(str); end
 
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:40
-    def parse_element(node); end
-
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:54
-    def parse_integer_node(node); end
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:38
+    def parse_cache; end
 
     # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:58
+    def parse_element(node); end
+
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:72
+    def parse_integer_node(node); end
+
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:76
     def parse_symbol_node(node); end
 
     # Method coverage keys can contain inspect-format class references
@@ -4453,20 +4528,20 @@ module SimpleCov::SourceFile::RubyDataParser
     # syntax. Wrap them in quotes so Ripper can parse the surrounding
     # array literal; downstream we treat them as opaque strings.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:83
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:101
     def quote_inspected_class_segments(str); end
 
     # Concatenate the text fragments of a `:string_content` node. Ripper
     # may emit zero, one, or many `:@tstring_content` children depending
     # on the literal.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:69
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:87
     def string_literal_text(string_content); end
 
     # Undo the same backslash-prefix escapes the previous hand-rolled
     # parser undid: `\X` → `X` for any X.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:75
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:93
     def unescape_ruby(raw); end
   end
 end
