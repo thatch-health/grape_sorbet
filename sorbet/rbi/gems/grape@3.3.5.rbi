@@ -237,10 +237,10 @@ class Grape::API::Instance
     # pkg:gem/grape#lib/grape/api/instance.rb:59
     def compile!; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:26
+    # pkg:gem/grape#lib/grape/api/instance.rb:24
     def configuration; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:26
+    # pkg:gem/grape#lib/grape/api/instance.rb:24
     def configuration=(_arg0); end
 
     # see Grape::Router#recognize_path
@@ -253,8 +253,8 @@ class Grape::API::Instance
     # pkg:gem/grape#lib/grape/api/instance.rb:44
     def reset!; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:28
-    def to_s(*_arg0, **_arg1, &_arg2); end
+    # pkg:gem/grape#lib/grape/api/instance.rb:26
+    def to_s; end
 
     protected
 
@@ -3516,13 +3516,13 @@ class Grape::Router
 
   private
 
-  # pkg:gem/grape#lib/grape/router.rb:154
+  # pkg:gem/grape#lib/grape/router.rb:158
   def cascade?(response); end
 
-  # pkg:gem/grape#lib/grape/router.rb:142
+  # pkg:gem/grape#lib/grape/router.rb:146
   def default_response; end
 
-  # pkg:gem/grape#lib/grape/router.rb:150
+  # pkg:gem/grape#lib/grape/router.rb:154
   def greedy_match?(input); end
 
   # Returns true if `response` should be returned as-is from the enclosing
@@ -3535,10 +3535,14 @@ class Grape::Router
   # pkg:gem/grape#lib/grape/router.rb:70
   def identity(input, method, env); end
 
-  # pkg:gem/grape#lib/grape/router.rb:146
+  # pkg:gem/grape#lib/grape/router.rb:150
   def match?(input, method); end
 
-  # pkg:gem/grape#lib/grape/router.rb:129
+  # Routing args are rebuilt for every attempt: when a route cascades
+  # (X-Cascade pass), the next candidate must not observe the previous
+  # attempt's +route_info+ or path captures.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:132
   def process_route(route, input, env, include_allow_header: T.unsafe(nil)); end
 
   # pkg:gem/grape#lib/grape/router.rb:79
@@ -3547,7 +3551,7 @@ class Grape::Router
   # pkg:gem/grape#lib/grape/router.rb:91
   def transaction(input, method, env); end
 
-  # pkg:gem/grape#lib/grape/router.rb:137
+  # pkg:gem/grape#lib/grape/router.rb:141
   def with_optimization; end
 
   class << self
@@ -5590,7 +5594,7 @@ class Grape::Validations::Types::VariantCollectionCoercer
   #   also specifying the container type
   # @param method [#call,#parse] method by which values should be coerced
   #
-  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:20
+  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:23
   def initialize(types, method = T.unsafe(nil)); end
 
   # Coerce the given value.
@@ -5600,15 +5604,20 @@ class Grape::Validations::Types::VariantCollectionCoercer
   #   the coerced result, or an instance
   #   of {InvalidValue} if the value could not be coerced.
   #
-  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:43
+  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:46
   def call(value); end
 
   # Returns the Grape DSL notation for this coercer, e.g. "Array[Integer, String]".
   # Distinct from the plain-array string "[Integer, String]" produced by the
   # +types:+ keyword, which lets documentation tools tell the two apart.
   #
-  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:32
+  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:35
   def to_s; end
+
+  # @return [Array<Class>,Set<Class>] the member types as declared in the DSL
+  #
+  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:10
+  def types; end
 end
 
 # Frozen value object holding everything {ParamsScope#validates} needs to
@@ -5686,10 +5695,20 @@ class Grape::Validations::ValidationsSpec
   # pkg:gem/grape#lib/grape/validations/validations_spec.rb:87
   def check_incompatible_option_values(default, values, except_values); end
 
+  # The type as written in the DSL. Identical to +@coerce_type+ except for
+  # a multiple-type declaration (+type: [Integer, String]+), where
+  # {#parse_coerce} wraps the declared list in a
+  # {Types::VariantCollectionCoercer} for runtime coercion — the
+  # definition-time coherence checks need the list back, since the wrapper
+  # matches nothing under +===+.
+  #
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:149
+  def declared_coerce_type; end
+
   # pkg:gem/grape#lib/grape/validations/validations_spec.rb:133
   def extract_value_and_message(opt); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:143
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:153
   def guess_coerce_type(coerce_type, *values_list); end
 
   # pkg:gem/grape#lib/grape/validations/validations_spec.rb:116
