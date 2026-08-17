@@ -18,6 +18,10 @@
 # parent this dogfood report measures.
 # Reopened here for the fork-related at_exit plumbing that only matters
 # when subprocess support is loaded.
+# The clobber-prevention backstop: an empty process stands down instead
+# of formatting over a fresher report a sibling produced. Split from
+# exit_handling.rb, which orchestrates the at_exit flow that consults
+# this. See issue #581.
 # Result-building façade: turns the raw `Coverage.result` hash into a
 # `SimpleCov::Result`, applies filters and groups, drives merging
 # across test suites via `SimpleCov::ResultMerger`, and exposes the
@@ -26,6 +30,7 @@
 # pkg:gem/simplecov#lib/simplecov.rb:6
 module SimpleCov
   extend ::SimpleCov::Configuration
+  extend ::SimpleCov::RunIdentity::Accessors
 
   class << self
     # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:20
@@ -33,7 +38,7 @@ module SimpleCov
 
     # Clear out the previously cached .result. Primarily useful in testing.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:101
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:123
     def clear_result; end
 
     # Collate a series of SimpleCov result files into a single SimpleCov output.
@@ -42,13 +47,33 @@ module SimpleCov
     # so all results in all files specified will be merged. Pass
     # `ignore_timeout: false` to honor it.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:16
-    def collate(result_filenames, profile = T.unsafe(nil), ignore_timeout: T.unsafe(nil), &_arg3); end
+    # `processes:` above 1 fans the merge out across that many forked worker
+    # processes, for a collate big enough that reading and parsing the
+    # resultsets dominates it. The report is identical either way, not merely
+    # equivalent — the workers visit the resultsets in the order the
+    # single-process merge visits them — and one process never forks at all.
+    # The count is deliberately not clamped to the machine's core count nor
+    # gated on some minimum number of resultsets: how many processes a collate
+    # job can afford is the caller's call, not SimpleCov's. Anything below 1 is
+    # taken as 1, so a count computed from arithmetic that can reach zero needs
+    # no guarding. Defaults to `SIMPLECOV_CONCURRENCY`, or 1 when that is
+    # unset. See `SimpleCov::ParallelResultMerger`.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:28
+    def collate(result_filenames, profile = T.unsafe(nil), processes: T.unsafe(nil), ignore_timeout: T.unsafe(nil), &_arg4); end
 
     # @api private — true while `SimpleCov.collate` is running its finalizer.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:63
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:85
     def collating_result?; end
+
+    # Build this process's slice of the coverage result. `standalone` is true
+    # when no merge step follows, which makes this the final result: it is the
+    # one that reports dropped source files, and the one that injects unloaded
+    # files. When a merge does follow, both jobs belong to the merged result.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:73
+    def collect_own_coverage(standalone:); end
 
     # `:oneshot_line` data is folded into the `:line` bucket of
     # `coverage_statistics` by `ResultAdapter`, so use `:line` to look
@@ -57,26 +82,34 @@ module SimpleCov
     # pkg:gem/simplecov#lib/simplecov.rb:66
     def coverage_statistics_key(criterion); end
 
+    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:89
+    def current_parallel_worker_count; end
+
     # Returns true when our process has no coverage data to contribute
     # (after the resultset merge) and a newer report already exists on
     # disk. Typically fires when `SimpleCov.start` ran in a parent
-    # process — e.g. a Rakefile or Rails' `Bundler.require` — that
-    # shelled out to the test runner. See issue #581.
+    # process that shelled out to the test runner. See issue #581.
     #
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:40
+    # pkg:gem/simplecov#lib/simplecov/report_deferral.rb:13
     def defer_to_existing_report?; end
 
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:49
+    # `.last_run.json` only exists after fully successful runs, so alone
+    # it left the backstop inert when the child run failed — the case
+    # where clobbering its report hurts most. The report stamp is
+    # touched by every formatting process regardless of exit status. The
+    # rescue covers a file vanishing mid-at_exit (`rm -rf coverage`).
+    #
+    # pkg:gem/simplecov#lib/simplecov/report_deferral.rb:27
     def existing_report_newer_than_us?; end
 
     # @api private
     #
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:98
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:68
     def exit_and_report_previous_error(exit_status); end
 
     # @api private — returns the exit status from the exit exception.
     #
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:79
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:49
     def exit_status_from_exception; end
 
     # Should we take care of at_exit behavior or something else? Used by the
@@ -99,7 +132,7 @@ module SimpleCov
 
     # Applies the configured filters to the given array of SimpleCov::SourceFile items
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:68
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:90
     def filtered(files); end
 
     # @api private
@@ -123,8 +156,18 @@ module SimpleCov
     # construction). Files matched by no group fall into the implicit
     # "Ungrouped" bucket.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:81
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:103
     def grouped(files, groups: T.unsafe(nil)); end
+
+    # Add simulated coverage for each of `candidate_paths` the result doesn't
+    # already carry, and return it with the set of paths added.
+    #
+    # @api private — the seam `SimpleCov::ResultMerger` injects through. Public
+    # only because the merge runs in another object, on behalf of processes
+    # whose configuration it may not share, so it supplies the paths itself.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:146
+    def inject_unloaded_files(result, candidate_paths, synthesize: T.unsafe(nil), lines: T.unsafe(nil)); end
 
     # Install the at_exit hook that formats results and runs exit-code
     # checks. `SimpleCov.start` calls this automatically. Idempotent —
@@ -137,7 +180,7 @@ module SimpleCov
 
     # Applies the profile of given name on SimpleCov configuration
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:96
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:118
     def load_profile(name); end
 
     # @api private — marked in the child immediately after a fork.
@@ -145,7 +188,7 @@ module SimpleCov
     # pkg:gem/simplecov#lib/simplecov.rb:56
     def mark_forked_subprocess!; end
 
-    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:102
+    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:107
     def monotonic_time; end
 
     # @api private — bump the serial in the parent before a fork so the
@@ -164,7 +207,7 @@ module SimpleCov
     # @api private — true once the wait deadline has passed; warns on
     # the first timeout so the user knows the merged total is partial.
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:108
+    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:113
     def parallel_wait_timed_out?(deadline, expected, seen); end
 
     # pkg:gem/simplecov#lib/simplecov.rb:23
@@ -177,15 +220,15 @@ module SimpleCov
     # accepts it. test_unit sets status 0 on success, so SUCCESS must
     # also be treated as "not a previous error".
     #
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:93
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:63
     def previous_error?(error_exit_status); end
 
     # @api private — `exit_status = SimpleCov.process_result(SimpleCov.result)`.
     #
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:135
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:105
     def process_result(result); end
 
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:120
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:90
     def process_results_and_report_error; end
 
     # When this process started tracking coverage. Captured by SimpleCov.start
@@ -210,39 +253,41 @@ module SimpleCov
     # would surface a spurious "below minimum" violation about the
     # missing slice rather than a real shortfall.
     #
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:115
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:85
     def ready_to_process_results?; end
 
-    # Returns the result for the current coverage run, merging it across test suites
-    # from cache using SimpleCov::ResultMerger if use_merging is activated (default)
+    # Returns the result for the current coverage run. With merging enabled,
+    # every process stores its own slice, but only the finalization owner reads
+    # and caches the merged result.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:34
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:49
     def result; end
 
     # Returns nil if the result has not been computed, otherwise the result.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:58
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:80
     def result?; end
 
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:141
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:111
     def result_exit_status(result); end
 
     # Track whether the resultset count has held steady (and positive) for
     # `PARALLEL_RESULTS_SETTLE` seconds. `tracker` carries the last count and
     # the time it last changed across poll iterations.
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:92
+    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:97
     def resultset_count_settled?(tracker, count); end
 
     # @api private — round down to two decimals to be extra strict.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:114
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:136
     def round_coverage(coverage); end
 
-    # @api private — called from the at_exit block.
+    # @api private — called from the at_exit block (which pre-captures
+    # the status, see there) and by `collate` (the default argument).
     #
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:69
-    def run_exit_tasks!; end
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:41
+    def run_exit_tasks!(error_exit_status = T.unsafe(nil)); end
 
     # Sets up SimpleCov to run against your project. See README for
     # the full DSL, or:
@@ -298,12 +343,12 @@ module SimpleCov
     # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:74
     def wait_for_parallel_results(expected, native_wait: T.unsafe(nil)); end
 
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:56
+    # pkg:gem/simplecov#lib/simplecov/report_deferral.rb:37
     def warn_about_deferred_report; end
 
     # @api private
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:116
+    # pkg:gem/simplecov#lib/simplecov/parallel_coordination.rb:121
     def warn_about_incomplete_parallel_results(expected, seen); end
 
     # pkg:gem/simplecov#lib/simplecov.rb:110
@@ -323,41 +368,22 @@ module SimpleCov
     # @api private — persist the per-criterion coverage percentages
     # rounded down (see #679) so the next run can compute drift.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:107
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:129
     def write_last_run(result); end
 
     private
 
-    # Finds files that were to be tracked but were not loaded, and
-    # initializes their line-by-line coverage to zero (or nil for
-    # comments / whitespace).
-    #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:132
-    def add_not_loaded_files(result); end
-
-    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:147
+    # pkg:gem/simplecov#lib/simplecov/exit_handling.rb:117
     def build_coverage_limits; end
 
-    # pkg:gem/simplecov#lib/simplecov.rb:204
+    # pkg:gem/simplecov#lib/simplecov.rb:202
     def defer_to_minitest_after_run; end
 
-    # Expand the given globs relative to SimpleCov.root, not Dir.pwd —
-    # test runners that chdir (or CI scripts that invoke the suite
-    # from a subdir) would otherwise silently miss the unloaded-file
-    # injection and produce a different file set per environment. See
-    # issue #1106.
-    #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:152
-    def discover_unloaded_paths(globs); end
-
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:125
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:170
     def grouped_file_set(grouped); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:120
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:165
     def initial_setup(profile, &block); end
-
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:156
-    def inject_unloaded_files(result, candidate_paths); end
 
     # `Rake::TestTask` runs `ruby -e 'require "minitest/autorun"; ...'`,
     # which means Minitest's at_exit registers before SimpleCov's. Since
@@ -367,7 +393,7 @@ module SimpleCov
     # is armed, route the report through `Minitest.after_run` instead,
     # which fires after the suite completes. See issues #1099 and #1112.
     #
-    # pkg:gem/simplecov#lib/simplecov.rb:197
+    # pkg:gem/simplecov#lib/simplecov.rb:195
     def minitest_autorun_pending?; end
 
     # Run all the steps that handle processing the raw coverage result.
@@ -375,22 +401,36 @@ module SimpleCov
     # off); with merging on the merged result reports dropped source files,
     # so the per-process slice stays quiet to avoid one warning per worker.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:172
-    def process_coverage_result(report:); end
+    # `inject_unloaded:` is likewise false when a merge step follows. Only the
+    # union of every process's loaded files says what was really never loaded,
+    # so injecting here means each worker simulates nearly the whole project
+    # and all but one of those passes is merged away. See #1250.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:202
+    def process_coverage_result(report:, inject_unloaded: T.unsafe(nil)); end
 
     # Trigger Coverage.start with the configured criteria. Every supported
     # runtime (CRuby >= 3.2, JRuby >= 10, TruffleRuby >= 22) accepts the
     # criteria-hash form, so no compatibility fallback is needed.
     #
-    # pkg:gem/simplecov#lib/simplecov.rb:180
+    # pkg:gem/simplecov#lib/simplecov.rb:178
     def start_coverage_measurement; end
+
+    # Every path this process was told to track, whether or not it loaded them.
+    # Recorded on the result (and from there into the resultset) so that a merge
+    # in another process can inject the ones nobody loaded without needing this
+    # process's `cover` / `track_files` configuration. A standalone `collate`
+    # never ran `SimpleCov.start` and so has none of its own. See #1250.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:179
+    def tracked_file_paths; end
 
     # Globs to expand on disk when injecting unloaded files into the
     # result. Combines the legacy `track_files` glob (additive only)
     # with every string glob declared via `cover` (also restrictive,
     # but the restriction lives in `Result#apply_cover_filters!`).
     #
-    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:143
+    # pkg:gem/simplecov#lib/simplecov/result_processing.rb:189
     def unloaded_file_discovery_globs; end
 
     # JRuby coverage data is unreliable unless full-trace mode is enabled.
@@ -398,7 +438,7 @@ module SimpleCov
     # @see https://github.com/simplecov-ruby/simplecov/issues/420
     # @see https://github.com/simplecov-ruby/simplecov/issues/86
     #
-    # pkg:gem/simplecov#lib/simplecov.rb:213
+    # pkg:gem/simplecov#lib/simplecov.rb:211
     def warn_if_jruby_full_trace_disabled; end
   end
 end
@@ -406,27 +446,62 @@ end
 # Filter that matches when any of its component filters (built from the
 # array's elements) match the source file.
 #
-# pkg:gem/simplecov#lib/simplecov/filter.rb:122
+# pkg:gem/simplecov#lib/simplecov/filter.rb:151
 class SimpleCov::ArrayFilter < ::SimpleCov::Filter
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:123
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:152
   def initialize(filter_argument); end
 
   # Returns true if any of the filters in the array match the given source file.
   # Configure this Filter like StringFilter.new(['some/path', /^some_regex/, Proc.new {|src_file| ... }])
   #
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:133
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:167
   def matches?(source_files_list); end
+
+  # Path-decidable only when every component filter is.
+  #
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:161
+  def path_only?; end
 end
+
+# Replaces an artifact through a collision-safe temporary file in the
+# destination directory, so readers see either the old or complete new file.
+#
+# pkg:gem/simplecov#lib/simplecov/atomic_file.rb:9
+module SimpleCov::AtomicFile
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/atomic_file.rb:13
+    def write(path, content, binary: T.unsafe(nil)); end
+
+    private
+
+    # pkg:gem/simplecov#lib/simplecov/atomic_file.rb:61
+    def destination_mode(path); end
+
+    # On POSIX systems rename replaces the destination atomically. On
+    # Windows it fails with EACCES when the destination is open in a
+    # reader or mid-replacement by a concurrent writer, so retry briefly
+    # there before giving up.
+    #
+    # pkg:gem/simplecov#lib/simplecov/atomic_file.rb:41
+    def rename_over(temp_path, path); end
+
+    # pkg:gem/simplecov#lib/simplecov/atomic_file.rb:25
+    def replace(temp, path, content, mode, binary:); end
+  end
+end
+
+# pkg:gem/simplecov#lib/simplecov/atomic_file.rb:10
+SimpleCov::AtomicFile::DEFAULT_MODE = T.let(T.unsafe(nil), Integer)
 
 # Filter that matches when the configured block returns truthy for the
 # source file.
 #
-# pkg:gem/simplecov#lib/simplecov/filter.rb:102
+# pkg:gem/simplecov#lib/simplecov/filter.rb:127
 class SimpleCov::BlockFilter < ::SimpleCov::Filter
   # Returns true if the block given when initializing this filter with BlockFilter.new {|src_file| ... }
   # returns true for the given source file.
   #
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:105
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:130
   def matches?(source_file); end
 end
 
@@ -462,14 +537,14 @@ module SimpleCov::Color
   # keyword lets callers (e.g., CLI subcommands honoring `--no-color`)
   # override the auto-detection without touching env vars.
   #
-  # pkg:gem/simplecov#lib/simplecov/color.rb:61
+  # pkg:gem/simplecov#lib/simplecov/color.rb:65
   def colorize(text, color, enabled: T.unsafe(nil)); end
 
   # Render `percent` as a fixed "NN.NN%" string colored by which
   # threshold band it falls into. Callers that want a different
   # rendering of the number can pass the pre-rendered `text`.
   #
-  # pkg:gem/simplecov#lib/simplecov/color.rb:70
+  # pkg:gem/simplecov#lib/simplecov/color.rb:74
   def colorize_percent(percent, text = T.unsafe(nil), enabled: T.unsafe(nil)); end
 
   # `stream` is the IO that the colorized text is destined for. The
@@ -481,10 +556,10 @@ module SimpleCov::Color
   # pkg:gem/simplecov#lib/simplecov/color.rb:36
   def enabled?(stream = T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/color.rb:74
+  # pkg:gem/simplecov#lib/simplecov/color.rb:78
   def env_set?(name); end
 
-  # pkg:gem/simplecov#lib/simplecov/color.rb:50
+  # pkg:gem/simplecov#lib/simplecov/color.rb:54
   def for_percent(percent); end
 
   class << self
@@ -493,14 +568,14 @@ module SimpleCov::Color
     # keyword lets callers (e.g., CLI subcommands honoring `--no-color`)
     # override the auto-detection without touching env vars.
     #
-    # pkg:gem/simplecov#lib/simplecov/color.rb:61
+    # pkg:gem/simplecov#lib/simplecov/color.rb:65
     def colorize(text, color, enabled: T.unsafe(nil)); end
 
     # Render `percent` as a fixed "NN.NN%" string colored by which
     # threshold band it falls into. Callers that want a different
     # rendering of the number can pass the pre-rendered `text`.
     #
-    # pkg:gem/simplecov#lib/simplecov/color.rb:70
+    # pkg:gem/simplecov#lib/simplecov/color.rb:74
     def colorize_percent(percent, text = T.unsafe(nil), enabled: T.unsafe(nil)); end
 
     # `stream` is the IO that the colorized text is destined for. The
@@ -512,10 +587,10 @@ module SimpleCov::Color
     # pkg:gem/simplecov#lib/simplecov/color.rb:36
     def enabled?(stream = T.unsafe(nil)); end
 
-    # pkg:gem/simplecov#lib/simplecov/color.rb:74
+    # pkg:gem/simplecov#lib/simplecov/color.rb:78
     def env_set?(name); end
 
-    # pkg:gem/simplecov#lib/simplecov/color.rb:50
+    # pkg:gem/simplecov#lib/simplecov/color.rb:54
     def for_percent(percent); end
   end
 end
@@ -529,54 +604,32 @@ SimpleCov::Color::GREEN_THRESHOLD = T.let(T.unsafe(nil), Integer)
 # pkg:gem/simplecov#lib/simplecov/color.rb:20
 SimpleCov::Color::YELLOW_THRESHOLD = T.let(T.unsafe(nil), Integer)
 
-# Functionally for combining coverage results
+# Namespace for the pieces that combine coverage results.
 #
-# pkg:gem/simplecov#lib/simplecov/combine.rb:6
-module SimpleCov::Combine
-  private
-
-  # Combine two coverage based on the given combiner_module.
-  #
-  # Combiners should always be called through this interface,
-  # as it takes care of short-circuiting of one of the coverages is nil.
-  #
-  # @return [Hash]
-  #
-  # pkg:gem/simplecov#lib/simplecov/combine.rb:16
-  def combine(combiner_module, coverage_a, coverage_b); end
-
-  # pkg:gem/simplecov#lib/simplecov/combine.rb:22
-  def empty_coverage?(coverage_a, coverage_b); end
-
-  # pkg:gem/simplecov#lib/simplecov/combine.rb:26
-  def existing_coverage(coverage_a, coverage_b); end
-
-  class << self
-    # Combine two coverage based on the given combiner_module.
-    #
-    # Combiners should always be called through this interface,
-    # as it takes care of short-circuiting of one of the coverages is nil.
-    #
-    # @return [Hash]
-    #
-    # pkg:gem/simplecov#lib/simplecov/combine.rb:16
-    def combine(combiner_module, coverage_a, coverage_b); end
-
-    # pkg:gem/simplecov#lib/simplecov/combine.rb:22
-    def empty_coverage?(coverage_a, coverage_b); end
-
-    # pkg:gem/simplecov#lib/simplecov/combine.rb:26
-    def existing_coverage(coverage_a, coverage_b); end
-  end
-end
+# `CoverageAccumulator` is the entry point: it folds any number of
+# resultsets together, delegating one file's lines, branches and methods to
+# the combiner modules alongside it.
+#
+# pkg:gem/simplecov#lib/simplecov/combine.rb:10
+module SimpleCov::Combine; end
 
 # Combine different branch coverage results on single file.
 #
-# Should be called through `SimpleCov.combine`.
+# Should be called through `CoverageAccumulator`.
 #
-# pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:11
+# pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:13
 module SimpleCov::Combine::BranchesCombiner
   private
+
+  # Folds `coverage` into `target`, an interned table keyed by condition
+  # identity. Kept interned (rather than turned back into tuple keys per
+  # merge) so a fold over N resultsets interns each condition once
+  # instead of re-interning the whole accumulated table N times.
+  #
+  # @return [Hash] `target`
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:39
+  def absorb(target, coverage); end
 
   # Return merged branches or the existed branch if other is missing.
   #
@@ -589,16 +642,46 @@ module SimpleCov::Combine::BranchesCombiner
   #
   # @return [Hash]
   #
-  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:26
+  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:28
   def combine(coverage_a, coverage_b); end
 
-  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:40
-  def merge_branches(target, source); end
+  # Bounded by the project's branch count, like `RubyDataParser`'s parse
+  # cache.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:67
+  def identities; end
 
-  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:48
+  # Turns an interned table back into the tuple-keyed hash the rest of
+  # SimpleCov reads. Done once, at the end of a fold.
+  #
+  # @return [Hash]
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:61
+  def materialize(target); end
+
+  # Split out so the empty arm table has somewhere to carry its type
+  # annotation. Only allocated the first time a condition is seen.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:52
+  def new_condition(condition); end
+
+  # Branches match on source span, whatever ids the recording processes
+  # handed them (issue #1233).
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:73
   def tuple_identity(tuple); end
 
   class << self
+    # Folds `coverage` into `target`, an interned table keyed by condition
+    # identity. Kept interned (rather than turned back into tuple keys per
+    # merge) so a fold over N resultsets interns each condition once
+    # instead of re-interning the whole accumulated table N times.
+    #
+    # @return [Hash] `target`
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:39
+    def absorb(target, coverage); end
+
     # Return merged branches or the existed branch if other is missing.
     #
     # Branches inside files are always same if they exist, the difference only in coverage count.
@@ -610,177 +693,396 @@ module SimpleCov::Combine::BranchesCombiner
     #
     # @return [Hash]
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:26
+    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:28
     def combine(coverage_a, coverage_b); end
 
-    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:40
-    def merge_branches(target, source); end
+    # Bounded by the project's branch count, like `RubyDataParser`'s parse
+    # cache.
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:67
+    def identities; end
 
-    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:48
+    # Turns an interned table back into the tuple-keyed hash the rest of
+    # SimpleCov reads. Done once, at the end of a fold.
+    #
+    # @return [Hash]
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:61
+    def materialize(target); end
+
+    # Split out so the empty arm table has somewhere to carry its type
+    # annotation. Only allocated the first time a condition is seen.
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:52
+    def new_condition(condition); end
+
+    # Branches match on source span, whatever ids the recording processes
+    # handed them (issue #1233).
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/branches_combiner.rb:73
     def tuple_identity(tuple); end
   end
 end
 
-# Handle combining two coverage results for same file
+# Folds any number of resultsets' coverage into one, absorbing them one
+# at a time.
 #
-# Should be called through `SimpleCov.combine`.
+# This replaces a pairwise `reduce` over the resultsets, which rebuilt
+# the entire accumulated structure on every one of its N-1 steps: a
+# fresh outer file hash, a fresh lines array for every file, and a fresh
+# branch / method table for every file whose keys were re-interned from
+# their tuples each time. On a 160-worker run over ~1,800 files that is
+# ~290,000 whole-file rebuilds to produce ~1,800 files of output.
 #
-# pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:9
-module SimpleCov::Combine::FilesCombiner
+# The accumulated side is private to the fold, so it can be updated in
+# place instead, and the interned tables only have to be turned back into
+# tuple-keyed hashes once, at the end.
+#
+# Resultsets are absorbed one at a time rather than taken as a list, so
+# `ResultMerger.merge_results` can keep reading and discarding them one
+# file at a time — reading 100s of CI jobs' worth of coverage into memory
+# at once is what that method is careful not to do.
+#
+# pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:29
+class SimpleCov::Combine::CoverageAccumulator
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:69
+  def initialize; end
+
+  # Folds one resultset's coverage (filename => per-file coverage) into
+  # the accumulator. A `nil` coverage is ignored — a resultset that
+  # carried nothing contributes nothing.
+  #
+  # @return [CoverageAccumulator] self, so absorbs can be chained
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:87
+  def absorb(coverage); end
+
+  # The merged coverage, or `nil` when nothing was absorbed at all — the
+  # caller needs to tell "no results" apart from "results that cover
+  # nothing", and only the former means there is no report to build.
+  #
+  # A file only one resultset carried is returned exactly as it came in,
+  # untouched: with nothing to merge it into, copying it would only cost
+  # memory.
+  #
+  # @return [Hash, nil]
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:109
+  def result; end
+
   private
 
-  # Combines the results for 2 coverages of a file.
+  # The first sighting of a file is kept as-is; the second promotes it to
+  # a `MergedFile` that owns its state, and every later one folds into
+  # that same object.
   #
-  # @return [Hash]
-  #
-  # pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:25
-  def combine(coverage_a, coverage_b); end
-
-  # A file some process actually loaded has at least one executed line;
-  # a simulated (never-loaded) file's lines are all `nil` or `0`.
-  #
-  # pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:64
-  def executed?(coverage); end
-
-  # When exactly one side of the merge was actually executed, its branch
-  # and method tuples are authoritative and the other side's are dropped.
-  # A simulated entry (SimulateCoverage backfills tracked-but-unloaded
-  # files) synthesizes those tuples statically, so a location that drifts
-  # from what Coverage emits would otherwise be unioned in by position
-  # and survive as a phantom, permanently-missed branch (see #1233). This
-  # contains any such drift to denominator inflation for files no process
-  # loaded, rather than a false miss on a covered file. Lines are never
-  # dropped: a simulated file's line shape is correct and carries the
-  # unloaded-file denominator (#1059).
-  #
-  # Returns the two coverages to draw branch/method tuples from, blanking
-  # the non-executed side only when the other side was executed. When
-  # both sides were executed (two real runs) or neither was (all
-  # simulated), both are returned unchanged and combine normally.
-  #
-  # pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:54
-  def reconcile_synthesized(coverage_a, coverage_b); end
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:122
+  def merge_file(existing, file_coverage); end
 
   class << self
-    # Combines the results for 2 coverages of a file.
-    #
-    # @return [Hash]
-    #
-    # pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:25
-    def combine(coverage_a, coverage_b); end
-
     # A file some process actually loaded has at least one executed line;
-    # a simulated (never-loaded) file's lines are all `nil` or `0`.
+    # a simulated (never-loaded) file's lines are all `nil` or `0`. This is
+    # the signal the merge reconciles synthesized tuples on, and the one
+    # `ResultMerger` re-derives a merged result's not-loaded set from, so it
+    # lives here rather than being spelled out at each site.
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:64
-    def executed?(coverage); end
+    # `Array()` plus the `Numeric` test rather than a bare
+    # `any?(&:positive?)` because this reads straight off a parsed
+    # resultset, which is external input: a file written by another
+    # SimpleCov version, or hand-edited, can carry anything under
+    # "lines" — a Hash coerces to pairs, a String to itself. Keeping a
+    # malformed entry to a wrong answer instead of a NoMethodError out
+    # of the middle of a merge is the point.
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:43
+    def executed?(lines); end
 
-    # When exactly one side of the merge was actually executed, its branch
-    # and method tuples are authoritative and the other side's are dropped.
-    # A simulated entry (SimulateCoverage backfills tracked-but-unloaded
-    # files) synthesizes those tuples statically, so a location that drifts
-    # from what Coverage emits would otherwise be unioned in by position
-    # and survive as a phantom, permanently-missed branch (see #1233). This
-    # contains any such drift to denominator inflation for files no process
-    # loaded, rather than a false miss on a covered file. Lines are never
-    # dropped: a simulated file's line shape is correct and carries the
-    # unloaded-file denominator (#1059).
+    # Folds `[command_names, coverage]` pairs into one merged coverage.
     #
-    # Returns the two coverages to draw branch/method tuples from, blanking
-    # the non-executed side only when the other side was executed. When
-    # both sides were executed (two real runs) or neither was (all
-    # simulated), both are returned unchanged and combine normally.
+    # `pairs` is only ever iterated, so a caller that reads resultsets off
+    # disk can hand in a lazy enumerable and never hold more than one in
+    # memory — which is what `ResultMerger.merge_results` is careful about.
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:54
-    def reconcile_synthesized(coverage_a, coverage_b); end
+    # @return [Array] the concatenated command names and the merged coverage
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:57
+    def fold(pairs); end
   end
 end
 
-# pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:13
-SimpleCov::Combine::FilesCombiner::EMPTY_TABLE = T.let(T.unsafe(nil), Hash)
-
-# Branch/method tuples drawn from a simulated (never-loaded) file
-# when the other side of the merge was actually executed.
+# One file's accumulated coverage, against state this object owns
+# outright rather than rebuilt for each merged pair.
 #
-# pkg:gem/simplecov#lib/simplecov/combine/files_combiner.rb:18
-SimpleCov::Combine::FilesCombiner::NO_SYNTHESIZED = T.let(T.unsafe(nil), Hash)
+# pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:134
+class SimpleCov::Combine::CoverageAccumulator::MergedFile
+  # A criterion is carried for this file when the data carries it, not
+  # when this process happens to measure it. A merge runs on behalf of
+  # the processes that produced the resultsets and does not necessarily
+  # share their configuration: `simplecov merge` never ran SimpleCov.start
+  # at all, and dropping a table it did not ask for would lose branch data
+  # the producers did measure. A nil table means nobody measured that
+  # criterion; an empty one means it was measured and the file has none.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:142
+  def initialize(coverage, branches:, methods:); end
+
+  # Folds one more resultset's coverage for this file in.
+  #
+  # @return [MergedFile] self
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:159
+  def absorb(coverage); end
+
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:165
+  def to_h; end
+
+  private
+
+  # Both sides agree on whether they ran: union their tuples. A criterion
+  # only the incoming side carries comes into play here, because its
+  # tuples survive. It deliberately does not come into play on the path
+  # that drops them: promoting there would advertise an empty table
+  # sourced from data this merge just discarded, which claims the file
+  # has no branches when what is true is that nobody measured them.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:213
+  def absorb_tuples(coverage); end
+
+  # The executed side's tuples when it has them. Otherwise `keep_empty`
+  # decides whether the criterion survives as an empty table, which is
+  # what keeps `SourceFile` able to tell "no branches here" from
+  # "branches were not measured".
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:247
+  def authoritative_table(combiner, table, keep_empty); end
+
+  # Only the accumulated side ran, so the incoming tuples are synthesized
+  # and contribute nothing. When the discarded side carried a methods
+  # table, a measuring process still gets one — the empty table stands in
+  # for the blanked side, which is what a pair against a blank one used
+  # to produce for a file that has no methods yet. When no side has
+  # carried methods at all, the table stays nil (the rule `initialize`
+  # documents), the same answer the union path gives.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:226
+  def drop_incoming_tuples(coverage); end
+
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:262
+  def executed?(lines); end
+
+  # Whether a side can be judged at all. Absent lines do not mean the side
+  # never ran: a branch-only or method-only run omits them even for the
+  # files it loaded, so treating that as synthesized would discard real
+  # tuples. Unknown means union, which is already what happens when
+  # neither side carries lines.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:258
+  def judgeable?(lines); end
+
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:174
+  def new_table; end
+
+  # When exactly one side of the merge was actually executed, its branch
+  # and method tuples are authoritative and the other side's are
+  # dropped. A simulated entry (SimulateCoverage backfills
+  # tracked-but-unloaded files) synthesizes those tuples statically, so
+  # a location that drifts from what Coverage emits would otherwise be
+  # unioned in by position and survive as a phantom, permanently-missed
+  # branch (see #1233). This contains any such drift to denominator
+  # inflation for files no process loaded, rather than a false miss on a
+  # covered file. Lines are never dropped: a simulated file's line shape
+  # is correct and carries the unloaded-file denominator (#1059).
+  #
+  # The accumulated side's executed-ness is re-read on every absorb
+  # because folding in an executed resultset can flip it, exactly as it
+  # would have flipped between two steps of the pairwise fold.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:192
+  def reconcile_synthesized(coverage); end
+
+  # Only the incoming side ran, so what's accumulated is synthesized:
+  # start its tuples over from the executed side's. The authoritative
+  # side decides which criteria the file carries, not just their tuples.
+  # Keeping a table in play that only the dropped side carried would make
+  # the answer depend on which side was seen first.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/coverage_accumulator.rb:235
+  def replace_tuples(coverage); end
+end
+
+# Builds the raw-key => interned-identity caches the tuple combiners keep.
+#
+# The cache maps a raw key to its interned identity on first sight and
+# keeps it: the pairwise fold would otherwise re-derive the accumulator's
+# identities on every one of its merges, always to the same answer.
+#
+# Identities exist only to be `combine`'s hash keys, and `Array#hash` is
+# not memoized, so keying on the identity tuple itself would rehash its
+# elements for every key of both sides of every merge. An Integer hashes
+# as an immediate. Two keys share an id exactly when their identities are
+# equal, so the string and array forms of one key still merge together.
+#
+# pkg:gem/simplecov#lib/simplecov/combine/identity_interner.rb:18
+module SimpleCov::Combine::IdentityInterner
+  private
+
+  # pkg:gem/simplecov#lib/simplecov/combine/identity_interner.rb:21
+  def build; end
+
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/combine/identity_interner.rb:21
+    def build; end
+  end
+end
+
+# The inner merge loop the branches and methods combiners share:
+# fold `source`'s tuple => count pairs into `target`, an interned
+# table keyed by each tuple's merge identity and holding
+# `[raw_key, count]` pairs. The first-seen raw key is kept for
+# display; counts sum. `target` and its pairs are always built by
+# this loop, so updating them in place can't reach data a caller
+# still holds.
+#
+# pkg:gem/simplecov#lib/simplecov/combine/interned_counts.rb:12
+module SimpleCov::Combine::InternedCounts
+  private
+
+  # @return [Hash] `target`
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/interned_counts.rb:16
+  def absorb_counts(target, source, identities); end
+
+  class << self
+    # @return [Hash] `target`
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/interned_counts.rb:16
+    def absorb_counts(target, source, identities); end
+  end
+end
 
 # Combine two different lines coverage results on same file
 #
-# Should be called through `SimpleCov.combine`.
+# Should be called through `CoverageAccumulator`.
 #
 # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:9
 module SimpleCov::Combine::LinesCombiner
   private
 
-  # Build a fresh array sized to the longer input. The previous
-  # implementation mutated whichever input was longer in place,
-  # which could surprise callers holding a reference to that array
-  # (e.g. the parsed `coverage` key of a resultset hash being
-  # passed into a second merge).
+  # The rare arm: `existing` is nil (line not yet relevant in the
+  # target) or malformed external input.
   #
-  # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:17
-  def combine(coverage_a, coverage_b); end
+  # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:68
+  def coerce_add(existing, value); end
 
+  # Folds `source` into `target` rather than building a third array.
+  # Only for a `target` the caller owns outright: a caller holding a
+  # reference to it (e.g. the parsed `coverage` key of a resultset
+  # hash being passed into a second merge) would see it change.
+  # `source` is never touched.
+  #
   # Two runs of the same source file should agree on which lines
   # are coverage-relevant (`nil` for comments / whitespace, `0`+
   # for executable). When they don't, treat "relevant on either
   # side" as relevant rather than masking a real `0` as `nil`,
   # which would silently drop an uncovered line from the
-  # denominator and inflate the percentage.
-  #
-  # Logic:
+  # denominator and inflate the percentage:
   #
   # => nil + nil = nil
   # => nil + int = int (preserves a relevant-but-uncovered 0)
   # => int + int = int (sum)
   #
-  # @param [Integer || nil] first_val
-  # @param [Integer || nil] second_val
-  # @return [Integer || nil]
+  # The loop is written out rather than dispatching a block per
+  # element because this is the innermost loop of a merge: a
+  # 160-worker run over ~1,800 files folds tens of millions of line
+  # counts through it, and a call per count is a measurable share of
+  # that.
   #
-  # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:38
-  def merge_line_coverage(first_val, second_val); end
+  # @return [Array] the array to keep — `target` itself once there is one
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:36
+  def merge_into(target, source); end
+
+  # Split out only to keep `merge_into` short; it is the same loop.
+  #
+  # The `Integer` tests coerce malformed counts (a "3" written by a
+  # hand-edited or foreign resultset, a JSON float) with `to_i`, so
+  # external input merges to a wrong answer instead of raising out of
+  # the middle of a merge. An `is_a?` per count is far cheaper than
+  # the block dispatch this loop exists to avoid, and the well-formed
+  # fast path stays branch-for-branch what it was.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:53
+  def sum_into(target, source, size); end
 
   class << self
-    # Build a fresh array sized to the longer input. The previous
-    # implementation mutated whichever input was longer in place,
-    # which could surprise callers holding a reference to that array
-    # (e.g. the parsed `coverage` key of a resultset hash being
-    # passed into a second merge).
+    # The rare arm: `existing` is nil (line not yet relevant in the
+    # target) or malformed external input.
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:17
-    def combine(coverage_a, coverage_b); end
+    # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:68
+    def coerce_add(existing, value); end
 
+    # Folds `source` into `target` rather than building a third array.
+    # Only for a `target` the caller owns outright: a caller holding a
+    # reference to it (e.g. the parsed `coverage` key of a resultset
+    # hash being passed into a second merge) would see it change.
+    # `source` is never touched.
+    #
     # Two runs of the same source file should agree on which lines
     # are coverage-relevant (`nil` for comments / whitespace, `0`+
     # for executable). When they don't, treat "relevant on either
     # side" as relevant rather than masking a real `0` as `nil`,
     # which would silently drop an uncovered line from the
-    # denominator and inflate the percentage.
-    #
-    # Logic:
+    # denominator and inflate the percentage:
     #
     # => nil + nil = nil
     # => nil + int = int (preserves a relevant-but-uncovered 0)
     # => int + int = int (sum)
     #
-    # @param [Integer || nil] first_val
-    # @param [Integer || nil] second_val
-    # @return [Integer || nil]
+    # The loop is written out rather than dispatching a block per
+    # element because this is the innermost loop of a merge: a
+    # 160-worker run over ~1,800 files folds tens of millions of line
+    # counts through it, and a call per count is a measurable share of
+    # that.
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:38
-    def merge_line_coverage(first_val, second_val); end
+    # @return [Array] the array to keep — `target` itself once there is one
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:36
+    def merge_into(target, source); end
+
+    # Split out only to keep `merge_into` short; it is the same loop.
+    #
+    # The `Integer` tests coerce malformed counts (a "3" written by a
+    # hand-edited or foreign resultset, a JSON float) with `to_i`, so
+    # external input merges to a wrong answer instead of raising out of
+    # the middle of a merge. An `is_a?` per count is far cheaper than
+    # the block dispatch this loop exists to avoid, and the well-formed
+    # fast path stays branch-for-branch what it was.
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/lines_combiner.rb:53
+    def sum_into(target, source, size); end
   end
 end
 
 # Combine different method coverage results on a single file.
 #
-# Should be called through `SimpleCov.combine`.
+# Should be called through `CoverageAccumulator`.
 #
-# pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:11
+# pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:13
 module SimpleCov::Combine::MethodsCombiner
   private
+
+  # Folds `coverage` into `target`, an interned table keyed by method
+  # source identity. See `BranchesCombiner.absorb` for why a fold keeps
+  # its accumulator interned.
+  #
+  # A `nil` `target` stays `nil` until some resultset actually carries
+  # methods, so a merge can tell "no method data anywhere" apart from
+  # "method data that covers nothing".
+  #
+  # @return [Hash, nil] `target`, created on the first coverage seen
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:47
+  def absorb(target, coverage); end
 
   # Return merged methods or the existing methods if other is missing.
   #
@@ -798,13 +1100,40 @@ module SimpleCov::Combine::MethodsCombiner
   #
   # @return [Hash]
   #
-  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:31
+  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:33
   def combine(coverage_a, coverage_b); end
 
-  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:44
+  # Bounded by the project's method count, like `RubyDataParser`'s parse
+  # cache.
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:64
+  def identities; end
+
+  # Turns an interned table back into the tuple-keyed hash the rest of
+  # SimpleCov reads. Done once, at the end of a fold.
+  #
+  # @return [Hash]
+  #
+  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:58
+  def materialize(target); end
+
+  # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:68
   def source_identity(key); end
 
   class << self
+    # Folds `coverage` into `target`, an interned table keyed by method
+    # source identity. See `BranchesCombiner.absorb` for why a fold keeps
+    # its accumulator interned.
+    #
+    # A `nil` `target` stays `nil` until some resultset actually carries
+    # methods, so a merge can tell "no method data anywhere" apart from
+    # "method data that covers nothing".
+    #
+    # @return [Hash, nil] `target`, created on the first coverage seen
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:47
+    def absorb(target, coverage); end
+
     # Return merged methods or the existing methods if other is missing.
     #
     # Method coverage maps `[class, name, start_line, start_col, end_line,
@@ -821,10 +1150,24 @@ module SimpleCov::Combine::MethodsCombiner
     #
     # @return [Hash]
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:31
+    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:33
     def combine(coverage_a, coverage_b); end
 
-    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:44
+    # Bounded by the project's method count, like `RubyDataParser`'s parse
+    # cache.
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:64
+    def identities; end
+
+    # Turns an interned table back into the tuple-keyed hash the rest of
+    # SimpleCov reads. Done once, at the end of a fold.
+    #
+    # @return [Hash]
+    #
+    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:58
+    def materialize(target); end
+
+    # pkg:gem/simplecov#lib/simplecov/combine/methods_combiner.rb:68
     def source_identity(key); end
   end
 end
@@ -835,74 +1178,44 @@ end
 # To unite the results on file basis, it leverages
 # the combine of lines and branches inside each file within given results.
 #
-# pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:10
+# pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:12
 module SimpleCov::Combine::ResultsCombiner
   private
 
   # Combine process explanation
-  # => ResultCombiner: define all present files between results and start combine on file level.
-  # ==> FileCombiner: collect result of next combine levels lines, branches, and methods.
+  # => ResultsCombiner: hand every result to one accumulator.
+  # ==> CoverageAccumulator::MergedFile: hold one file's merged coverage.
   # ===> LinesCombiner: combine lines results.
   # ===> BranchesCombiner: combine branches results.
   # ===> MethodsCombiner: combine methods results.
   #
+  # Callers that read their results one at a time (`ResultMerger`, to
+  # keep a big CI run's resultsets out of memory all at once) should
+  # drive a `CoverageAccumulator` directly instead of collecting the
+  # results to pass here.
+  #
   # @return [Hash]
   #
-  # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:23
+  # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:30
   def combine(*results); end
-
-  # Combine two files coverage results
-  #
-  # @param [Hash] coverage_a
-  # @param [Hash] coverage_b
-  #
-  # @return [Hash]
-  #
-  # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:57
-  def combine_file_coverage(coverage_a, coverage_b); end
-
-  # Manage combining results on files level
-  #
-  # @param [Hash] combined_results
-  # @param [Hash] result
-  #
-  # @return [Hash]
-  #
-  # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:38
-  def combine_result_sets(combined_results, result); end
 
   class << self
     # Combine process explanation
-    # => ResultCombiner: define all present files between results and start combine on file level.
-    # ==> FileCombiner: collect result of next combine levels lines, branches, and methods.
+    # => ResultsCombiner: hand every result to one accumulator.
+    # ==> CoverageAccumulator::MergedFile: hold one file's merged coverage.
     # ===> LinesCombiner: combine lines results.
     # ===> BranchesCombiner: combine branches results.
     # ===> MethodsCombiner: combine methods results.
     #
+    # Callers that read their results one at a time (`ResultMerger`, to
+    # keep a big CI run's resultsets out of memory all at once) should
+    # drive a `CoverageAccumulator` directly instead of collecting the
+    # results to pass here.
+    #
     # @return [Hash]
     #
-    # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:23
+    # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:30
     def combine(*results); end
-
-    # Combine two files coverage results
-    #
-    # @param [Hash] coverage_a
-    # @param [Hash] coverage_b
-    #
-    # @return [Hash]
-    #
-    # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:57
-    def combine_file_coverage(coverage_a, coverage_b); end
-
-    # Manage combining results on files level
-    #
-    # @param [Hash] combined_results
-    # @param [Hash] result
-    #
-    # @return [Hash]
-    #
-    # pkg:gem/simplecov#lib/simplecov/combine/results_combiner.rb:38
-    def combine_result_sets(combined_results, result); end
   end
 end
 
@@ -911,8 +1224,26 @@ end
 # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:7
 module SimpleCov::CommandGuesser
   class << self
-    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:16
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:35
     def guess; end
+
+    # The invoked program on its own. `original_run_command` joins
+    # `$PROGRAM_NAME` and `ARGV` with a space, so a program path containing
+    # one (`/opt/My Ruby/bin/rspec`) cannot be recovered from it afterwards.
+    # Falls back to the first token for callers that set only the flattened
+    # command, which is every caller outside `defaults.rb`.
+    #
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:31
+    def original_program_name; end
+
+    # The invoked program on its own. `original_run_command` joins
+    # `$PROGRAM_NAME` and `ARGV` with a space, so a program path containing
+    # one (`/opt/My Ruby/bin/rspec`) cannot be recovered from it afterwards.
+    # Falls back to the first token for callers that set only the flattened
+    # command, which is every caller outside `defaults.rb`.
+    #
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:29
+    def original_program_name=(_arg0); end
 
     # Storage for the original command line call that invoked the test suite.
     # This has got to be stored as early as possible because i.e. rake and test/unit 2
@@ -923,29 +1254,30 @@ module SimpleCov::CommandGuesser
     # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:14
     def original_run_command; end
 
-    # Storage for the original command line call that invoked the test suite.
-    # This has got to be stored as early as possible because i.e. rake and test/unit 2
-    # have a habit of tampering with ARGV, which makes i.e. the automatic distinction
-    # between rails unit/functional/integration tests impossible without this cached
-    # item.
+    # Assigning the flattened command clears any separately recorded program
+    # name so the two can never describe different runs. Callers that know the
+    # real one assign it immediately afterwards, as `defaults.rb` does.
     #
-    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:14
-    def original_run_command=(_arg0); end
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:19
+    def original_run_command=(command); end
 
     private
 
-    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:45
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:82
     def from_command_line_options; end
 
     # If the command regexps fail, let's try checking defined constants.
     #
-    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:61
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:118
     def from_defined_constants; end
+
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:98
+    def from_executable_name; end
 
     # When parallel_tests (or a compatible runner) is driving the suite,
     # tag the command name with this worker's position in the pool.
     #
-    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:24
+    # pkg:gem/simplecov#lib/simplecov/command_guesser.rb:44
     def parallel_data; end
   end
 end
@@ -979,14 +1311,18 @@ end
 # as the flat `minimum_coverage` family, so enforcement is unchanged.
 # Selection and validation of the coverage criteria Ruby's `Coverage`
 # library should track. Supports `:line` (the historical default),
-# `:branch`, `:method`, and `:oneshot_line`, plus the standalone
-# `:eval` toggle for instrumenting `eval`'d code.
-# Inclusion / exclusion / grouping methods: `cover`, `skip`, `group`,
-# plus the deprecated `track_files` / `add_filter` / `add_group`
-# aliases. Mutates the same `filters`, `groups`, and `cover_filters`
-# collections the main Configuration module exposes.
+# `:branch`, `:method`, and `:oneshot_line`. The standalone `:eval`
+# toggle lives in `eval_coverage.rb`.
+# The standalone eval-coverage toggle (`enable_coverage :eval`),
+# instrumenting `eval`'d code on Rubies that support it. Kept separate
+# from the criteria-set logic in `coverage_criteria.rb` because `:eval`
+# is a boolean toggle, never a member of the enabled-criteria set.
+# Inclusion and exclusion methods: `cover` and `skip`, plus the deprecated
+# `track_files` and `add_filter` aliases.
 # Formatter selection (`formatter` / `formatters`), reporting toggles
 # (`print_errors`), and the deprecated `# :nocov:` token hook.
+# Group configuration is kept separate from inclusion and exclusion filters,
+# while sharing their matcher parser through the main Configuration module.
 # Coverage-entry filters scoped to branch / method criteria. See
 # `ignore_branches` and `ignore_methods`, and #1033 /
 # #1046 for the synthetic-entry detection rationale.
@@ -1003,48 +1339,48 @@ module SimpleCov::Configuration
   # is actively tracking, or a `@result` has already been assembled
   # (e.g. by `SimpleCov.collate`, which never starts Coverage).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration.rb:123
+  # pkg:gem/simplecov#lib/simplecov/configuration.rb:114
   def active_session?; end
 
   # DEPRECATED: alias for `skip`. Same matcher grammar, identical behavior.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:103
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:101
   def add_filter(filter_argument = T.unsafe(nil), &block); end
 
   # DEPRECATED: alias for `group`. Same arguments, same behavior.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:138
+  # pkg:gem/simplecov#lib/simplecov/configuration/groups.rb:29
   def add_group(group_name, filter_argument = T.unsafe(nil), &block); end
 
   # Gets or sets the behavior to process coverage results.
   # By default, it stores/merges the current result and formats only
   # from the final reporting process.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration.rb:108
+  # pkg:gem/simplecov#lib/simplecov/configuration.rb:99
   def at_exit(&block); end
 
   # Gets or sets the behavior to start a new forked Process.
   # Defaults to adding " (subprocess: #{serial})" to command_name and
   # starting SimpleCov in quiet mode.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration.rb:132
+  # pkg:gem/simplecov#lib/simplecov/configuration.rb:123
   def at_fork(&block); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:71
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:76
   def branch_coverage?; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:75
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:80
   def branch_coverage_supported?; end
 
   # Reset the criteria back to the lazy default (`Set[:line]`).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:56
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:52
   def clear_coverage_criteria; end
 
   # Remove every filter from the chain, including the defaults installed
   # by `SimpleCov.start`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:120
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:118
   def clear_filters; end
 
   # Get or set whether SimpleCov colorizes its stderr diagnostics. Accepts
@@ -1056,7 +1392,7 @@ module SimpleCov::Configuration
   # renders ANSI in its own terminal (parallel_tests with
   # `--combine-stderr`, log multiplexers, some CI runners). See #1157.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:65
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:68
   def color(value = T.unsafe(nil)); end
 
   # The name of the command (a.k.a. Test Suite) currently running.
@@ -1067,9 +1403,10 @@ module SimpleCov::Configuration
   def command_name(name = T.unsafe(nil)); end
 
   # Allows you to configure simplecov in a block instead of
-  # prepending SimpleCov to each config method.
+  # prepending SimpleCov to each config method. Parameterized blocks retain
+  # their caller context and receive this configuration target explicitly.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration.rb:82
+  # pkg:gem/simplecov#lib/simplecov/configuration.rb:83
   def configure(&block); end
 
   # Restrict the universe of files in the coverage report to those matching
@@ -1094,16 +1431,16 @@ module SimpleCov::Configuration
   #       cover { |sf| sf.lines.count > 5 }
   #     end
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:34
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:32
   def cover(*args, &block); end
 
   # Returns the list of configured inclusion filters added via `cover`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:41
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:39
   def cover_filters; end
 
   # Returns the list of string globs passed to `cover` — used by the
-  # disk-discovery pass in `SimpleCov.add_not_loaded_files` so files
+  # disk-discovery pass in `SimpleCov.tracked_file_paths` so files
   # matching a `cover` glob appear in the report even when they were
   # never required during the suite.
   #
@@ -1111,7 +1448,7 @@ module SimpleCov::Configuration
   # array to `cover`) so a glob nested inside `cover(["lib/**/*.rb",
   # /helper\.rb\z/])` still drives unloaded-file discovery.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:53
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:51
   def cover_globs; end
 
   # Configure (and, unless `enabled: false`, enable) a coverage criterion.
@@ -1121,15 +1458,15 @@ module SimpleCov::Configuration
   #
   # `primary: true` makes this the report's leading criterion (and the one a
   # bare `minimum_coverage 90` targets). `oneshot: true` (valid only for
-  # `:line`) selects the faster oneshot-lines mode. `:eval` is enable-only.
+  # `:line`) selects the faster oneshot-lines mode.
   #
   # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:43
   def coverage(criterion, primary: T.unsafe(nil), enabled: T.unsafe(nil), oneshot: T.unsafe(nil), **thresholds, &block); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:47
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:43
   def coverage_criteria; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:51
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:47
   def coverage_criterion_enabled?(criterion); end
 
   # Ask the Coverage runtime itself whether a criterion is supported
@@ -1141,7 +1478,7 @@ module SimpleCov::Configuration
   # dogfood report, which runs on a newer Ruby.
   # simplecov:disable
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:99
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:100
   def coverage_criterion_supported?(criterion); end
 
   # The name of the output and cache directory. Defaults to 'coverage'
@@ -1151,12 +1488,10 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration.rb:30
   def coverage_dir(dir = T.unsafe(nil)); end
 
-  # simplecov:enable
-  #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:107
+  # pkg:gem/simplecov#lib/simplecov/configuration/eval_coverage.rb:13
   def coverage_for_eval_enabled?; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:87
+  # pkg:gem/simplecov#lib/simplecov/configuration/eval_coverage.rb:9
   def coverage_for_eval_supported?; end
 
   # Returns the full path to the output directory. By default
@@ -1179,26 +1514,27 @@ module SimpleCov::Configuration
   # markers without emitting the public-API deprecation warning. Will
   # be removed alongside the deprecated `nocov_token` setter.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:129
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:132
   def current_nocov_token(value = T.unsafe(nil)); end
 
   # Remove `criterion` from the set of enabled coverage criteria.
-  # Disabling every criterion raises at `start_tracking` (not here),
-  # so config files that toggle criteria in arbitrary order don't
-  # have to worry about transient empty states.
+  # `:eval` turns the standalone eval-coverage toggle back off,
+  # mirroring `enable_coverage`. Disabling every criterion raises at
+  # `start_tracking` (not here), so config files that toggle criteria
+  # in arbitrary order don't have to worry about transient empty states.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:32
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:26
   def disable_coverage(criterion); end
 
   # Enable one or more coverage criteria. `:eval` is accepted as a
   # shorthand for the standalone eval-coverage toggle.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:15
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:17
   def enable_coverage(*criteria); end
 
   # DEPRECATED: prefer `enable_coverage :eval`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:112
+  # pkg:gem/simplecov#lib/simplecov/configuration/eval_coverage.rb:18
   def enable_coverage_for_eval; end
 
   # DEPRECATED: alias for `merge_subprocesses`. Same value/behavior.
@@ -1215,22 +1551,22 @@ module SimpleCov::Configuration
   # Pins the suite to an exact coverage figure by setting both
   # `minimum_coverage` and `maximum_coverage`. See #187.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:47
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:43
   def expected_coverage(coverage = T.unsafe(nil)); end
 
   # Returns the list of configured exclusion filters added via `skip`
   # (or the deprecated `add_filter`).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:88
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:86
   def filters; end
 
   # Returns the list of configured exclusion filters added via `skip`
   # (or the deprecated `add_filter`).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:9
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:7
   def filters=(_arg0); end
 
-  # Get or set whether this process owns final merge processing:
+  # Get or set whether SimpleCov's selected final process owns merge processing:
   # waiting for sibling workers, building the merged result, formatting,
   # enforcing thresholds, and writing `.last_run.json`.
   #
@@ -1239,10 +1575,10 @@ module SimpleCov::Configuration
   # is enabled. Those runs are likely using an external `SimpleCov.collate`
   # step to finalize the merge.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:67
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:65
   def finalize_merge(value = T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:80
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:78
   def finalize_merge?; end
 
   # Gets or sets the configured formatter. Accepts a formatter class
@@ -1285,8 +1621,11 @@ module SimpleCov::Configuration
   # Accepts a single formatter as well as an Array, matching the pre-1.0 behavior
   # where `MultiFormatter.new` normalized its input. Elements may be
   # formatter classes or ready-built instances; see `formatter`.
+  # `nil`, `false`, and `[]` all opt out of formatting entirely —
+  # `false` normalized like `formatter false` does, since `Array(false)`
+  # would otherwise smuggle it in as a "formatter" that can only fail.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:50
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:53
   def formatters=(formatters); end
 
   # Define a display group for files. Same matcher grammar as `skip`,
@@ -1294,18 +1633,16 @@ module SimpleCov::Configuration
   # `group_name` for the formatter. Files matched by no group fall
   # into the implicit "Ungrouped" bucket.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:133
+  # pkg:gem/simplecov#lib/simplecov/configuration/groups.rb:22
   def group(group_name, filter_argument = T.unsafe(nil), &_arg2); end
 
   # Returns the configured groups. Add groups using SimpleCov.group.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:125
+  # pkg:gem/simplecov#lib/simplecov/configuration/groups.rb:8
   def groups; end
 
-  # Returns the configured groups. Add groups using SimpleCov.group.
-  #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:9
-  def groups=(_arg0); end
+  # pkg:gem/simplecov#lib/simplecov/configuration/groups.rb:12
+  def groups=(new_groups); end
 
   # Variadic; multiple calls union. Setting is recorded regardless
   # of whether branch coverage is enabled at call time. See #1033, #1046.
@@ -1331,23 +1668,31 @@ module SimpleCov::Configuration
   # pkg:gem/simplecov#lib/simplecov/configuration/ignored_entries.rb:37
   def ignored_methods; end
 
+  # Whether this run produces line data at all. The oneshot variant counts:
+  # `ResultAdapter` turns its executed-line list back into a line array. A
+  # branch-only or method-only run produces none, and `Coverage.result`
+  # entries for the files it loaded carry no `"lines"` key.
+  #
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:71
+  def line_coverage?; end
+
   # Defines the maximum overall coverage allowed for the testsuite to
   # pass. Useful paired with `minimum_coverage` (or via
   # `expected_coverage`) to pin coverage to an exact value, so an
   # unexpected jump up fails the build. See #187.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:35
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:33
   def maximum_coverage(coverage = T.unsafe(nil)); end
 
   # Defines the maximum coverage drop at once allowed for the
   # testsuite to pass. Default is 100% (disabled).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:58
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:54
   def maximum_coverage_drop(coverage_drop = T.unsafe(nil)); end
 
   # @api private
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:85
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:83
   def merge_finalization_owner?; end
 
   # Get or set whether SimpleCov should hook `Process._fork` to
@@ -1361,20 +1706,20 @@ module SimpleCov::Configuration
   # Defines the maximum age (in seconds) of a resultset to still be
   # included in merged results. Default is 600 seconds (10 minutes).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:101
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:102
   def merge_timeout(seconds = T.unsafe(nil)); end
 
   # Get or set whether to merge results from multiple test suites
   # (test:units, test:functionals, cucumber, ...) into a single
   # coverage report. Defaults to true.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:51
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:49
   def merging(use = T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:79
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:84
   def method_coverage?; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:83
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:88
   def method_coverage_supported?; end
 
   # Defines the minimum overall coverage required for the testsuite to pass.
@@ -1390,18 +1735,18 @@ module SimpleCov::Configuration
   # Hash mixing Symbol keys with String / Regexp keys to declare
   # per-path overrides. See README and #575.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:73
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:67
   def minimum_coverage_by_file(coverage = T.unsafe(nil)); end
 
   # Returns the per-path overrides set via `minimum_coverage_by_file`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:90
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:84
   def minimum_coverage_by_file_overrides; end
 
   # Defines the minimum coverage per group required for the testsuite
   # to pass. Default is 0% (disabled).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:98
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:92
   def minimum_coverage_by_group(coverage = T.unsafe(nil)); end
 
   # Drop every filter previously installed (defaults plus anything
@@ -1409,7 +1754,7 @@ module SimpleCov::Configuration
   # clean slate. Order matters — call this before your own `skip`
   # invocations.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:155
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:126
   def no_default_skips; end
 
   # DEPRECATED: configure `# :nocov:` token override. Prefer
@@ -1417,7 +1762,7 @@ module SimpleCov::Configuration
   # SimpleCov::Directive). The `# :nocov:` toggle and this hook will
   # be removed in a future release.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:119
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:122
   def nocov_token(nocov_token = T.unsafe(nil)); end
 
   # Get or set whether SimpleCov should auto-require the
@@ -1435,15 +1780,15 @@ module SimpleCov::Configuration
   # is still included and the minimum / maximum coverage checks aren't
   # skipped against a partial total.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:114
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:115
   def parallel_wait_timeout(seconds = T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:38
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:34
   def primary_coverage(criterion = T.unsafe(nil)); end
 
   # DEPRECATED: alias for `print_errors`. Same value, same behavior.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:107
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:110
   def print_error_status; end
 
   # DEPRECATED: alias for `print_errors`. Same value, same behavior.
@@ -1457,7 +1802,7 @@ module SimpleCov::Configuration
   # previous-error notices. Defaults to true. Set to false to silence
   # SimpleCov entirely when parsing tooling output (see issue #1155).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:78
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:81
   def print_errors(value = T.unsafe(nil)); end
 
   # Returns the hash of available profiles
@@ -1468,21 +1813,21 @@ module SimpleCov::Configuration
   # Returns the project name — defaults to the last dirname in
   # SimpleCov.root, capitalized with underscores → spaces.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration.rb:154
+  # pkg:gem/simplecov#lib/simplecov/configuration.rb:145
   def project_name(new_name = T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:22
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:20
   def raise_on_invalid_coverage(coverage, coverage_setting); end
 
   # Refuses any coverage drop. Coverage is only allowed to increase.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:113
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:105
   def refuse_coverage_drop(*criteria); end
 
   # Remove any filters whose `filter_argument` equals the given value.
   # Returns true when at least one filter was removed, false otherwise.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:112
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:110
   def remove_filter(filter_argument); end
 
   # The root for the project. This defaults to the
@@ -1498,10 +1843,10 @@ module SimpleCov::Configuration
   # See README for the full grammar; `skip` accepts a String (path-segment
   # substring), Regexp, block predicate, or Array of any of those.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:98
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:96
   def skip(filter_argument = T.unsafe(nil), &_arg1); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:124
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:127
   def skip_token(nocov_token = T.unsafe(nil)); end
 
   # Get or set whether `coverage.json` includes the full source-text
@@ -1511,22 +1856,22 @@ module SimpleCov::Configuration
   # a copy of the source tree (which dominates the payload on larger
   # projects).
   #
-  # The HTML viewer's `coverage_data.js` always includes source —
-  # the client-side renderer needs it. Only `coverage.json` honors
+  # The HTML report's embedded data always includes source — the
+  # client-side renderer needs it. Only `coverage.json` honors
   # this setting.
   #
   #     SimpleCov.start do
   #       source_in_json false
   #     end
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:100
+  # pkg:gem/simplecov#lib/simplecov/configuration/formatting.rb:103
   def source_in_json(value = T.unsafe(nil)); end
 
   # DEPRECATED: prefer `cover`, which both includes unloaded files (the
   # historical `track_files` behavior) and restricts the report to the
   # matching set.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:60
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:58
   def track_files(glob); end
 
   # `track_files(nil)` is the documented way to clear a previously-set
@@ -1534,26 +1879,33 @@ module SimpleCov::Configuration
   # users at it. The `cover` API has no direct equivalent for "reset
   # the inclusion list" — point users at the `@cover_filters` reset.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:70
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:68
   def track_files_replacement_hint(glob); end
 
   # Returns the glob used to include files that were not explicitly required.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:82
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:80
   def tracked_files; end
 
   # DEPRECATED: alias for `merging`. Same value, same behavior.
+  # Delegating (rather than duplicating the body) also fixes the
+  # return value: this used to return nil where `merging` returns
+  # false, because the final expression was the skipped guard
+  # assignment rather than the stored value.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:90
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:92
   def use_merging(use = T.unsafe(nil)); end
 
   # @api private — called from `SimpleCov.start_tracking` to fail
   # fast when the user has disabled every coverage criterion.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:63
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:59
   def validate_coverage_criteria!; end
 
   private
+
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:110
+  def add_coverage_criterion(criterion); end
 
   # Forward the one-liner threshold keywords (`coverage :branch, minimum: 80`)
   # to the matching `CoverageCriterion` verbs, rejecting anything that isn't a
@@ -1563,15 +1915,16 @@ module SimpleCov::Configuration
   def apply_threshold_options(configurator, options); end
 
   # Build a filter for a `cover` argument. Strings are treated as
-  # globs (not substrings — that's `skip`/`add_filter`'s semantics).
+  # globs (not substrings — that's `skip`/`add_filter`'s semantics);
+  # everything else dispatches exactly like `add_filter`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:172
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:144
   def build_cover_filter(arg); end
 
   # Walk a list of cover filters and return the string globs they hold,
   # descending into `ArrayFilter` wrappers built by `cover(["a", "b"])`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:187
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:154
   def collect_cover_globs(filter_list); end
 
   # If `:line` is enabled, it's the default primary; otherwise fall
@@ -1579,11 +1932,16 @@ module SimpleCov::Configuration
   # insertion order). Returning `:line` even when disabled would
   # propagate broken state into `minimum_coverage 90`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:134
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:121
   def default_primary_coverage; end
 
-  # Enable the criterion (or its oneshot / eval variant) and return the
-  # criterion symbol that thresholds should be stored under.
+  # No support check needed: off is a safe state on every Ruby.
+  #
+  # pkg:gem/simplecov#lib/simplecov/configuration/eval_coverage.rb:37
+  def disable_eval_coverage; end
+
+  # Enable or disable the criterion (or its oneshot / eval variant) and
+  # return the criterion symbol that thresholds should be stored under.
   #
   # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:75
   def enable_coverage_criterion(criterion, enabled:, oneshot:); end
@@ -1591,36 +1949,37 @@ module SimpleCov::Configuration
   # Shared implementation backing both `enable_coverage :eval` and
   # the deprecated `enable_coverage_for_eval`.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:122
+  # pkg:gem/simplecov#lib/simplecov/configuration/eval_coverage.rb:28
   def enable_eval_coverage; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:92
-  def enable_eval_coverage_criterion; end
-
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:83
-  def enable_oneshot_line(criterion); end
-
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:143
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:144
   def explicit_coverage_destination?; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:137
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:138
   def explicit_custom_coverage_destination?; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:121
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:122
   def inferred_finalize_merge?; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:156
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:157
   def inferred_finalize_merge_warning; end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:142
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:143
   def minimum_possible_coverage_exceeded(coverage_option); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:133
+  # Shared normalize-and-validate step behind every threshold setter:
+  # a bare Numeric targets the primary criterion, and the resulting
+  # per-criterion hash is validated before it is stored.
+  #
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:115
+  def normalized_threshold(coverage, setting); end
+
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:134
   def parallel_worker_environment?; end
 
   # The actual filter processor. Not meant for direct use.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:162
+  # pkg:gem/simplecov#lib/simplecov/configuration/filters.rb:133
   def parse_filter(filter_argument = T.unsafe(nil), &filter_proc); end
 
   # Split a `minimum_coverage_by_file` argument into Symbol-keyed
@@ -1628,65 +1987,56 @@ module SimpleCov::Configuration
   # normalize Numeric override values to `{primary_coverage => N}`
   # so downstream code only has one shape to handle.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:124
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:125
   def partition_per_file_thresholds(coverage); end
 
   # Render the `coverage` configuration equivalent to a (deprecated)
   # `minimum_coverage_by_file` argument so the deprecation warning can be
   # copy-pasted verbatim into the user's config.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:149
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:150
   def per_file_coverage_replacement(defaults, overrides); end
 
   # Same, for a (deprecated) `minimum_coverage_by_group` argument.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:161
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:162
   def per_group_coverage_replacement(coverage); end
 
   # pkg:gem/simplecov#lib/simplecov/configuration/ignored_entries.rb:47
   def raise_if_branch_type_unsupported(type); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:142
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:129
   def raise_if_criterion_disabled(criterion); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:151
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:147
   def raise_if_criterion_unsupported(criterion); end
 
   # pkg:gem/simplecov#lib/simplecov/configuration/ignored_entries.rb:55
   def raise_if_method_type_unsupported(type); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:172
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:173
   def render_coverage_blocks(by_criterion); end
 
-  # Copy instance variables back to block_context and restore our saved values.
-  #
-  # pkg:gem/simplecov#lib/simplecov/configuration.rb:178
-  def restore_ivars(block_context, saved); end
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:81
+  def resolve_criterion_variant(criterion, oneshot); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:105
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:99
   def store_minimum_per_file(criterion, percent, target); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:116
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:110
   def store_minimum_per_group(criterion, percent, group_name); end
 
   # @api private — threshold-store writers used by CoverageCriterion. They
   # write the same `@minimum_coverage` / `@maximum_coverage` / ... hashes the
   # flat threshold methods populate, so the exit-code checks are unchanged.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:100
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:94
   def store_overall_threshold(setting, criterion, percent); end
 
-  # Copy instance variables from block_context into self, saving any
-  # of ours that would be clobbered. Returns the saved values for
-  # later restoration.
-  #
-  # pkg:gem/simplecov#lib/simplecov/configuration.rb:167
-  def swap_ivars_from(block_context); end
-
-  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:135
+  # pkg:gem/simplecov#lib/simplecov/configuration/thresholds.rb:136
   def validate_per_file_key(key); end
 
-  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:148
+  # pkg:gem/simplecov#lib/simplecov/configuration/merging.rb:149
   def warn_about_inferred_finalize_merge; end
 end
 
@@ -1702,47 +2052,47 @@ SimpleCov::Configuration::COVERAGE_THRESHOLD_OPTIONS = T.let(T.unsafe(nil), Arra
 # always a plain percentage (`minimum_per_file 100` is unambiguous) and the
 # syntax is identical across line, branch, and method coverage.
 #
-# pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:127
+# pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:124
 class SimpleCov::Configuration::CoverageCriterion
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:128
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:125
   def initialize(config, criterion); end
 
   # Pin coverage to an exact figure (sets both `minimum` and `maximum`).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:145
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:142
   def exact(percent); end
 
   # Overall maximum: fails the build if coverage rises above it. Paired with
   # `minimum` (or via `exact`) this pins coverage so an unexpected jump fails.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:140
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:137
   def maximum(percent); end
 
   # Maximum allowed drop between runs (`maximum_drop 0` refuses any drop).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:151
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:148
   def maximum_drop(percent); end
 
   # Overall (suite-wide) minimum for this criterion.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:134
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:131
   def minimum(percent); end
 
   # Per-file minimum. With no `only:`, sets the default applied to every
   # file; with `only:` (a String path or Regexp), overrides that default
   # for the matching files.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:158
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:155
   def minimum_per_file(percent, only: T.unsafe(nil)); end
 
   # Per-group minimum for the named group (defined via `group`).
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:163
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:160
   def minimum_per_group(percent, only:); end
 
   # Make this criterion the report's primary (leading) criterion.
   #
-  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:168
+  # pkg:gem/simplecov#lib/simplecov/configuration/coverage.rb:165
   def primary; end
 end
 
@@ -1759,6 +2109,9 @@ SimpleCov::Configuration::IGNORABLE_BRANCH_TYPES = T.let(T.unsafe(nil), Array)
 # pkg:gem/simplecov#lib/simplecov/configuration/ignored_entries.rb:11
 SimpleCov::Configuration::IGNORABLE_METHOD_TYPES = T.let(T.unsafe(nil), Array)
 
+# pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:12
+SimpleCov::Configuration::LINE_COVERAGE_ALTERNATIVES = T.let(T.unsafe(nil), Hash)
+
 # pkg:gem/simplecov#lib/simplecov/configuration/coverage_criteria.rb:11
 SimpleCov::Configuration::ONESHOT_LINE_COVERAGE_CRITERION = T.let(T.unsafe(nil), Symbol)
 
@@ -1771,6 +2124,21 @@ SimpleCov::Configuration::SUPPORTED_COVERAGE_CRITERIA = T.let(T.unsafe(nil), Arr
 # pkg:gem/simplecov#lib/simplecov.rb:9
 class SimpleCov::ConfigurationError < ::StandardError; end
 
+# Shared parser for coverage.json consumers. It enforces the encoding and
+# stable outermost shape while leaving command- or viewer-specific fields to
+# their respective callers.
+#
+# pkg:gem/simplecov#lib/simplecov/coverage_json.rb:9
+module SimpleCov::CoverageJSON
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/coverage_json.rb:12
+    def load(path); end
+  end
+end
+
+# pkg:gem/simplecov#lib/simplecov/coverage_json.rb:10
+class SimpleCov::CoverageJSON::Error < ::StandardError; end
+
 # Holds the individual data of a coverage result.
 #
 # This is uniform across coverage criteria as they all have:
@@ -1780,7 +2148,7 @@ class SimpleCov::ConfigurationError < ::StandardError; end
 # * missed - how many of the coverables are missed
 # * omitted - how many lines cannot be covered (blank lines/comments); only meaningful for line coverage
 # * percent - percentage as covered/missed
-# * strength - average hits per/coverable (will not exist for one shot lines format)
+# * strength - average hits per coverable unit (will not exist for one shot lines format)
 #
 # pkg:gem/simplecov#lib/simplecov/coverage_statistics.rb:14
 class SimpleCov::CoverageStatistics
@@ -1875,7 +2243,7 @@ module SimpleCov::CoverageViolations
 
     private
 
-    # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:134
+    # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:138
     def compute_drop(criterion, result, last_run); end
 
     # Walk the overrides in declaration order, merging each one that matches
@@ -1892,7 +2260,12 @@ module SimpleCov::CoverageViolations
     # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:118
     def group_minimum_violations(group_name, group, minimums); end
 
-    # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:125
+    # The misconfiguration notice is enforcement output, not a Ruby
+    # warning: like every other enforcement message it must survive
+    # `-W0` and `Warning.warn` hooks (see ExitCodes.print_error) and
+    # honor the `print_errors` opt-out.
+    #
+    # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:129
     def lookup_group(result, group_name); end
 
     # Per-path matching for `minimum_coverage_by_file` overrides. Strings
@@ -1916,7 +2289,7 @@ module SimpleCov::CoverageViolations
     # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:75
     def percent_for(stats_source, criterion); end
 
-    # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:144
+    # pkg:gem/simplecov#lib/simplecov/coverage_violations.rb:154
     def round(percent); end
   end
 end
@@ -2120,6 +2493,35 @@ module SimpleCov::ExitCodes
   end
 end
 
+# Shared skeleton for the threshold checks: stash the result and the
+# threshold configuration, fail when any violation exists, and
+# report one message per violation. Subclasses supply `exit_code`,
+# `compute_violations` (memoized here — `failing?` and `report` both
+# consult it), and `report_violation`.
+#
+# pkg:gem/simplecov#lib/simplecov/exit_codes/check.rb:10
+class SimpleCov::ExitCodes::Check
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/check.rb:11
+  def initialize(result, thresholds); end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/check.rb:16
+  def failing?; end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/check.rb:20
+  def report; end
+
+  private
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/check.rb:26
+  def result; end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/check.rb:26
+  def thresholds; end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/check.rb:28
+  def violations; end
+end
+
 # pkg:gem/simplecov#lib/simplecov/exit_codes.rb:8
 SimpleCov::ExitCodes::EXCEPTION = T.let(T.unsafe(nil), Integer)
 
@@ -2158,30 +2560,24 @@ SimpleCov::ExitCodes::MINIMUM_COVERAGE = T.let(T.unsafe(nil), Integer)
 # configured maximum since the last recorded run.
 #
 # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:7
-class SimpleCov::ExitCodes::MaximumCoverageDropCheck
+class SimpleCov::ExitCodes::MaximumCoverageDropCheck < ::SimpleCov::ExitCodes::Check
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:8
-  def initialize(result, maximum_coverage_drop); end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:21
   def exit_code; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:13
-  def failing?; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:17
-  def report; end
 
   private
 
-  # The "drop percent" is a delta, not a coverage level — it has no
-  # natural green/yellow/red mapping. Callers color the whole line red
-  # so the failure is still visible at a glance.
-  #
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:30
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:14
+  def compute_violations; end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:25
   def message_for(violation); end
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:40
-  def violations; end
+  # The "drop percent" is a delta, not a coverage level — it has no
+  # natural green/yellow/red mapping, so the whole line goes red to
+  # keep the failure visible at a glance.
+  #
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_coverage_drop_check.rb:21
+  def report_violation(violation); end
 end
 
 # Fails when the overall (project-wide) coverage for any criterion is
@@ -2191,107 +2587,80 @@ end
 # and surface unexpected increases instead of silently absorbing them.
 #
 # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:10
-class SimpleCov::ExitCodes::MaximumOverallCoverageCheck
+class SimpleCov::ExitCodes::MaximumOverallCoverageCheck < ::SimpleCov::ExitCodes::Check
   # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:11
-  def initialize(result, maximum_coverage); end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:24
   def exit_code; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:16
-  def failing?; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:20
-  def report; end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:34
-  def report_violation(violation); end
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:17
+  def compute_violations; end
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:30
-  def violations; end
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/maximum_overall_coverage_check.rb:21
+  def report_violation(violation); end
 end
 
 # Fails when any individual file falls below the configured minimum
 # coverage for any criterion.
 #
 # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:7
-class SimpleCov::ExitCodes::MinimumCoverageByFileCheck
+class SimpleCov::ExitCodes::MinimumCoverageByFileCheck < ::SimpleCov::ExitCodes::Check
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:8
   def initialize(result, minimum_coverage_by_file, overrides = T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:31
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:13
   def exit_code; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:14
-  def failing?; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:18
-  def report; end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:37
-  def violations; end
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:19
+  def compute_violations; end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_file_check.rb:23
+  def report_violation(violation); end
 end
 
 # Fails when any configured group falls below its minimum coverage
 # threshold for any criterion.
 #
 # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:7
-class SimpleCov::ExitCodes::MinimumCoverageByGroupCheck
+class SimpleCov::ExitCodes::MinimumCoverageByGroupCheck < ::SimpleCov::ExitCodes::Check
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:8
-  def initialize(result, minimum_coverage_by_group); end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:30
   def exit_code; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:13
-  def failing?; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:17
-  def report; end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:36
-  def violations; end
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:14
+  def compute_violations; end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_coverage_by_group_check.rb:18
+  def report_violation(violation); end
 end
 
 # Fails when the overall (project-wide) coverage for any criterion is
 # below the configured minimum.
 #
 # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:7
-class SimpleCov::ExitCodes::MinimumOverallCoverageCheck
+class SimpleCov::ExitCodes::MinimumOverallCoverageCheck < ::SimpleCov::ExitCodes::Check
   # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:8
-  def initialize(result, minimum_coverage); end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:21
   def exit_code; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:13
-  def failing?; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:17
-  def report; end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:34
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:17
+  def compute_violations; end
+
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:21
   def report_violation(violation); end
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:46
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:33
   def report_worst_files(criterion); end
 
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:30
-  def violations; end
-
-  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:60
+  # pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:47
   def worst_files_for(criterion); end
 end
 
-# pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:27
+# pkg:gem/simplecov#lib/simplecov/exit_codes/minimum_overall_coverage_check.rb:14
 SimpleCov::ExitCodes::MinimumOverallCoverageCheck::WORST_FILES_LIMIT = T.let(T.unsafe(nil), Integer)
 
 # pkg:gem/simplecov#lib/simplecov/exit_codes.rb:7
@@ -2308,7 +2677,7 @@ class SimpleCov::FileList
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:22
   def initialize(files); end
 
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:111
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:107
   def branch_covered_percent; end
 
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:10
@@ -2326,7 +2695,7 @@ class SimpleCov::FileList
 
   # Return total count of covered branches
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:102
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:98
   def covered_branches; end
 
   # Returns the count of lines that have coverage
@@ -2336,27 +2705,27 @@ class SimpleCov::FileList
 
   # Return total count of covered methods
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:121
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:117
   def covered_methods; end
 
   # The coverage across all files in percent, for the given criterion (line
   # by default). Returns nil if the criterion was not measured.
   # @return [Float, nil]
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:85
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:81
   def covered_percent(criterion = T.unsafe(nil)); end
 
   # Computes the coverage based upon lines covered and lines missed for each file
   # Returns an array with all coverage percentages
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:64
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:60
   def covered_percentages; end
 
   # The strength (average hits per relevant unit) for the given criterion
   # (line by default).
   # @return [Float, nil]
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:92
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:88
   def covered_strength(criterion = T.unsafe(nil)); end
 
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:10
@@ -2365,9 +2734,10 @@ class SimpleCov::FileList
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:10
   def empty?(*_arg0, **_arg1, &_arg2); end
 
-  # Finds the least covered file and returns that file's name
+  # Finds the least covered file and returns that file's name, or nil
+  # for an empty list (e.g. a fully filtered result).
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:69
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:66
   def least_covered_file; end
 
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:10
@@ -2375,18 +2745,18 @@ class SimpleCov::FileList
 
   # Returns the overall amount of relevant lines of code across all files in this list
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:78
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:74
   def lines_of_code; end
 
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:10
   def map(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:130
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:126
   def method_covered_percent; end
 
   # Return total count of covered branches
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:107
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:103
   def missed_branches; end
 
   # Returns the count of lines that have been missed
@@ -2396,7 +2766,7 @@ class SimpleCov::FileList
 
   # Return total count of missed methods
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:126
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:122
   def missed_methods; end
 
   # Returns the count of lines that are not relevant for coverage
@@ -2409,7 +2779,7 @@ class SimpleCov::FileList
 
   # Returns the count of skipped lines
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:56
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:54
   def skipped_lines; end
 
   # pkg:gem/simplecov#lib/simplecov/file_list.rb:10
@@ -2420,17 +2790,17 @@ class SimpleCov::FileList
 
   # Return total count of branches in all files
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:97
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:93
   def total_branches; end
 
   # Return total count of methods in all files
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:116
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:112
   def total_methods; end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:155
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:151
   def compute_coverage_statistics; end
 
   # Seed the result hash with one entry per criterion the user
@@ -2441,14 +2811,14 @@ class SimpleCov::FileList
   # enabled set so disabled criteria don't surface in totals, JSON,
   # or the HTML report.
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:143
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:139
   def compute_coverage_statistics_by_file; end
 
   # `:line` (or its `:oneshot_line` synonym) is reported when either
   # criterion is enabled; the JRuby-gated branch/method criteria are
   # reported when they pass their own engine-support check.
   #
-  # pkg:gem/simplecov#lib/simplecov/file_list.rb:162
+  # pkg:gem/simplecov#lib/simplecov/file_list.rb:158
   def enabled_criteria_for_reporting; end
 end
 
@@ -2473,16 +2843,29 @@ class SimpleCov::Filter
   # pkg:gem/simplecov#lib/simplecov/filter.rb:22
   def matches?(_source_file); end
 
-  class << self
-    # pkg:gem/simplecov#lib/simplecov/filter.rb:26
-    def build_filter(filter_argument); end
+  # Whether this filter's verdict depends only on the file's path, so it can
+  # be decided before that file has any coverage. Used when recording which
+  # tracked files a process did not load, where no coverage exists yet.
+  # Defaults to false so a custom filter is never guessed at. See #1250.
+  #
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:30
+  def path_only?; end
 
-    # pkg:gem/simplecov#lib/simplecov/filter.rb:32
+  class << self
+    # `string_filter` selects the semantics of bare String arguments —
+    # StringFilter's segment-substring match for `add_filter`/`skip`,
+    # GlobFilter for `cover` — and threads through Array elements so a
+    # list gets the same treatment as its members.
+    #
+    # pkg:gem/simplecov#lib/simplecov/filter.rb:38
+    def build_filter(filter_argument, string_filter: T.unsafe(nil)); end
+
+    # pkg:gem/simplecov#lib/simplecov/filter.rb:48
     def class_for_argument(filter_argument); end
 
     private
 
-    # pkg:gem/simplecov#lib/simplecov/filter.rb:37
+    # pkg:gem/simplecov#lib/simplecov/filter.rb:53
     def filter_classes_by_argument_type; end
   end
 end
@@ -2495,6 +2878,11 @@ end
 # pkg:gem/simplecov#lib/simplecov/formatter/multi_formatter.rb:4
 module SimpleCov::Formatter
   class << self
+    # Normalize a class or instance, then dispatch the result to it.
+    #
+    # pkg:gem/simplecov#lib/simplecov/formatter.rb:18
+    def format(formatter, result); end
+
     # Formatters can be configured either as classes (instantiated
     # fresh for every report) or as ready-built instances — the only
     # way to reach constructor options like
@@ -2535,8 +2923,19 @@ class SimpleCov::Formatter::Base
   # stay absolute; a `../../../tmp/cov` display would be more
   # confusing than the absolute form. See issue #197.
   #
-  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:46
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:62
   def displayable_output_path; end
+
+  # The one home of the "status lines go to stderr, not through warn"
+  # decision (see #1225). stderr rather than stdout because this is a
+  # status message, not the program's output, so it stays out of
+  # pipelines like `rspec -f json`. And `$stderr.puts` rather than
+  # `warn` so the line neither reaches `Warning.warn` hooks (warning
+  # trackers, raise-on-warning test setups) nor vanishes under `-W0`.
+  # Subclasses call this at the end of their `format`.
+  #
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:33
+  def emit_status(result); end
 
   # Subclasses override to name the report's entry-point file
   # (e.g. `index.html` for HTML, `coverage.json` for JSON), which
@@ -2544,14 +2943,14 @@ class SimpleCov::Formatter::Base
   # leaves the bare directory in place for any third-party formatter
   # that has no single canonical entry point.
   #
-  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:68
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:84
   def entry_point_filename; end
 
   # Subclasses override to prepend a marker (e.g. "JSON ") to the
   # summary line. Default empty for the HTML formatter, which has
   # historically been the unmarked default.
   #
-  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:29
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:45
   def message_prefix; end
 
   # Emit one summary line per criterion that the run actually
@@ -2561,13 +2960,13 @@ class SimpleCov::Formatter::Base
   # insertion order as `SourceFile#coverage_statistics`, which in
   # turn reflects what the user enabled).
   #
-  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:78
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:94
   def output_message(result); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:33
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:49
   def output_path; end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:52
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:68
   def relative_or_absolute_output_path; end
 
   # Returns nil for branch/method criteria that have nothing to
@@ -2575,79 +2974,209 @@ class SimpleCov::Formatter::Base
   # Showing "Branch coverage: 0 / 0 (100.00%)" is noise; the older
   # output specifically suppressed it.
   #
-  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:88
+  # pkg:gem/simplecov#lib/simplecov/formatter/base.rb:104
   def stats_line(criterion, stat); end
 end
 
-# Generates an HTML coverage report by writing a coverage_data.js file
-# alongside pre-compiled static assets (index.html, application.js/css).
-# Uses JSONFormatter.build_hash to serialize the result, then writes both
-# coverage.json and coverage_data.js from the same in-memory hash.
+# Shared writer for the coverage.json artifact, used by JSONFormatter
+# (as its report) and HTMLFormatter (as the side file feeding
+# `simplecov serve` and external tools). Centralizing the write keeps
+# the two copies byte-identical (same pretty printing, same binary
+# mode, so no CRLF translation on Windows depending on which
+# formatter wrote last) and gives both formatters the
+# concurrent-overwrite warning of issue #1171.
 #
-# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:14
-class SimpleCov::Formatter::HTMLFormatter < ::SimpleCov::Formatter::Base
-  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:17
-  def format(result); end
-
-  # Generate HTML from a pre-existing coverage.json file without
-  # needing a live SimpleCov::Result or even a running test suite.
-  #
-  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:42
-  def format_from_json(json_path, output_dir); end
-
+# pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:16
+module SimpleCov::Formatter::CoverageJSONWriter
   private
 
-  # Write `content` at `dest` via a uniquely-named temp file in the
-  # same directory, then `File.rename` onto the final path. rename is
-  # atomic and overwrite-safe, so:
-  # - parallel writers can't race on an unlink-then-write window, and
-  # - read-only existing files (e.g. assets shipped at 0444 from
-  #   /nix/store) are replaced cleanly instead of triggering EACCES
-  #   from opening the existing path for writing.
-  #
-  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:68
-  def atomic_write(dest, content); end
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:55
-  def copy_static_assets(dest_dir = T.unsafe(nil)); end
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:51
-  def entry_point_filename; end
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:78
-  def public_dir; end
-end
-
-# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:15
-SimpleCov::Formatter::HTMLFormatter::DATA_FILENAME = T.let(T.unsafe(nil), String)
-
-# Writes coverage results as JSON to coverage/coverage.json. Used
-# standalone, alongside the HTML formatter, or by external tools that
-# consume SimpleCov output.
-#
-# pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:13
-class SimpleCov::Formatter::JSONFormatter < ::SimpleCov::Formatter::Base
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:25
-  def format(result); end
-
-  private
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:43
-  def entry_point_filename; end
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:70
+  # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:57
   def existing_meta(path); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:39
-  def message_prefix; end
+  # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:69
+  def parse_meta(path); end
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:89
+  def parse_meta_full(path); end
+
+  # The meta object is flat and sits at the head of every file this
+  # module writes, so the common case parses just that slice instead
+  # of a multi-megabyte report. A miss (foreign key order, a brace
+  # inside a meta string) falls back to the full parse.
+  #
+  # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:77
+  def parse_meta_head(path); end
 
   # Warns when the existing coverage.json has a timestamp newer than this
   # process's start time — a strong signal that a sibling test process
   # (e.g., parallel_tests) wrote it while we were running, and that our
   # write is about to clobber their data.
   #
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:51
+  # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:38
   def warn_if_concurrent_overwrite(path, result); end
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:27
+  def write(output_path, hash, result); end
+
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:57
+    def existing_meta(path); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:69
+    def parse_meta(path); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:89
+    def parse_meta_full(path); end
+
+    # The meta object is flat and sits at the head of every file this
+    # module writes, so the common case parses just that slice instead
+    # of a multi-megabyte report. A miss (foreign key order, a brace
+    # inside a meta string) falls back to the full parse.
+    #
+    # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:77
+    def parse_meta_head(path); end
+
+    # Warns when the existing coverage.json has a timestamp newer than this
+    # process's start time — a strong signal that a sibling test process
+    # (e.g., parallel_tests) wrote it while we were running, and that our
+    # write is about to clobber their data.
+    #
+    # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:38
+    def warn_if_concurrent_overwrite(path, result); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:27
+    def write(output_path, hash, result); end
+  end
+end
+
+# pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:17
+SimpleCov::Formatter::CoverageJSONWriter::FILENAME = T.let(T.unsafe(nil), String)
+
+# The previous report can embed the project's entire source text,
+# so the overwrite check bounds how much of it is read looking for
+# the meta object before falling back to a full parse.
+#
+# pkg:gem/simplecov#lib/simplecov/formatter/coverage_json_writer.rb:22
+SimpleCov::Formatter::CoverageJSONWriter::META_SCAN_BYTES = T.let(T.unsafe(nil), Integer)
+
+# Generates a single self-contained HTML coverage report. The compiled
+# template (public/index.html) already carries the viewer app's JS and
+# CSS inline; format substitutes the coverage JSON at the data marker
+# and writes one index.html, so the report can be mailed, uploaded as
+# a single CI artifact, or opened from anywhere without sibling files.
+# A coverage.json is written alongside from the same in-memory hash.
+#
+# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:18
+class SimpleCov::Formatter::HTMLFormatter < ::SimpleCov::Formatter::Base
+  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:31
+  def format(result); end
+
+  # Generate HTML from a pre-existing coverage.json file without
+  # needing a live SimpleCov::Result or even a running test suite.
+  # The round-trip through parse/generate compacts the (typically
+  # pretty-printed) input and rejects invalid JSON here rather than
+  # embedding it and failing at view time.
+  #
+  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:52
+  def format_from_json(json_path, output_dir); end
+
+  private
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:60
+  def entry_point_filename; end
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:96
+  def public_dir; end
+
+  # Substitute the coverage JSON into the compiled template. `<` is
+  # escaped as \u003c — valid JSON, since `<` can only occur inside
+  # strings — so embedded source text containing "</script>" or
+  # "<!--" cannot terminate the surrounding <script> element. Block
+  # forms keep gsub/sub from interpreting backslashes in the JSON as
+  # replacement-string back-references.
+  #
+  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:81
+  def render_report(json); end
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:64
+  def source_less_hash(hash); end
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:69
+  def write_report_files(json_hash, viewer_hash, result); end
+end
+
+# Placeholder in the compiled template where the report's data goes.
+#
+# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:20
+SimpleCov::Formatter::HTMLFormatter::DATA_MARKER = T.let(T.unsafe(nil), String)
+
+# The sibling files a 1.0.0 through 1.0.3 report wrote next to
+# index.html. They are stale the moment a single-file report lands
+# on top of them — `simplecov serve` would happily keep serving the
+# old coverage_data.js — so formatting removes the known names.
+#
+# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter.rb:26
+SimpleCov::Formatter::HTMLFormatter::LEGACY_REPORT_FILES = T.let(T.unsafe(nil), Array)
+
+# Validates the subset of coverage.json that the browser viewer
+# dereferences without defensive fallbacks.
+#
+# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:10
+module SimpleCov::Formatter::HTMLFormatter::ViewerDataValidator
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:21
+    def call(data); end
+
+    private
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:87
+    def validate_boolean!(meta, key); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:39
+    def validate_file!(filename, file); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:69
+    def validate_group!(name, group, meta); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:52
+    def validate_meta!(meta); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:33
+    def validate_section!(data, key); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:60
+    def validate_statistics!(statistics, meta, location); end
+
+    # pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:80
+    def validate_type!(object, key, type, location); end
+  end
+end
+
+# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:12
+SimpleCov::Formatter::HTMLFormatter::ViewerDataValidator::COVERAGE_FLAGS = T.let(T.unsafe(nil), Hash)
+
+# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:11
+SimpleCov::Formatter::HTMLFormatter::ViewerDataValidator::META_STRINGS = T.let(T.unsafe(nil), Array)
+
+# pkg:gem/simplecov#lib/simplecov/formatter/html_formatter/viewer_data_validator.rb:17
+SimpleCov::Formatter::HTMLFormatter::ViewerDataValidator::STAT_FIELDS = T.let(T.unsafe(nil), Array)
+
+# Writes coverage results as JSON to coverage/coverage.json. Used
+# standalone, alongside the HTML formatter, or by external tools that
+# consume SimpleCov output.
+#
+# pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:12
+class SimpleCov::Formatter::JSONFormatter < ::SimpleCov::Formatter::Base
+  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:24
+  def format(result); end
+
+  private
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:35
+  def entry_point_filename; end
+
+  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:31
+  def message_prefix; end
 
   class << self
     # `include_source:` defaults to `SimpleCov.source_in_json` (true
@@ -2656,7 +3185,7 @@ class SimpleCov::Formatter::JSONFormatter < ::SimpleCov::Formatter::Base
     # setting (the HTML formatter, which feeds the client-side
     # viewer) pass `include_source: true` explicitly.
     #
-    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:21
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:20
     def build_hash(result, include_source: T.unsafe(nil)); end
   end
 end
@@ -2669,46 +3198,45 @@ end
 #
 # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:11
 class SimpleCov::Formatter::JSONFormatter::ErrorsFormatter
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:15
-  def initialize(result); end
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:16
+    def call(result); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:20
-  def call; end
+    private
 
-  private
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:73
+    def bucket(errors, name); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:76
-  def bucket(name); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:81
+    def expected_actual(violation); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:84
-  def expected_actual(violation); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:66
+    def format_maximum_drop(result, errors); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:69
-  def format_maximum_drop; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:60
+    def format_maximum_overall(result, errors); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:63
-  def format_maximum_overall; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:34
+    def format_minimum_by_file(result, errors); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:37
-  def format_minimum_by_file; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:47
+    def format_minimum_by_group(result, errors); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:50
-  def format_minimum_by_group; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:28
+    def format_minimum_overall(result, errors); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:31
-  def format_minimum_overall; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:77
+    def key_for(violation); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:80
-  def key_for(violation); end
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:44
-  def record_by_file(violation); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:41
+    def record_by_file(violation, errors); end
+  end
 end
 
 # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/errors_formatter.rb:12
 SimpleCov::Formatter::JSONFormatter::ErrorsFormatter::CRITERION_KEYS = T.let(T.unsafe(nil), Hash)
 
-# pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:14
+# pkg:gem/simplecov#lib/simplecov/formatter/json_formatter.rb:13
 SimpleCov::Formatter::JSONFormatter::FILENAME = T.let(T.unsafe(nil), String)
 
 # Builds the hash that JSONFormatter serializes to coverage.json:
@@ -2716,51 +3244,43 @@ SimpleCov::Formatter::JSONFormatter::FILENAME = T.let(T.unsafe(nil), String)
 #
 # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:13
 class SimpleCov::Formatter::JSONFormatter::ResultHashFormatter
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:25
-  def initialize(result, include_source: T.unsafe(nil)); end
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:26
+    def format(result, include_source: T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:30
-  def format; end
+    private
 
-  private
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:78
+    def coverage_flags; end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:82
-  def coverage_flags; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:86
+    def format_coverage_statistics(statistics); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:97
-  def format_coverage_statistics(statistics); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:39
+    def format_files(result, include_source:); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:43
-  def format_files; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:45
+    def format_groups(result); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:49
-  def format_groups; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:94
+    def format_line_statistic(stat); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:105
-  def format_line_statistic(stat); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:52
+    def format_meta(result); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:56
-  def format_meta; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:105
+    def format_single_statistic(stat); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:116
-  def format_single_statistic(stat); end
-
-  # Full git commit SHA of `SimpleCov.root`'s HEAD, or nil when the
-  # project isn't a git checkout or git isn't on PATH. Recorded so tools
-  # can recover the exact source a report was generated against, which
-  # matters most when `source_in_json false` drops the source text from
-  # coverage.json. stderr is captured (not forwarded) so a non-git project
-  # doesn't print git's diagnostics to the build.
-  #
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:75
-  def git_commit; end
-
-  # Mirrors SourceFileFormatter's predicate so meta.line_coverage
-  # tracks exactly which configurations cause the formatter to
-  # emit line stats.
-  #
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:93
-  def line_coverage_enabled?; end
+    # Full git commit SHA of `SimpleCov.root`'s HEAD, or nil when the
+    # project isn't a git checkout or git isn't on PATH. Recorded so tools
+    # can recover the exact source a report was generated against, which
+    # matters most when `source_in_json false` drops the source text from
+    # coverage.json. stderr is captured (not forwarded) so a non-git project
+    # doesn't print git's diagnostics to the build.
+    #
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:71
+    def git_commit; end
+  end
 end
 
 # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/result_hash_formatter.rb:22
@@ -2783,44 +3303,39 @@ SimpleCov::Formatter::JSONFormatter::ResultHashFormatter::SCHEMA_VERSION = T.let
 #
 # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:9
 class SimpleCov::Formatter::JSONFormatter::SourceFileFormatter
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:10
-  def initialize(source_file, include_source: T.unsafe(nil)); end
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:11
+    def call(source_file, include_source: T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:15
-  def call; end
+    private
 
-  private
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:43
+    def branch_coverage_section(source_file); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:53
-  def branch_coverage_section; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:70
+    def format_branch(branch); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:36
-  def ensure_utf8(str); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:66
+    def format_line(line); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:77
-  def format_branch(branch); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:81
+    def format_method(method); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:73
-  def format_line(line); end
+    # No per-line encoding conversion here: SourceLoader guarantees
+    # every line leaves it as valid UTF-8 (transcoding declared
+    # encodings, scrubbing invalid bytes), and the converter copy
+    # this used to make per line was the single largest allocation
+    # source in formatting a large report.
+    #
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:26
+    def format_source_code(source_file); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:88
-  def format_method(method); end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:30
+    def line_coverage_section(source_file); end
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:32
-  def format_source_code; end
-
-  # `:oneshot_line` is a synonym for `:line` for stats purposes
-  # (see `SimpleCov.coverage_statistics_key`), so treat either as
-  # "line coverage is on" for the line-block emit decisions.
-  #
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:28
-  def line_coverage_enabled?; end
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:40
-  def line_coverage_section; end
-
-  # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:63
-  def method_coverage_section; end
+    # pkg:gem/simplecov#lib/simplecov/formatter/json_formatter/source_file_formatter.rb:53
+    def method_coverage_section(source_file); end
+  end
 end
 
 # Wraps multiple formatters so SimpleCov.formatter can drive several
@@ -2854,8 +3369,8 @@ class SimpleCov::Formatter::SimpleFormatter
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/formatter/simple_formatter.rb:16
-  def format_group(name, files); end
+  # pkg:gem/simplecov#lib/simplecov/formatter/simple_formatter.rb:17
+  def format_group(name, files, criterion); end
 end
 
 # Filter that matches when the source file's project path matches the
@@ -2863,11 +3378,50 @@ end
 # `skip` when callers want glob semantics instead of the substring
 # match of `StringFilter`.
 #
-# pkg:gem/simplecov#lib/simplecov/filter.rb:114
+# pkg:gem/simplecov#lib/simplecov/filter.rb:139
 class SimpleCov::GlobFilter < ::SimpleCov::Filter
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:115
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:140
   def matches?(source_file); end
+
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:144
+  def path_only?; end
 end
+
+# Semantic names owned by result processing rather than user configuration.
+#
+# pkg:gem/simplecov#lib/simplecov/group_names.rb:5
+module SimpleCov::GroupNames
+  private
+
+  # Group names are Hash keys, report labels, and JSON object keys all at
+  # once, so they are normalized to Strings up front: a Symbol spelling
+  # (`group :Controllers`) means the String, and anything else has no
+  # sensible serialized form. Normalizing before `validate!` also keeps
+  # `group :Ungrouped` from slipping past the reservation below.
+  #
+  # pkg:gem/simplecov#lib/simplecov/group_names.rb:15
+  def normalize(group_name); end
+
+  # pkg:gem/simplecov#lib/simplecov/group_names.rb:25
+  def validate!(group_names); end
+
+  class << self
+    # Group names are Hash keys, report labels, and JSON object keys all at
+    # once, so they are normalized to Strings up front: a Symbol spelling
+    # (`group :Controllers`) means the String, and anything else has no
+    # sensible serialized form. Normalizing before `validate!` also keeps
+    # `group :Ungrouped` from slipping past the reservation below.
+    #
+    # pkg:gem/simplecov#lib/simplecov/group_names.rb:15
+    def normalize(group_name); end
+
+    # pkg:gem/simplecov#lib/simplecov/group_names.rb:25
+    def validate!(group_names); end
+  end
+end
+
+# pkg:gem/simplecov#lib/simplecov/group_names.rb:6
+SimpleCov::GroupNames::UNGROUPED = T.let(T.unsafe(nil), String)
 
 # Reads and writes coverage/.last_run.json — the previous run's coverage
 # percentages used by MaximumCoverageDropCheck.
@@ -2881,12 +3435,13 @@ module SimpleCov::LastRun
     # pkg:gem/simplecov#lib/simplecov/last_run.rb:15
     def read; end
 
-    # Write to a process-private temp file, then atomically rename, so a
-    # concurrent reader (e.g. another parallel-tests worker checking
-    # MaximumCoverageDrop) never sees a half-written file.
-    #
-    # pkg:gem/simplecov#lib/simplecov/last_run.rb:27
+    # pkg:gem/simplecov#lib/simplecov/last_run.rb:30
     def write(json); end
+
+    private
+
+    # pkg:gem/simplecov#lib/simplecov/last_run.rb:36
+    def invalid_last_run; end
   end
 end
 
@@ -2895,25 +3450,42 @@ end
 #
 # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:8
 class SimpleCov::LinesClassifier
-  # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:34
+  # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:44
   def classify(lines); end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:54
+  # A `:nocov:` marker is itself a comment, so the cheap
+  # whitespace-or-comment test can gate the token match: a line of real
+  # code cannot be a marker, and no longer pays to be checked against
+  # one. That matters because this runs per line of every
+  # tracked-but-unloaded file, once in every process of a parallel run.
+  #
+  # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:64
+  def classify_line(line, line_number, directive_disabled, skip_state); end
+
+  # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:75
   def directive_disabled_line_set(lines); end
 
-  # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:47
-  def not_relevant_line?(line, line_number, skipping, directive_disabled); end
-
   class << self
-    # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:16
+    # The leading `^(\s*)#` anchor is load-bearing beyond matching the marker:
+    # `classify_line` only reaches this for lines that already passed
+    # `whitespace_line?`, which is sound only while every marker is also a
+    # comment. Loosening this to match a trailing `x = 1 # :nocov:` would stop
+    # the toggle firing. `lines_classifier_spec.rb` pins the implication.
+    #
+    # The `/o` flag freezes the interpolated nocov token at this
+    # process's first classification; a `nocov_token` configured after
+    # coverage has classified a file would be silently ignored. Sound
+    # today because configuration always precedes classification.
+    #
+    # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:26
     def no_cov_line; end
 
-    # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:20
+    # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:30
     def no_cov_line?(line); end
 
-    # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:27
+    # pkg:gem/simplecov#lib/simplecov/lines_classifier.rb:37
     def whitespace_line?(line); end
   end
 end
@@ -2948,8 +3520,10 @@ SimpleCov::LinesClassifier::WHITESPACE_OR_COMMENT_LINE = T.let(T.unsafe(nil), Re
 #     (precise sync + first-process detection via the gem's own API).
 #   - `GenericAdapter` — env-var-only detection for runners that follow
 #     the parallel_tests `TEST_ENV_NUMBER` convention but don't ship a
-#     Ruby API (parallel_rspec, custom CI sharding, knapsack-style
-#     splitters). See https://github.com/simplecov-ruby/simplecov/issues/1065.
+#     Ruby API (parallel_rspec, rspec-conductor 1.0.7+, custom CI
+#     sharding, knapsack-style splitters). See
+#     https://github.com/simplecov-ruby/simplecov/issues/1065 and
+#     https://github.com/simplecov-ruby/simplecov/issues/1156.
 #
 # Users can plug in additional adapters:
 #
@@ -2972,7 +3546,7 @@ module SimpleCov::ParallelAdapters
   # downstream code can override the built-ins by registering a more
   # specific match.
   #
-  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:44
+  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:46
   def adapters; end
 
   # The adapter SimpleCov should consult for this process — the first
@@ -2981,7 +3555,7 @@ module SimpleCov::ParallelAdapters
   # parallel test runner), in which case the caller should treat the
   # process as single-worker.
   #
-  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:71
+  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:73
   def current; end
 
   # Register a custom adapter. Newly registered adapters are inserted
@@ -2997,13 +3571,13 @@ module SimpleCov::ParallelAdapters
   #
   #   SimpleCov::ParallelAdapters.register MyRunnerAdapter
   #
-  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:60
+  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:62
   def register(adapter); end
 
   # Clear the memoized `current` selection. Primarily for tests that
   # mutate env vars between examples; production runs are single-shot.
   #
-  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:79
+  # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:81
   def reset_current!; end
 
   class << self
@@ -3014,7 +3588,7 @@ module SimpleCov::ParallelAdapters
     # downstream code can override the built-ins by registering a more
     # specific match.
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:44
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:46
     def adapters; end
 
     # The adapter SimpleCov should consult for this process — the first
@@ -3023,7 +3597,7 @@ module SimpleCov::ParallelAdapters
     # parallel test runner), in which case the caller should treat the
     # process as single-worker.
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:71
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:73
     def current; end
 
     # Register a custom adapter. Newly registered adapters are inserted
@@ -3039,13 +3613,13 @@ module SimpleCov::ParallelAdapters
     #
     #   SimpleCov::ParallelAdapters.register MyRunnerAdapter
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:60
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:62
     def register(adapter); end
 
     # Clear the memoized `current` selection. Primarily for tests that
     # mutate env vars between examples; production runs are single-shot.
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:79
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters.rb:81
     def reset_current!; end
   end
 end
@@ -3086,6 +3660,13 @@ class SimpleCov::ParallelAdapters::Base
     # pkg:gem/simplecov#lib/simplecov/parallel_adapters/base.rb:28
     def first_worker?; end
 
+    # The user's explicit `SimpleCov.parallel_tests false` opt-out,
+    # which every adapter's `active?` honors before its own
+    # detection.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/base.rb:62
+    def forced_off?; end
+
     # Does `wait_for_siblings` block until every sibling PROCESS has
     # exited (so no further resultset can appear)? When true, the
     # reporting worker can accept a settled resultset count below
@@ -3095,6 +3676,15 @@ class SimpleCov::ParallelAdapters::Base
     #
     # pkg:gem/simplecov#lib/simplecov/parallel_adapters/base.rb:48
     def native_wait?; end
+
+    # Shared implementation of the PARALLEL_TEST_GROUPS convention
+    # both built-in adapters follow for `expected_worker_count`.
+    # Unset, empty, non-numeric, and non-positive values all mean 1:
+    # an unparseable value must not yield 0 workers, which would end
+    # the sibling wait before it started.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/base.rb:71
+    def parallel_test_groups_count; end
 
     # Optional: block until sibling workers have finished writing
     # their resultsets. An adapter that wraps a parallel-test runner
@@ -3111,34 +3701,35 @@ end
 # Catch-all adapter for parallel test runners that follow the
 # `TEST_ENV_NUMBER` / `PARALLEL_TEST_GROUPS` env-var convention but
 # don't ship a Ruby API for SimpleCov to hook (parallel_rspec,
-# knapsack-style splitters, custom CI sharding scripts). Activates
-# when `TEST_ENV_NUMBER` is set; doesn't require any specific gem to
-# be loaded.
+# rspec-conductor since 1.0.7, knapsack-style splitters, custom CI
+# sharding scripts). Activates when `TEST_ENV_NUMBER` is set;
+# doesn't require any specific gem to be loaded.
 #
 # Heuristic for `first_worker?`: the worker whose `TEST_ENV_NUMBER`
-# is `""` (parallel_tests/parallel_rspec convention) or `"1"`
-# (zero-based runners that start at 1). Any other value is treated
-# as a non-first worker.
+# is `""` (parallel_tests/parallel_rspec convention, rspec-conductor's
+# default) or `"1"` (runners that number from 1, like rspec-conductor
+# with `--first-is-1`). Any other value is treated as a non-first
+# worker.
 #
 # `wait_for_siblings` is inherited from Base as a no-op — without a
 # runner-provided API the only synchronization available is polling
 # the resultset cache, which `SimpleCov.wait_for_parallel_results`
 # does after the no-op returns.
 #
-# pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:23
+# pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:24
 class SimpleCov::ParallelAdapters::GenericAdapter < ::SimpleCov::ParallelAdapters::Base
   class << self
-    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:25
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:26
     def active?; end
 
-    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:38
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:39
     def expected_worker_count; end
 
     # parallel_tests sets the first worker's TEST_ENV_NUMBER to "";
     # parallel_rspec inherits that. Runners that number from 1 use
     # "1" for the first worker. Both shapes match.
     #
-    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:34
+    # pkg:gem/simplecov#lib/simplecov/parallel_adapters/generic.rb:35
     def first_worker?; end
   end
 end
@@ -3209,6 +3800,240 @@ class SimpleCov::ParallelAdapters::ParallelTestsAdapter < ::SimpleCov::ParallelA
   end
 end
 
+# Folds a list of resultset files into one merged coverage table across
+# forked worker processes. Drives `SimpleCov.collate(..., processes: N)`.
+#
+# `ResultMerger.absorb_results` is a fold over N independent
+# read-parse-combine steps, so it splits cleanly: each worker runs that
+# same fold over a contiguous slice of the file list and ships the pair
+# back over a pipe, and the parent combines the handful of per-worker
+# pairs it gets back. Reading and parsing the shards — where a collate
+# over a few hundred CI jobs spends most of its time — is what actually
+# parallelises.
+#
+# The slices are contiguous and merged back in order, so the fold visits
+# the resultsets in the order the serial fold visits them and the merged
+# result is identical to `SimpleCov.collate`'s, not merely equivalent.
+#
+# Every failure path returns nil rather than a partial merge, so the caller
+# can redo the fold serially: reporting coverage for a subset of the
+# resultsets would silently understate it.
+#
+# pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:24
+module SimpleCov::ParallelResultMerger
+  private
+
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:128
+  def abandon(workers); end
+
+  # `ResultMerger.absorb_results` across at most `processes` forked
+  # workers: same arguments, same `[command_names, coverage]` return.
+  #
+  # The tracked paths a worker's slice carried come back with its payload
+  # rather than through a collector block, since the block a serial absorb
+  # takes would be mutating a Set in the wrong process.
+  #
+  # @return [Array(Array<String>, Hash), nil] the pair
+  #   `ResultMerger.create_result` consumes, or nil when the work could not
+  #   be fanned out and the caller should merge in this process instead.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:73
+  def absorb_results(file_paths, processes:, ignore_timeout: T.unsafe(nil), tracked_files: T.unsafe(nil)); end
+
+  # Contiguous slices whose sizes differ by at most one, so no worker is
+  # left folding twice its share while the others idle. There are never
+  # more slices than files: asking for more processes than there are
+  # resultsets just gives one resultset per process.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:93
+  def chunk(file_paths, processes); end
+
+  # Deserializes on a thread per worker so every pipe is drained while the
+  # workers are still writing. A payload larger than the pipe buffer would
+  # otherwise block its worker mid-write, and the parent would block
+  # reaping a worker that can never finish.
+  #
+  # Returns nil if any worker failed, so the caller can fall back to the
+  # serial fold rather than report a subset of the resultsets as the whole.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:185
+  def collect(workers); end
+
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:196
+  def drain(workers); end
+
+  # A `fork` that fails here raises, and is left to. `absorb_results` has
+  # already excluded the runtimes that never fork, so what remains is the OS
+  # refusing a process we expected to get — EAGAIN at RLIMIT_NPROC, ENOMEM
+  # under memory pressure. That says something is wrong with the machine
+  # rather than with the merge, and quietly absorbing it would hide it.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:106
+  def fan_out(chunks, ignore_timeout:, tracked_files: T.unsafe(nil)); end
+
+  # `ResultMerger.merge_and_store` across `processes` forked workers. One
+  # worker hands straight back to `ResultMerger`, so the default `collate`
+  # takes exactly the path it always has and never reaches this module's
+  # machinery at all.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:33
+  def merge_and_store(*file_paths, processes:, ignore_timeout: T.unsafe(nil)); end
+
+  # `ResultMerger.merge_results` across `processes` forked workers, merging
+  # in this process instead whenever the fan-out did not produce a complete
+  # merge — a runtime that cannot fork, nothing worth splitting, or a worker
+  # that died. The result is the same either way; only the time it took to
+  # get there differs.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:48
+  def merge_results(*file_paths, processes:, ignore_timeout: T.unsafe(nil)); end
+
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:200
+  def read_payload(reader); end
+
+  # Everything the child does. `exit!` rather than `exit` because it must
+  # never fall through to the collating process's inherited `at_exit`
+  # handlers — SimpleCov's own report generation included.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:155
+  def run_in_child(reader, writer, chunk, ignore_timeout); end
+
+  # The body of a worker: merge the slice, ship it back, and report the exit
+  # status the child should terminate with. Kept free of the exit itself so
+  # it can be exercised in-process.
+  #
+  # The slice's tracked paths travel with the pair because the parent needs
+  # the union across every worker to know what nothing loaded.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:166
+  def run_worker(chunk, writer, ignore_timeout:); end
+
+  # `fork` itself can fail (EAGAIN under a process limit). The caller
+  # cleans up the workers it knows about, but this pipe is ours: the
+  # parent's writer end always closes, and the reader closes too when
+  # no child was spawned to feed it. Steep cannot type body locals
+  # inside an ensure, hence the ignore markers; the safe navigation
+  # keeps the cleanup well-defined when `IO.pipe` itself raised.
+  #
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:141
+  def spawn_worker(chunk, ignore_timeout:); end
+
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:115
+  def spawn_workers(chunks, ignore_timeout:); end
+
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:214
+  def succeeded?(pid); end
+
+  # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:223
+  def warn_about_failed_workers(failed, total); end
+
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:128
+    def abandon(workers); end
+
+    # `ResultMerger.absorb_results` across at most `processes` forked
+    # workers: same arguments, same `[command_names, coverage]` return.
+    #
+    # The tracked paths a worker's slice carried come back with its payload
+    # rather than through a collector block, since the block a serial absorb
+    # takes would be mutating a Set in the wrong process.
+    #
+    # @return [Array(Array<String>, Hash), nil] the pair
+    #   `ResultMerger.create_result` consumes, or nil when the work could not
+    #   be fanned out and the caller should merge in this process instead.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:73
+    def absorb_results(file_paths, processes:, ignore_timeout: T.unsafe(nil), tracked_files: T.unsafe(nil)); end
+
+    # Contiguous slices whose sizes differ by at most one, so no worker is
+    # left folding twice its share while the others idle. There are never
+    # more slices than files: asking for more processes than there are
+    # resultsets just gives one resultset per process.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:93
+    def chunk(file_paths, processes); end
+
+    # Deserializes on a thread per worker so every pipe is drained while the
+    # workers are still writing. A payload larger than the pipe buffer would
+    # otherwise block its worker mid-write, and the parent would block
+    # reaping a worker that can never finish.
+    #
+    # Returns nil if any worker failed, so the caller can fall back to the
+    # serial fold rather than report a subset of the resultsets as the whole.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:185
+    def collect(workers); end
+
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:196
+    def drain(workers); end
+
+    # A `fork` that fails here raises, and is left to. `absorb_results` has
+    # already excluded the runtimes that never fork, so what remains is the OS
+    # refusing a process we expected to get — EAGAIN at RLIMIT_NPROC, ENOMEM
+    # under memory pressure. That says something is wrong with the machine
+    # rather than with the merge, and quietly absorbing it would hide it.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:106
+    def fan_out(chunks, ignore_timeout:, tracked_files: T.unsafe(nil)); end
+
+    # `ResultMerger.merge_and_store` across `processes` forked workers. One
+    # worker hands straight back to `ResultMerger`, so the default `collate`
+    # takes exactly the path it always has and never reaches this module's
+    # machinery at all.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:33
+    def merge_and_store(*file_paths, processes:, ignore_timeout: T.unsafe(nil)); end
+
+    # `ResultMerger.merge_results` across `processes` forked workers, merging
+    # in this process instead whenever the fan-out did not produce a complete
+    # merge — a runtime that cannot fork, nothing worth splitting, or a worker
+    # that died. The result is the same either way; only the time it took to
+    # get there differs.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:48
+    def merge_results(*file_paths, processes:, ignore_timeout: T.unsafe(nil)); end
+
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:200
+    def read_payload(reader); end
+
+    # Everything the child does. `exit!` rather than `exit` because it must
+    # never fall through to the collating process's inherited `at_exit`
+    # handlers — SimpleCov's own report generation included.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:155
+    def run_in_child(reader, writer, chunk, ignore_timeout); end
+
+    # The body of a worker: merge the slice, ship it back, and report the exit
+    # status the child should terminate with. Kept free of the exit itself so
+    # it can be exercised in-process.
+    #
+    # The slice's tracked paths travel with the pair because the parent needs
+    # the union across every worker to know what nothing loaded.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:166
+    def run_worker(chunk, writer, ignore_timeout:); end
+
+    # `fork` itself can fail (EAGAIN under a process limit). The caller
+    # cleans up the workers it knows about, but this pipe is ours: the
+    # parent's writer end always closes, and the reader closes too when
+    # no child was spawned to feed it. Steep cannot type body locals
+    # inside an ensure, hence the ignore markers; the safe navigation
+    # keeps the cleanup well-defined when `IO.pipe` itself raised.
+    #
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:141
+    def spawn_worker(chunk, ignore_timeout:); end
+
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:115
+    def spawn_workers(chunks, ignore_timeout:); end
+
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:214
+    def succeeded?(pid); end
+
+    # pkg:gem/simplecov#lib/simplecov/parallel_result_merger.rb:223
+    def warn_about_failed_workers(failed, total); end
+  end
+end
+
 # Profiles are SimpleCov configuration procs that can be easily
 # loaded using SimpleCov.start :rails and defined using
 #   SimpleCov.profiles.define :foo do
@@ -3251,7 +4076,7 @@ end
 # Filter that matches when the source file's project path matches the
 # configured Regexp.
 #
-# pkg:gem/simplecov#lib/simplecov/filter.rb:89
+# pkg:gem/simplecov#lib/simplecov/filter.rb:110
 class SimpleCov::RegexFilter < ::SimpleCov::Filter
   # Returns true when the given source file's filename matches the
   # regex configured when initializing this Filter with RegexFilter.new(/someregex/).
@@ -3259,8 +4084,30 @@ class SimpleCov::RegexFilter < ::SimpleCov::Filter
   # would return the match position (an Integer or nil), which trips
   # rspec-mocks 4's stricter predicate-matcher type check.
   #
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:95
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:116
   def matches?(source_file); end
+
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:120
+  def path_only?; end
+end
+
+# Touches coverage/.report_stamp whenever a report is formatted, no
+# matter how the run ends. The clobber-prevention backstop
+# (`SimpleCov.defer_to_existing_report?`) needs an on-disk signal that
+# a fresher report exists, and `.last_run.json` can't be it alone:
+# that file is only written after fully successful runs, which left
+# the backstop inert exactly when the child run failed and its report
+# mattered most.
+#
+# pkg:gem/simplecov#lib/simplecov/report_stamp.rb:13
+module SimpleCov::ReportStamp
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/report_stamp.rb:15
+    def path; end
+
+    # pkg:gem/simplecov#lib/simplecov/report_stamp.rb:19
+    def touch; end
+  end
 end
 
 # A simplecov code coverage result, initialized from the Hash Ruby's built-in coverage
@@ -3278,75 +4125,75 @@ class SimpleCov::Result
   # FilterConfig to opt out — useful for tests that build synthetic Results
   # and don't want the project's filters or groups applied.
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:57
-  def initialize(original_result, command_name: T.unsafe(nil), created_at: T.unsafe(nil), not_loaded_files: T.unsafe(nil), report: T.unsafe(nil), filter_config: T.unsafe(nil)); end
+  # pkg:gem/simplecov#lib/simplecov/result.rb:64
+  def initialize(original_result, command_name: T.unsafe(nil), created_at: T.unsafe(nil), not_loaded_files: T.unsafe(nil), tracked_files: T.unsafe(nil), run_id: T.unsafe(nil), worker_id: T.unsafe(nil), report: T.unsafe(nil), filter_config: T.unsafe(nil)); end
 
   # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   # The command name that launched this result.
   # Delegated to SimpleCov.command_name if not set manually
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:115
+  # pkg:gem/simplecov#lib/simplecov/result.rb:129
   def command_name; end
 
   # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
   # The command name that launched this result.
   # Delegated to SimpleCov.command_name if not set manually
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:25
+  # pkg:gem/simplecov#lib/simplecov/result.rb:32
   def command_name=(_arg0); end
 
   # Returns the {line:/branch:/method:} coverage_statistics hash for the
   # given file path, or nil if no matching source file is in this
   # result. See SimpleCov::Result#source_file_for for path resolution.
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:87
+  # pkg:gem/simplecov#lib/simplecov/result.rb:95
   def coverage_for(path); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def coverage_statistics(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def coverage_statistics_by_file(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def covered_branches(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def covered_lines(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def covered_methods(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def covered_percent(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def covered_percentages(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def covered_strength(*_arg0, **_arg1, &_arg2); end
 
   # Explicitly set the Time this result has been created
   # Defines when this result has been created. Defaults to Time.now
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:109
+  # pkg:gem/simplecov#lib/simplecov/result.rb:123
   def created_at; end
 
   # Explicitly set the Time this result has been created
   # Defines when this result has been created. Defaults to Time.now
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:23
+  # pkg:gem/simplecov#lib/simplecov/result.rb:30
   def created_at=(_arg0); end
 
   # Returns all filenames for source files contained in this result
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:71
+  # pkg:gem/simplecov#lib/simplecov/result.rb:79
   def filenames; end
 
   # Returns all files that are applicable to this result (sans filters!) as instances of
   # SimpleCov::SourceFile. Aliased as :source_files
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:20
+  # pkg:gem/simplecov#lib/simplecov/result.rb:27
   def files; end
 
   # Applies the configured SimpleCov.formatter on this result. Returns
@@ -3355,24 +4202,24 @@ class SimpleCov::Result
   # processes in a parallel CI run, which only need their
   # `.resultset.json` on disk. See #964.
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:101
+  # pkg:gem/simplecov#lib/simplecov/result.rb:109
   def format!; end
 
   # Returns a Hash of groups for this result. Define groups using SimpleCov.group 'Models', 'app/models'
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:92
+  # pkg:gem/simplecov#lib/simplecov/result.rb:100
   def groups; end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def least_covered_file(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def missed_branches(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def missed_lines(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def missed_methods(*_arg0, **_arg1, &_arg2); end
 
   # Returns the original Coverage.result used for this instance of SimpleCov::Result
@@ -3380,30 +4227,49 @@ class SimpleCov::Result
   # pkg:gem/simplecov#lib/simplecov/result.rb:17
   def original_result; end
 
+  # Invocation and top-level worker identities used only for parallel-result
+  # coordination. They do not change which fresh suites are merged.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result.rb:24
+  def run_id; end
+
   # Returns the SimpleCov::SourceFile for the given path, or nil if no
   # matching file is in this result. The path is resolved against
   # SimpleCov.root, so callers can pass either an absolute path or a
   # project-relative one.
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:79
+  # pkg:gem/simplecov#lib/simplecov/result.rb:87
   def source_file_for(path); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:21
+  # pkg:gem/simplecov#lib/simplecov/result.rb:28
   def source_files; end
 
   # Returns a hash representation of this Result that can be used for marshalling it into JSON
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:120
+  # pkg:gem/simplecov#lib/simplecov/result.rb:134
   def to_hash; end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def total_branches(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:32
+  # pkg:gem/simplecov#lib/simplecov/result.rb:39
   def total_lines(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:27
+  # pkg:gem/simplecov#lib/simplecov/result.rb:34
   def total_methods(*_arg0, **_arg1, &_arg2); end
+
+  # Every path the producing process was told to track, loaded or not. Carried
+  # into the resultset so a merge elsewhere can inject the ones nobody loaded
+  # without needing that process's `cover` / `track_files` config. See #1250.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result.rb:21
+  def tracked_files; end
+
+  # Invocation and top-level worker identities used only for parallel-result
+  # coordination. They do not change which fresh suites are merged.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result.rb:24
+  def worker_id; end
 
   private
 
@@ -3412,25 +4278,34 @@ class SimpleCov::Result
   # this is a no-op, preserving the historical "everything required, then
   # filtered" universe.
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:175
+  # pkg:gem/simplecov#lib/simplecov/result.rb:205
   def apply_cover_filters!(cover_filters); end
 
   # Applies the given filter chain to `@files`, dropping each source
   # file that any filter matches.
   #
-  # pkg:gem/simplecov#lib/simplecov/result.rb:165
+  # pkg:gem/simplecov#lib/simplecov/result.rb:195
   def apply_filters!(filters); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:159
+  # A live result's criterion keys are Symbols (`:lines`, `:branches`),
+  # while entries parsed back from `.resultset.json` carry Strings, and
+  # the combiners read only String keys. Serialize with String keys so a
+  # live result merged against a stored entry contributes its counts
+  # instead of being silently dropped for every shared file.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result.rb:187
   def coverage; end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:138
+  # pkg:gem/simplecov#lib/simplecov/result.rb:155
+  def initialize_coordination_metadata(tracked_files, run_id, worker_id); end
+
+  # pkg:gem/simplecov#lib/simplecov/result.rb:161
   def warn_about_missing_source_files(missing, input_size); end
 
   class << self
     # Loads a SimpleCov::Result#to_hash dump
     #
-    # pkg:gem/simplecov#lib/simplecov/result.rb:130
+    # pkg:gem/simplecov#lib/simplecov/result.rb:145
     def from_hash(hash); end
   end
 end
@@ -3442,18 +4317,18 @@ end
 # filters or groups (e.g. `filters: []` to keep every file). Grouping the
 # three together keeps Result#initialize's parameter list small.
 #
-# pkg:gem/simplecov#lib/simplecov/result.rb:40
+# pkg:gem/simplecov#lib/simplecov/result.rb:47
 class SimpleCov::Result::FilterConfig
-  # pkg:gem/simplecov#lib/simplecov/result.rb:43
+  # pkg:gem/simplecov#lib/simplecov/result.rb:50
   def initialize(filters: T.unsafe(nil), cover_filters: T.unsafe(nil), groups: T.unsafe(nil)); end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:41
+  # pkg:gem/simplecov#lib/simplecov/result.rb:48
   def cover_filters; end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:41
+  # pkg:gem/simplecov#lib/simplecov/result.rb:48
   def filters; end
 
-  # pkg:gem/simplecov#lib/simplecov/result.rb:41
+  # pkg:gem/simplecov#lib/simplecov/result.rb:48
   def groups; end
 end
 
@@ -3520,15 +4395,15 @@ end
 
 # Responsible for adapting the format of the coverage result whether it's default or with statistics
 #
-# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:7
+# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:9
 class SimpleCov::ResultAdapter
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:10
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:12
   def initialize(result); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:18
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:20
   def adapt; end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:8
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:10
   def result; end
 
   private
@@ -3538,10 +4413,10 @@ class SimpleCov::ResultAdapter
   # shape. Newer entries also need their methods and branches tables
   # massaged before downstream code reports or merges them.
   #
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:32
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:34
   def adapt_one(file_name, cover_statistic); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:144
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:146
   def adapt_oneshot_lines_if_needed(file_name, cover_statistic); end
 
   # Ruby's eval coverage records a fresh set of branch entries for every
@@ -3556,10 +4431,10 @@ class SimpleCov::ResultAdapter
   # on location identity. Regular (non-eval) source can never produce two
   # conditions at the same location, so this is a no-op outside eval.
   #
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:137
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:139
   def aggregate_duplicated_branches(cover_statistic); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:153
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:155
   def build_line_stub(file_name, oneshot_lines); end
 
   # Rendering a class name can execute user code: a singleton class's
@@ -3572,10 +4447,10 @@ class SimpleCov::ResultAdapter
   # be shadowed), falling back to the address form, which
   # ADDRESS_PATTERN then normalizes. See issue #1236.
   #
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:107
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:109
   def class_display_name(klass); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:90
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:92
   def normalize_method_key(key); end
 
   # Ruby's method coverage records one entry per DEFINED METHOD, not per
@@ -3593,14 +4468,14 @@ class SimpleCov::ResultAdapter
   # they are unaffected. The first entry's (normalized) key is kept for
   # display. See issue #1234.
   #
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:77
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:79
   def normalize_method_keys(cover_statistic); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:113
+  # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:115
   def singleton_wrapper_name(klass); end
 
   class << self
-    # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:14
+    # pkg:gem/simplecov#lib/simplecov/result_adapter.rb:16
     def call(*_arg0); end
   end
 end
@@ -3612,10 +4487,10 @@ end
 # CRuby: 16; some JVM/TruffleRuby formats may differ), so match any
 # length of hex digits and collapse to a single placeholder.
 #
-# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:47
+# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:49
 SimpleCov::ResultAdapter::ADDRESS_PATTERN = T.let(T.unsafe(nil), Regexp)
 
-# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:50
+# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:52
 SimpleCov::ResultAdapter::ADDRESS_PLACEHOLDER = T.let(T.unsafe(nil), String)
 
 # Strip the `#<Class:Foo>` wrapper Ruby's Coverage adds to singleton-class
@@ -3626,7 +4501,7 @@ SimpleCov::ResultAdapter::ADDRESS_PLACEHOLDER = T.let(T.unsafe(nil), String)
 # constants — anonymous-class addresses like `#<Class:0x0>` are left
 # alone (handled by ADDRESS_PATTERN above).
 #
-# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:60
+# pkg:gem/simplecov#lib/simplecov/result_adapter.rb:62
 SimpleCov::ResultAdapter::SINGLETON_WRAPPER_PATTERN = T.let(T.unsafe(nil), Regexp)
 
 # Singleton that is responsible for caching, loading and merging
@@ -3635,26 +4510,58 @@ SimpleCov::ResultAdapter::SINGLETON_WRAPPER_PATTERN = T.let(T.unsafe(nil), Regex
 #
 # pkg:gem/simplecov#lib/simplecov/result_merger/legacy_format_adapter.rb:4
 module SimpleCov::ResultMerger
+  extend ::SimpleCov::ResultMerger::ResultsetRunIdentity
+
   class << self
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:149
-    def concurrent_runner_entry?(entry); end
+    # Reads every resultset and folds it into one merged coverage, stopping
+    # short of building a `SimpleCov::Result`.
+    #
+    # It is intentional here that files are only read in and parsed one at a time.
+    #
+    # In big CI setups you might deal with 100s of CI jobs and each one producing Megabytes
+    # of data. Reading them all in easily produces Gigabytes of memory consumption which
+    # we want to avoid.
+    #
+    # For similar reasons a SimpleCov::Result is only created in the end as that'd create
+    # even more data especially when it also reads in all source files.
+    #
+    # One accumulator absorbs the whole run, rather than folding each file
+    # into the merged-so-far pairwise: the pairwise form rebuilt every
+    # file's coverage once per resultset, which is what made merging a
+    # large parallel run's results the dominant cost of `collate`.
+    # Absorbing is still one resultset at a time, so the memory ceiling
+    # above is unchanged.
+    #
+    # `file_paths` is only ever iterated, so a caller that wants to observe
+    # the merge as it goes can hand in any Enumerable — `benchmarks/collate`
+    # passes an Enumerator that reports progress — rather than reimplement
+    # this loop and risk timing something other than what ships.
+    #
+    # @return [Array] the command names and the merged coverage
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:65
+    def absorb_results(file_paths, ignore_timeout: T.unsafe(nil), &on_parse); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:85
-    def create_result(command_names, coverage); end
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:115
+    def create_result(command_names, coverage, tracked_files: T.unsafe(nil)); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:58
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:91
     def drop_expired_results(results); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:19
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:23
     def merge_and_store(*file_paths, ignore_timeout: T.unsafe(nil)); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:96
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:133
     def merge_coverage(*results); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:25
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:29
     def merge_results(*file_paths, ignore_timeout: T.unsafe(nil)); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:47
+    # Yields the entries that survived the merge timeout, so a caller that
+    # wants to observe what a resultset carried sees only what is being
+    # merged. An expired entry contributes nothing, tracked paths included.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:79
     def merge_valid_results(results, ignore_timeout: T.unsafe(nil)); end
 
     # If an entry with the same command_name was written AFTER our process
@@ -3663,37 +4570,39 @@ module SimpleCov::ResultMerger
     # overwriting, so an empty parent-process result doesn't clobber the
     # subprocess's real data. See https://github.com/simplecov-ruby/simplecov/issues/581.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:141
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:175
     def merged_entry(existing, incoming); end
 
     # Gets all SimpleCov::Results stored in resultset, merges them and produces a new
     # SimpleCov::Result with merged coverage data and the command_name
     # for the result consisting of a join on all source result's names
     #
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:111
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:144
     def merged_result; end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:116
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:150
     def read_resultset; end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:15
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:19
     def resultset_path; end
 
     # Saves the given SimpleCov::Result in the resultset cache
     #
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:122
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:156
     def store_result(result); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:157
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:184
     def synchronize_resultset(&_arg0); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:43
-    def valid_results(file_path, ignore_timeout: T.unsafe(nil)); end
+    # Yields the surviving entries before they are reduced.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:72
+    def valid_results(file_path, ignore_timeout: T.unsafe(nil), &on_parse); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:70
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:103
     def warn_about_expired_results(expired_command_names); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:66
+    # pkg:gem/simplecov#lib/simplecov/result_merger.rb:99
     def within_merge_timeout?(data); end
   end
 end
@@ -3735,87 +4644,419 @@ module SimpleCov::ResultMerger::LegacyFormatAdapter
 end
 
 # Read + parse a `.resultset.json` file with the same tolerance the
-# historical `ResultMerger` had: missing file returns `{}`, an empty
-# or unparseable file warns and returns `{}`, parse success returns
-# the decoded Hash.
+# historical `ResultMerger` had: a missing or empty file quietly
+# returns `{}`, an unparseable one warns and returns `{}`, and parse
+# success returns the decoded Hash with any malformed entries
+# warned about and dropped.
 #
-# pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:11
+# pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:12
 module SimpleCov::ResultMerger::ResultsetFile
   private
 
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:28
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:35
   def decode(content); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:14
+  # Each surviving entry must have the shape every consumer relies
+  # on: a Hash carrying a Numeric "timestamp" (the merge-timeout
+  # check) and a Hash "coverage" (the merge fold). A truncated or
+  # hand-edited entry would otherwise crash out of the middle of an
+  # at_exit merge, so it gets the same warn-and-move-on treatment
+  # as an unparseable file.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:56
+  def drop_malformed_entries(resultset); end
+
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:68
+  def invalid_resultset; end
+
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:15
   def parse(path); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:19
+  # A missing or blank file quietly means "no results yet"; anything
+  # else — a 1-byte truncation included — flows through decode so
+  # corruption warns instead of silently vanishing (the old
+  # `length < 2` check swallowed exactly those). Read first and
+  # rescue rather than check exist? (racy against a concurrent
+  # clean).
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:26
   def read(path); end
 
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:64
+  def well_formed_entry?(data); end
+
   class << self
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:28
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:35
     def decode(content); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:14
+    # Each surviving entry must have the shape every consumer relies
+    # on: a Hash carrying a Numeric "timestamp" (the merge-timeout
+    # check) and a Hash "coverage" (the merge fold). A truncated or
+    # hand-edited entry would otherwise crash out of the middle of an
+    # at_exit merge, so it gets the same warn-and-move-on treatment
+    # as an unparseable file.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:56
+    def drop_malformed_entries(resultset); end
+
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:68
+    def invalid_resultset; end
+
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:15
     def parse(path); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:19
+    # A missing or blank file quietly means "no results yet"; anything
+    # else — a 1-byte truncation included — flows through decode so
+    # corruption warns instead of silently vanishing (the old
+    # `length < 2` check swallowed exactly those). Read first and
+    # rescue rather than check exist? (racy against a concurrent
+    # clean).
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:26
     def read(path); end
+
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_file.rb:64
+    def well_formed_entry?(data); end
   end
+end
+
+# Run/worker metadata queries used by resultset storage and parallel
+# coordination. Kept separate from the coverage-folding implementation.
+#
+# pkg:gem/simplecov#lib/simplecov/result_merger/resultset_run_identity.rb:7
+module SimpleCov::ResultMerger::ResultsetRunIdentity
+  # Whether `entry` was written by a runner concurrent with this
+  # process: either it shares our run id (`current_run_entry?`), or it
+  # was written strictly after our process started. A mismatched run
+  # id must not defeat the timestamp check — a subprocess we shelled
+  # out to (fork+exec) generates its own random run id, and its
+  # freshly written entry is exactly the data issue #581 protects
+  # from being clobbered. Strict id matching is reserved for worker
+  # counting (`worker_identities_for_run`), where admitting a stale
+  # entry would end a sibling wait early.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_run_identity.rb:48
+  def concurrent_runner_entry?(entry, incoming = T.unsafe(nil)); end
+
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_run_identity.rb:23
+  def current_run_entry?(entry, run_id, started_at); end
+
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_run_identity.rb:34
+  def fresh_entry?(entry, started_at); end
+
+  # One namespaced identity per distinct worker that wrote to the
+  # current run: `[:worker, id]` for entries that carry a worker id,
+  # `[:legacy, command_name]` for fresh entries written without one
+  # (an old SimpleCov writing to the same resultset). Pairs rather
+  # than mangled strings, so a resultset mixing both kinds can never
+  # alias a real worker id to a synthesized legacy identity.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_run_identity.rb:14
+  def worker_identities_for_run(results, run_id, started_at); end
+
+  # Strictly after, unlike `fresh_entry?`: an entry stamped at the
+  # exact instant we started is treated as leftover from a previous
+  # run, so a same-second stale entry is still overwritten.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_run_identity.rb:61
+  def written_after_start?(entry, started_at); end
 end
 
 # Reads and writes the persistent `.resultset.json` cache, including
 # file-lock synchronization between processes and atomic temp-file
 # renames so concurrent readers don't observe a truncated file.
 #
-# pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:11
+# pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:13
 module SimpleCov::ResultMerger::ResultsetStore
   private
 
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:14
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:19
   def resultset_path; end
 
-  # Ensure only one process is reading or writing the resultset at
-  # any given time. Reentrant: the lock is acquired once per outer
-  # call no matter how deeply nested.
+  # Serialize threads before taking the process-wide file lock. Nested
+  # calls by the owning thread bypass flock so they cannot deadlock on a
+  # second descriptor for the same lock file.
   #
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:32
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:38
   def synchronize(&_arg0); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:41
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:44
   def with_flock; end
 
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:22
+  # Compact JSON, not pretty-printed: this is a machine-read cache
+  # that every parallel worker rewrites wholesale, and on a large
+  # project pretty printing nearly doubles the bytes written, read
+  # back, and parsed on each of those store-merge round trips.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:31
   def write(resultset); end
 
-  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:18
+  # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:23
   def writelock_path; end
 
   class << self
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:14
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:19
     def resultset_path; end
 
-    # Ensure only one process is reading or writing the resultset at
-    # any given time. Reentrant: the lock is acquired once per outer
-    # call no matter how deeply nested.
+    # Serialize threads before taking the process-wide file lock. Nested
+    # calls by the owning thread bypass flock so they cannot deadlock on a
+    # second descriptor for the same lock file.
     #
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:32
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:38
     def synchronize(&_arg0); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:41
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:44
     def with_flock; end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:22
+    # Compact JSON, not pretty-printed: this is a machine-read cache
+    # that every parallel worker rewrites wholesale, and on a large
+    # project pretty printing nearly doubles the bytes written, read
+    # back, and parsed on each of those store-merge round trips.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:31
     def write(resultset); end
 
-    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:18
+    # pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:23
     def writelock_path; end
   end
 end
 
+# pkg:gem/simplecov#lib/simplecov/result_merger/resultset_store.rb:14
+SimpleCov::ResultMerger::ResultsetStore::LOCK_MONITOR = T.let(T.unsafe(nil), Monitor)
+
+# The merge step's half of unloaded-file handling: the policy of when
+# to inject and which criteria simulated files carry. The mechanism —
+# expanding globs and simulating each file — is
+# `SimpleCov::UnloadedFileInjector`, an easy name to confuse with this
+# one.
+#
+# Injection moved here from the individual processes because only the union
+# of what they all loaded says what was really never loaded. Doing it per
+# process meant N workers simulated the same file up to N times and the
+# merge threw all but one away. See #1250.
+#
+# pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:15
+module SimpleCov::ResultMerger::UnloadedFiles
+  private
+
+  # A simulated file should have the same shape as the files it is being
+  # merged alongside, so the criteria come from the merged data rather than
+  # from this process's configuration, which is not necessarily the
+  # configuration any contributing process measured under: `simplecov merge`
+  # never ran `SimpleCov.start` at all. Giving injected files fewer tables
+  # than their neighbours is what inflates the percentage #1059 fixed.
+  #
+  # Falls back to the configuration when there is nothing to be consistent
+  # with, which is a merge of resultsets that carried no files.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:64
+  def carries?(coverage, criterion); end
+
+  # Concurrent workers sharing a command name may have been told to track
+  # different sets, so keep both rather than letting the later write win.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:36
+  def carry_tracked(entry, existing, incoming); end
+
+  # The union of what every contributing process was told to track. Absent
+  # from resultsets written before this was recorded, in which case those
+  # processes injected their own unloaded files and the data is already in
+  # the coverage hash.
+  # A collector for the merge to hand `merge_valid_results`, gathering the
+  # tracked paths of every resultset that survives the merge timeout.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:24
+  def collector(into); end
+
+  # Simulate each tracked file the merged coverage doesn't already carry.
+  # The paths come from the resultsets rather than this process's own
+  # configuration, which a standalone `collate` would not have: it never ran
+  # `SimpleCov.start`, so it has no `cover` glob to expand. Idempotent, so
+  # resultsets from an older SimpleCov (or from a `merging false` process)
+  # that already carry their unloaded files pass through untouched.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:47
+  def inject(coverage, tracked_files); end
+
+  # Which files no contributing process ever loaded. Injection reports the
+  # ones it added, but a file can also arrive already simulated from a
+  # resultset this merge didn't inject into, so the merged line counts are
+  # still consulted, using the same signal
+  # `Combine::CoverageAccumulator` reconciles synthesized tuples on.
+  #
+  # A file is judged only when it has a relevant line. A branch-only or
+  # method-only run reports no line data at all for the files it loaded,
+  # and a loaded file with no executable lines (a comment-only constants
+  # stub, say) reports every line as `nil` — either would otherwise read
+  # as "never executed" and mark a genuinely loaded file not loaded,
+  # turning its branch and method coverage into #902's 0%.
+  # `SimulateCoverage` omits lines under those criteria too and gives a
+  # simulated file a `0` on every relevant line, so genuinely unloaded
+  # files still carry judgeable data, and a simulated file with none is
+  # already flagged by injection reporting it.
+  #
+  # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:93
+  def never_executed(coverage); end
+
+  # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:28
+  def tracked_in(resultset); end
+
+  class << self
+    # A simulated file should have the same shape as the files it is being
+    # merged alongside, so the criteria come from the merged data rather than
+    # from this process's configuration, which is not necessarily the
+    # configuration any contributing process measured under: `simplecov merge`
+    # never ran `SimpleCov.start` at all. Giving injected files fewer tables
+    # than their neighbours is what inflates the percentage #1059 fixed.
+    #
+    # Falls back to the configuration when there is nothing to be consistent
+    # with, which is a merge of resultsets that carried no files.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:64
+    def carries?(coverage, criterion); end
+
+    # Concurrent workers sharing a command name may have been told to track
+    # different sets, so keep both rather than letting the later write win.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:36
+    def carry_tracked(entry, existing, incoming); end
+
+    # The union of what every contributing process was told to track. Absent
+    # from resultsets written before this was recorded, in which case those
+    # processes injected their own unloaded files and the data is already in
+    # the coverage hash.
+    # A collector for the merge to hand `merge_valid_results`, gathering the
+    # tracked paths of every resultset that survives the merge timeout.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:24
+    def collector(into); end
+
+    # Simulate each tracked file the merged coverage doesn't already carry.
+    # The paths come from the resultsets rather than this process's own
+    # configuration, which a standalone `collate` would not have: it never ran
+    # `SimpleCov.start`, so it has no `cover` glob to expand. Idempotent, so
+    # resultsets from an older SimpleCov (or from a `merging false` process)
+    # that already carry their unloaded files pass through untouched.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:47
+    def inject(coverage, tracked_files); end
+
+    # Which files no contributing process ever loaded. Injection reports the
+    # ones it added, but a file can also arrive already simulated from a
+    # resultset this merge didn't inject into, so the merged line counts are
+    # still consulted, using the same signal
+    # `Combine::CoverageAccumulator` reconciles synthesized tuples on.
+    #
+    # A file is judged only when it has a relevant line. A branch-only or
+    # method-only run reports no line data at all for the files it loaded,
+    # and a loaded file with no executable lines (a comment-only constants
+    # stub, say) reports every line as `nil` — either would otherwise read
+    # as "never executed" and mark a genuinely loaded file not loaded,
+    # turning its branch and method coverage into #902's 0%.
+    # `SimulateCoverage` omits lines under those criteria too and gives a
+    # simulated file a `0` on every relevant line, so genuinely unloaded
+    # files still carry judgeable data, and a simulated file with none is
+    # already flagged by injection reporting it.
+    #
+    # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:93
+    def never_executed(coverage); end
+
+    # pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:28
+    def tracked_in(resultset); end
+  end
+end
+
+# pkg:gem/simplecov#lib/simplecov/result_merger/unloaded_files.rb:70
+SimpleCov::ResultMerger::UnloadedFiles::CRITERION_PREDICATES = T.let(T.unsafe(nil), Hash)
+
+# Identifies one test invocation and each top-level parallel worker within
+# it. Forked subprocesses inherit both values from their parent worker.
+#
+# pkg:gem/simplecov#lib/simplecov/run_identity.rb:8
+module SimpleCov::RunIdentity
+  private
+
+  # Whether the current run id alone proves same-run membership. Decided
+  # where the id is generated, never re-inferred from the id's shape, so
+  # an explicit SIMPLECOV_RUN_ID that happens to look like an inferred
+  # one is still trusted.
+  #
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:42
+  def authoritative?; end
+
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:47
+  def current; end
+
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:56
+  def current_worker_id; end
+
+  # Returns the run id together with its provenance: `true` when the id
+  # alone proves same-run membership (explicitly configured, derived from
+  # parallel_tests' per-invocation pid file, or freshly random), `false`
+  # when it was inferred from the parent pid, which consecutive runs
+  # launched by the same long-lived parent process share.
+  #
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:16
+  def generate; end
+
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:52
+  def materialize_current; end
+
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:60
+  def prepare; end
+
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:28
+  def worker_id; end
+
+  class << self
+    # Whether the current run id alone proves same-run membership. Decided
+    # where the id is generated, never re-inferred from the id's shape, so
+    # an explicit SIMPLECOV_RUN_ID that happens to look like an inferred
+    # one is still trusted.
+    #
+    # pkg:gem/simplecov#lib/simplecov/run_identity.rb:42
+    def authoritative?; end
+
+    # pkg:gem/simplecov#lib/simplecov/run_identity.rb:47
+    def current; end
+
+    # pkg:gem/simplecov#lib/simplecov/run_identity.rb:56
+    def current_worker_id; end
+
+    # Returns the run id together with its provenance: `true` when the id
+    # alone proves same-run membership (explicitly configured, derived from
+    # parallel_tests' per-invocation pid file, or freshly random), `false`
+    # when it was inferred from the parent pid, which consecutive runs
+    # launched by the same long-lived parent process share.
+    #
+    # pkg:gem/simplecov#lib/simplecov/run_identity.rb:16
+    def generate; end
+
+    # pkg:gem/simplecov#lib/simplecov/run_identity.rb:52
+    def materialize_current; end
+
+    # pkg:gem/simplecov#lib/simplecov/run_identity.rb:60
+    def prepare; end
+
+    # pkg:gem/simplecov#lib/simplecov/run_identity.rb:28
+    def worker_id; end
+  end
+end
+
+# Mixed into SimpleCov after ParallelAdapters has loaded.
+#
+# pkg:gem/simplecov#lib/simplecov/run_identity.rb:67
+module SimpleCov::RunIdentity::Accessors
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:68
+  def run_id; end
+
+  # pkg:gem/simplecov#lib/simplecov/run_identity.rb:72
+  def worker_id; end
+end
+
 # Responsible for producing file coverage metrics.
 #
-# pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:9
+# pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:10
 module SimpleCov::SimulateCoverage
   private
 
@@ -3842,10 +5083,21 @@ module SimpleCov::SimulateCoverage
   # can't be parsed, fall back to the old empty hashes — old behavior,
   # old tradeoff.
   #
+  # Pass `synthesize: false` to skip the static analysis and return the
+  # empty hashes directly. Callers use it when neither branch nor method
+  # coverage is enabled, since nothing will read the tuples and the Prism
+  # parse is about half the cost of simulating a file. See #1250.
+  #
+  # Pass `lines: false` to omit the `"lines"` key entirely, mirroring what
+  # `Coverage.result` reports for a file loaded under a branch-only or
+  # method-only run. Emitting zeroed lines there would make a simulated
+  # file indistinguishable from one a sibling process actually loaded once
+  # the two are merged.
+  #
   # @return [Hash]
   #
-  # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:38
-  def call(absolute_path); end
+  # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:50
+  def call(absolute_path, synthesize: T.unsafe(nil), lines: T.unsafe(nil)); end
 
   # Combine `Coverage.line_stub` (which gets multi-line statements right)
   # with `LinesClassifier` (which knows about `# :nocov:` toggles and
@@ -3854,11 +5106,23 @@ module SimpleCov::SimulateCoverage
   # or parse the file, or when the runtime doesn't expose `line_stub`
   # (JRuby and TruffleRuby).
   #
-  # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:64
+  # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:86
   def coverage_stub(path, source_lines); end
 
-  # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:52
+  # SystemCallError, not just ENOENT: a `track_files` glob can sweep
+  # up an unreadable file or a directory named like a Ruby file
+  # (EACCES, EISDIR), and simulation must degrade to "empty file"
+  # rather than crash the merge or report step.
+  #
+  # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:74
   def read_lines(path); end
+
+  # The branch and method tuples for a file, or empty hashes when the static
+  # analysis is skipped (nothing enabled reads them) or unavailable (no Prism,
+  # or the file doesn't parse).
+  #
+  # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:63
+  def synthesized_tuples(source_lines, synthesize); end
 
   class << self
     # Simulate a file coverage report for a file that was tracked but never
@@ -3884,10 +5148,21 @@ module SimpleCov::SimulateCoverage
     # can't be parsed, fall back to the old empty hashes — old behavior,
     # old tradeoff.
     #
+    # Pass `synthesize: false` to skip the static analysis and return the
+    # empty hashes directly. Callers use it when neither branch nor method
+    # coverage is enabled, since nothing will read the tuples and the Prism
+    # parse is about half the cost of simulating a file. See #1250.
+    #
+    # Pass `lines: false` to omit the `"lines"` key entirely, mirroring what
+    # `Coverage.result` reports for a file loaded under a branch-only or
+    # method-only run. Emitting zeroed lines there would make a simulated
+    # file indistinguishable from one a sibling process actually loaded once
+    # the two are merged.
+    #
     # @return [Hash]
     #
-    # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:38
-    def call(absolute_path); end
+    # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:50
+    def call(absolute_path, synthesize: T.unsafe(nil), lines: T.unsafe(nil)); end
 
     # Combine `Coverage.line_stub` (which gets multi-line statements right)
     # with `LinesClassifier` (which knows about `# :nocov:` toggles and
@@ -3896,11 +5171,23 @@ module SimpleCov::SimulateCoverage
     # or parse the file, or when the runtime doesn't expose `line_stub`
     # (JRuby and TruffleRuby).
     #
-    # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:64
+    # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:86
     def coverage_stub(path, source_lines); end
 
-    # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:52
+    # SystemCallError, not just ENOENT: a `track_files` glob can sweep
+    # up an unreadable file or a directory named like a Ruby file
+    # (EACCES, EISDIR), and simulation must degrade to "empty file"
+    # rather than crash the merge or report step.
+    #
+    # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:74
     def read_lines(path); end
+
+    # The branch and method tuples for a file, or empty hashes when the static
+    # analysis is skipped (nothing enabled reads them) or unavailable (no Prism,
+    # or the file doesn't parse).
+    #
+    # pkg:gem/simplecov#lib/simplecov/simulate_coverage.rb:63
+    def synthesized_tuples(source_lines, synthesize); end
   end
 end
 
@@ -4352,26 +5639,33 @@ class SimpleCov::SourceFile::Method
   # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:8
   def end_line; end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:36
+  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:42
   def lines; end
 
   # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:8
   def method_name; end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:32
+  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:38
   def missed?; end
 
   # Whether this method's source range intersects the given inclusive line range.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:41
+  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:47
   def overlaps_with?(line_range); end
 
   # Flag the method as skipped directly, without going through its lines.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:28
+  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:34
   def skipped!; end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:21
+  # Criterion-level skips (nocov chunks, `# simplecov:disable` /
+  # `# simplecov:disable method` regions) arrive via `skipped!` from
+  # MethodBuilder. Deliberately NOT derived from the lines' skip
+  # state: a line-only directive around a def must not remove the
+  # method from method totals. Without line info there is nothing to
+  # report against, so such a method stays skipped.
+  #
+  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:27
   def skipped?; end
 
   # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:8
@@ -4383,7 +5677,7 @@ class SimpleCov::SourceFile::Method
   # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:8
   def start_line; end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:47
+  # pkg:gem/simplecov#lib/simplecov/source_file/method.rb:53
   def to_s; end
 end
 
@@ -4467,9 +5761,13 @@ module SimpleCov::SourceFile::RubyDataParser
   # Method coverage keys can contain inspect-format class references
   # like `#<Class:Foo>` or `#<Class:0x...>`, which aren't valid Ruby
   # syntax. Wrap them in quotes so Ripper can parse the surrounding
-  # array literal; downstream we treat them as opaque strings.
+  # array literal; downstream we treat them as opaque strings. The
+  # pattern recurses because singleton methods on instances nest one
+  # inspect segment inside another (`#<Class:#<Object:0x...>>`), and
+  # stopping at the first `>` leaves a dangling `>` that fails both
+  # Ripper passes and crashes the merge.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:101
+  # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:105
   def quote_inspected_class_segments(str); end
 
   # Concatenate the text fragments of a `:string_content` node. Ripper
@@ -4526,9 +5824,13 @@ module SimpleCov::SourceFile::RubyDataParser
     # Method coverage keys can contain inspect-format class references
     # like `#<Class:Foo>` or `#<Class:0x...>`, which aren't valid Ruby
     # syntax. Wrap them in quotes so Ripper can parse the surrounding
-    # array literal; downstream we treat them as opaque strings.
+    # array literal; downstream we treat them as opaque strings. The
+    # pattern recurses because singleton methods on instances nest one
+    # inspect segment inside another (`#<Class:#<Object:0x...>>`), and
+    # stopping at the first `>` leaves a dangling `>` that fails both
+    # Ripper passes and crashes the merge.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:101
+    # pkg:gem/simplecov#lib/simplecov/source_file/ruby_data_parser.rb:105
     def quote_inspected_class_segments(str); end
 
     # Concatenate the text fragments of a `:string_content` node. Ripper
@@ -4561,31 +5863,32 @@ class SimpleCov::SourceFile::SkipChunks
   # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:20
   def initialize(filename, src); end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:42
+  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:39
   def directive_chunks; end
 
-  # `:method` ignores nocov chunks (Ruby's Coverage doesn't tie
-  # method entries to line ranges); `:line` / `:branch` honor both
-  # the nocov chunks and the per-criterion directive ranges.
+  # Every criterion honors the deprecated all-criteria `# :nocov:`
+  # chunks plus its own per-criterion directive ranges. Methods
+  # included: they carry a source range, and nocov has always meant
+  # "exclude everything here".
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:28
+  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:29
   def for(criterion); end
 
-  # no_cov_chunks is zero indexed to work directly with the array
-  # holding the lines.
+  # Ranges of 1-based line numbers (see `with_index(1)` below);
+  # consumers subtract 1 to index into the zero-based lines array.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:38
+  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:35
   def nocov_chunks; end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:48
+  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:45
   def build_nocov_chunks; end
 
   # Emit a one-time-per-file deprecation warning pointing the user
   # at the `# simplecov:disable` / `# simplecov:enable` replacement.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:66
+  # pkg:gem/simplecov#lib/simplecov/source_file/skip_chunks.rb:63
   def warn_nocov_deprecation(first_line_number); end
 
   class << self
@@ -4607,48 +5910,68 @@ module SimpleCov::SourceFile::SourceLoader
   # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:16
   def call(filename); end
 
-  # invalid/undef replace are technically not really necessary but
-  # nice to have and work around a JRuby incompatibility. Setting
-  # these options on `file.set_encoding` doesn't seem to work
-  # properly, so it has to be done here.
+  # Guarantee every line leaves the loader as valid UTF-8, replacing
+  # what can't be represented: transcode non-UTF-8 lines (setting
+  # invalid/undef options on `file.set_encoding` doesn't work
+  # properly, and this also works around a JRuby incompatibility)
+  # and scrub UTF-8-tagged lines that carry invalid bytes, which
+  # would otherwise raise from every regex the classifier runs.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:54
+  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:66
   def ensure_remove_undefs(file_lines); end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:35
+  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:45
   def read_lines(file, lines, current_line); end
+
+  # A line read as UTF-8 can still carry invalid bytes (a Latin-1
+  # source file without a magic comment, say). Replace them before
+  # any regex sees the line: the shebang and magic-comment checks
+  # would otherwise raise ArgumentError and take the report down.
+  #
+  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:35
+  def scrub_invalid(line); end
 
   # Encoding magic comment must be placed at first line except for
   # shebang.
   #
-  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:44
+  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:54
   def set_encoding_based_on_magic_comment(file, line); end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:31
+  # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:41
   def shebang?(line); end
 
   class << self
     # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:16
     def call(filename); end
 
-    # invalid/undef replace are technically not really necessary but
-    # nice to have and work around a JRuby incompatibility. Setting
-    # these options on `file.set_encoding` doesn't seem to work
-    # properly, so it has to be done here.
+    # Guarantee every line leaves the loader as valid UTF-8, replacing
+    # what can't be represented: transcode non-UTF-8 lines (setting
+    # invalid/undef options on `file.set_encoding` doesn't work
+    # properly, and this also works around a JRuby incompatibility)
+    # and scrub UTF-8-tagged lines that carry invalid bytes, which
+    # would otherwise raise from every regex the classifier runs.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:54
+    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:66
     def ensure_remove_undefs(file_lines); end
 
-    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:35
+    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:45
     def read_lines(file, lines, current_line); end
+
+    # A line read as UTF-8 can still carry invalid bytes (a Latin-1
+    # source file without a magic comment, say). Replace them before
+    # any regex sees the line: the shebang and magic-comment checks
+    # would otherwise raise ArgumentError and take the report down.
+    #
+    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:35
+    def scrub_invalid(line); end
 
     # Encoding magic comment must be placed at first line except for
     # shebang.
     #
-    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:44
+    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:54
     def set_encoding_based_on_magic_comment(file, line); end
 
-    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:31
+    # pkg:gem/simplecov#lib/simplecov/source_file/source_loader.rb:41
     def shebang?(line); end
   end
 end
@@ -4674,13 +5997,19 @@ class SimpleCov::SourceFile::Statistics
 
   private
 
+  # Files added via track_files but never loaded have no branch/method
+  # data. Report 0% instead of the empty-set default of 100% (see #902).
+  #
   # pkg:gem/simplecov#lib/simplecov/source_file/statistics.rb:36
   def branch_statistics; end
+
+  # pkg:gem/simplecov#lib/simplecov/source_file/statistics.rb:54
+  def coverage_statistics(covered, missed, omitted: T.unsafe(nil), percent: T.unsafe(nil)); end
 
   # pkg:gem/simplecov#lib/simplecov/source_file/statistics.rb:24
   def line_statistics; end
 
-  # pkg:gem/simplecov#lib/simplecov/source_file/statistics.rb:47
+  # pkg:gem/simplecov#lib/simplecov/source_file/statistics.rb:45
   def method_statistics; end
 end
 
@@ -4808,53 +6137,167 @@ end
 module SimpleCov::StaticCoverageExtractor::ConditionFolding
   private
 
-  # Parentheses are transparent to the fold (`if (1)` folds like
-  # `if 1`), so see through a single parenthesized expression. Compound
-  # forms (`!true`, `true || x`) are deliberately not folded: `!` never
-  # folds, and `||` / `&&` constant-propagation diverges across Ruby
-  # versions, so matching it would trade a rare, version-specific gain
-  # for real risk.
-  #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:31
-  def static_condition?(node); end
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:232
+  def container_contents_eliminable?(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:36
+  # Whether the compiler compiles `node` to nothing when its value is
+  # discarded.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:181
+  def eliminable_when_discarded?(node); end
+
+  # A folding literal, minus the ones parentheses shield from the
+  # fold (`unwrapped` differing from `node` is what says parentheses
+  # were seen through).
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:146
+  def foldable?(node, unwrapped); end
+
+  # The compiler's verdict on a condition: `:truthy` or `:falsy` when
+  # it folds, nil when it doesn't. The verdict decides which arm
+  # survives — the compiler eliminates the other arm's entire subtree,
+  # so everything inside it (nested branches, methods) must go
+  # unvisited too, not just the folded condition's own tuple.
+  #
+  # Parentheses are transparent to the fold for most literals
+  # (`if (1)` folds like `if 1`) but not all — see
+  # PAREN_OPAQUE_TYPES. Compound forms (`!true`, `true || x`) are
+  # deliberately not folded: `!` never folds, and `||` / `&&`
+  # constant-propagation diverges across Ruby versions, so matching
+  # it would trade a rare, version-specific gain for real risk.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:136
+  def folded_condition(node); end
+
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:217
+  def static_array_literal?(node); end
+
+  # The container dispatch, version-free: the predicate specs
+  # exercise it directly on every supported Ruby, 3.2 included.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:208
+  def static_container?(node); end
+
+  # A scalar literal leaf, or an Array/Hash/Range whose contents pass
+  # the running compiler's contents rule (see
+  # CONTAINER_CONTENTS_NEED_STATIC_LITERALS). Container elimination
+  # only exists from 3.3 on.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:194
+  def static_container_literal?(node); end
+
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:221
+  def static_hash_literal?(node); end
+
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:228
+  def static_range_literal?(node); end
+
+  # Parentheses are transparent to the fold, and a multi-statement
+  # body (`if (1; 2)`) folds by its LAST expression — but only when
+  # the compiler eliminates every leading statement. Stopping at
+  # multi-statement bodies synthesized a phantom then/else pair no
+  # real run can ever hit.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:164
   def unwrap_parentheses(node); end
+
+  # simplecov:disable — 3.2-only; unreachable on the modern dogfood Ruby
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:110
+  def visit_dead_arm(arm); end
+
+  # A truthy verdict keeps the first arm live, a falsy one the
+  # second. `visit` is nil-safe, so a missing arm just visits
+  # nothing. On 3.2 the dead arm's branch table entries survive the
+  # fold (parse.y instrumented branches before eliminating dead
+  # code, even inside dead `def` bodies and lambdas) while its
+  # methods never register, so the dead arm is visited with method
+  # collection suppressed.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:101
+  def visit_folded_arms(verdict, truthy_arm, falsy_arm); end
 end
+
+# Container literals in discarded position are eliminated from 3.3
+# on, but the contents rule differs: 3.3's compile.c elides a
+# container whose contents are merely effect-free (`[x]`, `[self]`),
+# while the Prism compiler (3.4+) demands fully static literals
+# (`[1]` goes, `[x]` stays). See `static_container_literal?`.
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:28
+SimpleCov::StaticCoverageExtractor::ConditionFolding::CONTAINER_CONTENTS_NEED_STATIC_LITERALS = T.let(T.unsafe(nil), TrueClass)
+
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:22
+SimpleCov::StaticCoverageExtractor::ConditionFolding::DEAD_ARM_BRANCHES_SURVIVE = T.let(T.unsafe(nil), FalseClass)
+
+# simplecov:disable branch — which arm runs is fixed by the running Ruby's version
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:86
+SimpleCov::StaticCoverageExtractor::ConditionFolding::ELIMINABLE_READ_TYPES = T.let(T.unsafe(nil), Array)
+
+# The literals whose fold eliminates the *then* side: `if false` /
+# `if nil` keep only the else arm. Every other folded literal is
+# truthy and keeps only the then arm.
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:51
+SimpleCov::StaticCoverageExtractor::ConditionFolding::FALSY_CONDITION_TYPES = T.let(T.unsafe(nil), Array)
+
+# CRuby 3.4 rebuilt the fold on the Prism compiler, and the
+# parse.y-based fold it replaced differed in three observable ways,
+# each pinned by the runtime tuple equivalence battery on CI:
+# `__FILE__` folded on 3.2/3.3 but no longer does; parentheses were
+# transparent for every literal on 3.2 (opacity starts at 3.3); and
+# on 3.2 the dead arm's branch table entries survive the fold —
+# parse.y instrumented branches before eliminating dead code — while
+# its `def`s still never register.
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:20
+SimpleCov::StaticCoverageExtractor::ConditionFolding::FOLDS_SOURCE_FILE = T.let(T.unsafe(nil), FalseClass)
+
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:21
+SimpleCov::StaticCoverageExtractor::ConditionFolding::PARENS_ALWAYS_TRANSPARENT = T.let(T.unsafe(nil), FalseClass)
+
+# The literals whose fold does NOT see through parentheses: CRuby
+# folds `if nil`, `if "x"`, and `if -> {}` but keeps a real branch
+# for `if (nil)`, `if ("x")`, and `if (-> {})` — verified against
+# Coverage, and pinned by the runtime tuple equivalence battery —
+# while every other literal folds parenthesized or not. `__FILE__`
+# is opaque like other strings on the Rubies that fold it at all.
+# Consulted only when PARENS_ALWAYS_TRANSPARENT is false.
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:60
+SimpleCov::StaticCoverageExtractor::ConditionFolding::PAREN_OPAQUE_TYPES = T.let(T.unsafe(nil), Array)
+
+# Non-literal reads that are also eliminated when discarded.
+# `self` is eliminated by every supported compiler; local/ivar/
+# defined? elimination arrived with the Prism-era compilers.
+# Anything that can raise or run hooks (constants, globals, calls,
+# writes) is never eliminated and keeps the branch real.
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:81
+SimpleCov::StaticCoverageExtractor::ConditionFolding::PRISM_ERA_ELIMINABLE_READS = T.let(T.unsafe(nil), Array)
 
 # Prism node types for the literals that fold. `while` / `until` do
 # NOT fold (`while true` is a real branch), so only the if-like
 # visitors consult this. Regexp and Range literals are excluded on
 # purpose: as conditions they mean `=~ $_` / flip-flop, which
-# Coverage does branch on.
+# Coverage does branch on. `[]`, `{}`, and interpolated strings do
+# not fold either, and `->` folds while a `lambda` call does not —
+# the compiler only folds what it can prove at compile time, and a
+# method named `lambda` proves nothing.
+# simplecov:disable branch — which arm runs is fixed by the running Ruby's version
 #
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:17
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:39
 SimpleCov::StaticCoverageExtractor::ConditionFolding::STATIC_CONDITION_TYPES = T.let(T.unsafe(nil), Array)
 
-# The same Prism 1.3 rename hit the `else` accessor on `UnlessNode`,
-# `CaseNode`, and `CaseMatchNode` (all three: `consequent` ->
-# `else_clause`). Ruby 3.3's stdlib Prism (0.19) only exposes
-# `consequent`, so reaching for `else_clause` there raised
-# NoMethodError inside the extractor — `call` swallowed it and the
-# whole file silently fell back to no simulated data for any
-# `unless`/`else` or empty-arm `case`. Resolve the name once, like
-# IF_NODE_SUBSEQUENT_METHOD. All three nodes renamed together, so one
-# constant (probed off CaseNode) covers them.
+# The scalar literals the compiler treats as fully static: a
+# multi-statement paren condition (`if (1; 2)`) folds by its last
+# expression only when every leading statement is eliminated when
+# discarded, and these — bare or composing an Array/Hash/Range —
+# always are. Pinned against real Coverage on 3.2 through 4.0.
 #
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:34
-SimpleCov::StaticCoverageExtractor::ELSE_CLAUSE_METHOD = T.let(T.unsafe(nil), Symbol)
-
-# `Prism::IfNode#subsequent` was renamed from `consequent` in Prism
-# 1.3 (Dec 2024). Ruby 3.3's stdlib still ships an older Prism that
-# only exposes `consequent`; 3.4+ and any project that's done
-# `gem install prism` exposes `subsequent`. Resolve the method name
-# ONCE here so the per-node hot path stays branch-free. The
-# not-taken arm on whichever Prism version we're on can't be
-# exercised by our own dogfood (we only run on one Prism at a time).
-# simplecov:disable
-#
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:18
-SimpleCov::StaticCoverageExtractor::IF_NODE_SUBSEQUENT_METHOD = T.let(T.unsafe(nil), Symbol)
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/condition_folding.rb:69
+SimpleCov::StaticCoverageExtractor::ConditionFolding::STATIC_LITERAL_LEAF_TYPES = T.let(T.unsafe(nil), Array)
 
 # The source ranges Ruby's Coverage assigns to branch conditions and
 # arms, resolved from Prism nodes. Simulated entries only ever merge
@@ -4865,7 +6308,7 @@ SimpleCov::StaticCoverageExtractor::IF_NODE_SUBSEQUENT_METHOD = T.let(T.unsafe(n
 # per-construct, per-Ruby-version Coverage location conventions;
 # splitting it would scatter closely-related resolvers.
 #
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:14
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:16
 module SimpleCov::StaticCoverageExtractor::LocationConventions
   private
 
@@ -4876,7 +6319,7 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # the begin's inner statements instead — or a point at the end of
   # the `begin` keyword when the body is empty.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:183
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:175
   def begin_modifier_loop?(node); end
 
   # Arm location for a when/in clause: its body statements, or — when
@@ -4885,7 +6328,7 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # `when` a point at the clause's end in void position or the tail
   # convention (keyword through the case's remaining content) in value.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:113
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:109
   def case_arm_location(case_node, when_node, when_type); end
 
   # Resolve the source range Coverage attributes to a synthetic-or-real
@@ -4894,17 +6337,17 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # explicit else with an empty body — the else..end span on modern
   # Rubies or the case's full range on legacy ones.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:154
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:146
   def else_arm_location(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:44
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:42
   def elsif_node?(node); end
 
   # Whether an empty then arm collapses to a point at the predicate's
   # end. Modern Coverage does this for every `if` (but not `unless`);
   # legacy Coverage does it only in void position, for both.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:227
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:216
   def empty_arm_collapses?(node, type); end
 
   # Location of an empty explicit `else`: a modern `if` uses the
@@ -4912,21 +6355,19 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # at the `else` keyword's end; otherwise (legacy value position, or
   # `unless`) it uses the condition's range.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:101
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:97
   def empty_else_location(node, sub, type); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:137
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:129
   def following_case_content(case_node, when_node); end
 
   # Resolve the source range Coverage attributes to a real-or-synthetic
-  # `:else` arm of an if-like construct. IfNode uses
-  # `subsequent` / `consequent` and UnlessNode `else_clause` /
-  # `consequent`, both depending on Prism version (resolved to
-  # `IF_NODE_SUBSEQUENT_METHOD` / `ELSE_CLAUSE_METHOD` at load time).
-  # When neither is present, the synthesized else inherits the
-  # condition's range (matches Coverage's convention).
+  # `:else` arm of an if-like construct (`PrismCompat` hides the
+  # per-Prism-version accessor split). When no else/elsif is present,
+  # the synthesized else inherits the condition's range (matches
+  # Coverage's convention).
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:85
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:81
   def if_like_else_location(node, type); end
 
   # The range Coverage assigns to an if-like node itself. Modern
@@ -4934,15 +6375,8 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # end an `elsif` clause's range at its last content instead of the
   # shared `end` keyword the clause doesn't own.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:34
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:36
   def if_like_location(node, type); end
-
-  # The `else`/`elsif` clause of an if-like node, under whichever
-  # accessor this Prism version exposes (see the two *_METHOD
-  # constants).
-  #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:220
-  def if_like_subsequent(node); end
 
   # Location of the then arm. Coverage uses the body statements'
   # range; with an empty then body the arm collapses to a zero-width
@@ -4951,36 +6385,36 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # trailing statement discards its value). In value (tail) position,
   # legacy Rubies and `unless` fall back to the node's range.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:71
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:69
   def if_like_then_location(node, type); end
 
   # The last body content in the case after `when_node`, falling
   # back to the clause's final condition value.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:132
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:124
   def legacy_case_tail_end(case_node, when_node); end
 
   # Where an if/elsif chain's content ends, for the legacy range
   # convention: the deepest trailing clause's statements, or that
   # clause's predicate / `else` keyword when its body is empty.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:52
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:50
   def legacy_content_end(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:187
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:179
   def legacy_do_while_body_location(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:122
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:118
   def legacy_when_value_location(case_node, when_node); end
 
   # An empty loop body falls back to the loop's range on modern
   # Rubies and collapses to a point at the predicate's end on legacy
   # ones.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:169
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:161
   def loop_body_location(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:210
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:206
   def point_at_end(location); end
 
   # Coverage's safe-navigation branch spans the receiver through the
@@ -4993,8 +6427,13 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # This convention is the same on legacy and modern Rubies. See
   # issue #1233.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:202
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:194
   def safe_navigation_location(node); end
+
+  # The range from `from`'s start through `to`'s end.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:199
+  def span(from, to); end
 
   # Whether `node` sits in value (method-return) position, which on
   # legacy Rubies keeps an empty arm's range instead of collapsing it
@@ -5002,41 +6441,41 @@ module SimpleCov::StaticCoverageExtractor::LocationConventions
   # ValuePositions (only on legacy; nil elsewhere, which reads as
   # "value" — the safe, pre-audit default).
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:238
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:227
   def value_position?(node); end
 end
 
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:15
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:17
 SimpleCov::StaticCoverageExtractor::LocationConventions::LEGACY_COVERAGE_LOCATIONS = T.let(T.unsafe(nil), FalseClass)
 
 # A zero-width stand-in for Prism locations, for the arms Coverage
 # anchors to a point rather than a range.
 #
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
 class SimpleCov::StaticCoverageExtractor::LocationConventions::PointLocation < ::Data
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
   def end_column; end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
   def end_line; end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
   def start_column; end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
   def start_line; end
 
   class << self
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
     def [](*_arg0); end
 
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
     def inspect; end
 
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
     def members; end
 
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:19
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/location_conventions.rb:21
     def new(*_arg0); end
   end
 end
@@ -5059,8 +6498,11 @@ module SimpleCov::StaticCoverageExtractor::MethodCollector
   # `def name(...)` and `def self.name(...)` both produce DefNode.
   # The class context is the surrounding lexical class/module (or
   # `Object` at the top level, matching `Coverage`'s convention).
+  # Suppression covers 3.2's folded dead arms, where nested branches
+  # stay instrumented but a `def` never registers (see
+  # Visitor#visit_dead_arm).
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/method_collector.rb:25
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/method_collector.rb:28
   def visit_def_node(node); end
 
   # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/method_collector.rb:18
@@ -5073,14 +6515,70 @@ module SimpleCov::StaticCoverageExtractor::MethodCollector
   # always carry a constant_path in practice.
   # simplecov:disable
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/method_collector.rb:39
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/method_collector.rb:46
   def constant_name(node); end
 
   # simplecov:enable
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/method_collector.rb:47
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/method_collector.rb:54
   def with_class(name); end
 end
+
+# The Prism 1.3 (Dec 2024) accessor renames for the trailing clause of
+# conditional nodes, resolved ONCE at load so the per-node hot paths
+# stay branch-free. Ruby 3.3's stdlib Prism (0.19) predates the
+# renames; 3.4+ and any installed prism gem post-dates them. Reaching
+# for the modern name on 0.19 raised NoMethodError inside the
+# extractor — `call` swallowed it and the whole file silently fell
+# back to no simulated data (see the 1.0.2 audit).
+#
+# This lives in its own file, required by every consumer, because the
+# constants are referenced from several extractor files and defining
+# them after those files were loaded worked only while the references
+# happened at call time — a load-order trap for the next editor.
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/prism_compat.rb:17
+module SimpleCov::StaticCoverageExtractor::PrismCompat
+  private
+
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/prism_compat.rb:50
+  def else_clause(node); end
+
+  # The `else`/`elsif` clause of an if-like node (an ElseNode, or a
+  # nested IfNode for `elsif`), or the `else` clause of anything else
+  # that has one, under whichever accessor this Prism exposes.
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/prism_compat.rb:46
+  def subsequent(node); end
+
+  class << self
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/prism_compat.rb:50
+    def else_clause(node); end
+
+    # The `else`/`elsif` clause of an if-like node (an ElseNode, or a
+    # nested IfNode for `elsif`), or the `else` clause of anything else
+    # that has one, under whichever accessor this Prism exposes.
+    #
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/prism_compat.rb:46
+    def subsequent(node); end
+  end
+end
+
+# The same rename hit the `else` accessor on `UnlessNode`,
+# `CaseNode`, and `CaseMatchNode` (all three: `consequent` ->
+# `else_clause`). All three renamed together, so one constant
+# (probed off CaseNode) covers them.
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/prism_compat.rb:35
+SimpleCov::StaticCoverageExtractor::PrismCompat::ELSE_CLAUSE_METHOD = T.let(T.unsafe(nil), Symbol)
+
+# `Prism::IfNode#subsequent` was renamed from `consequent`. The
+# not-taken arm on whichever Prism version we're on can't be
+# exercised by our own dogfood (we only run on one Prism at a time).
+# simplecov:disable
+#
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/prism_compat.rb:24
+SimpleCov::StaticCoverageExtractor::PrismCompat::IF_NODE_SUBSEQUENT_METHOD = T.let(T.unsafe(nil), Symbol)
 
 # Ruby 3.3 value-position analysis for the extractor's legacy branch
 # conventions (see LocationConventions and the #1233 audit).
@@ -5100,101 +6598,82 @@ end
 # names the constructs that forward tail position and everything else
 # falls through to the void default.
 #
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:22
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:24
 module SimpleCov::StaticCoverageExtractor::ValuePositions
   private
 
   # An identity set (a `compare_by_identity` Hash used as a set) of the
   # Prism nodes Coverage treats as being in value position.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:33
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:35
   def call(root); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:76
-  def else_clause(node); end
-
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:40
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:42
   def mark(node, in_value, positions); end
-
-  # The `else`/`elsif` clause of an if-like node, and the `else` clause
-  # of a case, under whichever accessor this Prism version exposes.
-  # `case/in` (CaseMatchNode) is intentionally not a tail construct: its
-  # `in` arms and `else` both discard tail position.
-  #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:72
-  def subsequent(node); end
 
   # The children of `node` that inherit its tail position; empty for the
   # void default. A method body is a tail context even when the `def`
   # itself is not (the method still returns its last expression), so it
   # is included regardless of `in_value`.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:54
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:56
   def tail_children(node, in_value); end
 
   class << self
     # An identity set (a `compare_by_identity` Hash used as a set) of the
     # Prism nodes Coverage treats as being in value position.
     #
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:33
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:35
     def call(root); end
 
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:76
-    def else_clause(node); end
-
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:40
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:42
     def mark(node, in_value, positions); end
-
-    # The `else`/`elsif` clause of an if-like node, and the `else` clause
-    # of a case, under whichever accessor this Prism version exposes.
-    # `case/in` (CaseMatchNode) is intentionally not a tail construct: its
-    # `in` arms and `else` both discard tail position.
-    #
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:72
-    def subsequent(node); end
 
     # The children of `node` that inherit its tail position; empty for the
     # void default. A method body is a tail context even when the `def`
     # itself is not (the method still returns its last expression), so it
     # is included regardless of `in_value`.
     #
-    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:54
+    # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/value_position.rb:56
     def tail_children(node, in_value); end
   end
 end
 
 # Prism visitor that accumulates branch and method tuples in the
 # shape Ruby's `Coverage` reports. Tuple ids are sequential across
-# the file — `Coverage` uses sequential ids too, so this matches the
-# conventional shape. Only defined when Prism is loadable;
+# the file like `Coverage`'s, but the numbering order can differ
+# (e.g. `case`/`when` and chained `&.` are visited in a different
+# order than Coverage numbers them). That's fine: the combiners
+# intern on source span and the report output drops ids, so nothing
+# downstream compares them. Only defined when Prism is loadable;
 # `StaticCoverageExtractor.available?` is the runtime gate.
 #
-# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:47
+# pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:19
 class SimpleCov::StaticCoverageExtractor::Visitor < ::Prism::Visitor
   include ::SimpleCov::StaticCoverageExtractor::MethodCollector
   include ::SimpleCov::StaticCoverageExtractor::LocationConventions
   include ::SimpleCov::StaticCoverageExtractor::ConditionFolding
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:60
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:32
   def initialize; end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:58
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:30
   def branches; end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:58
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:30
   def methods; end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:97
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:84
   def visit_call_node(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:110
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:97
   def visit_case_match_node(node); end
 
   # `case`/`when` and `case`/`in` (pattern matching) parse as CaseNode
   # and CaseMatchNode respectively. When there's no explicit `else`,
   # Coverage synthesizes one at the case's range.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:105
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:92
   def visit_case_node(node); end
 
   # `if` / `unless` / postfix-if / postfix-unless / ternary all parse
@@ -5204,10 +6683,18 @@ class SimpleCov::StaticCoverageExtractor::Visitor < ::Prism::Visitor
   # missing, Coverage synthesizes a `:else` arm attributed to the
   # whole condition's range — we do the same.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:87
+  # A folded condition emits no tuple, and on modern Rubies only its
+  # live arm is descended into: the compiler eliminates the dead
+  # arm's entire subtree, so a branch or method nested there would be
+  # a phantom no loaded run can produce. A falsy `if`'s elsif chain
+  # survives as a plain `if`, which is what visiting the subsequent
+  # IfNode emits. On 3.2 the dead arm is visited too, branches only
+  # (see visit_folded_arms).
+  #
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:68
   def visit_if_node(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:127
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:114
   def visit_match_predicate_node(node); end
 
   # One-line pattern matching: `x => pattern` (MatchRequiredNode) and
@@ -5218,7 +6705,7 @@ class SimpleCov::StaticCoverageExtractor::Visitor < ::Prism::Visitor
   # `=>` uses the whole expression, `in` uses just the pattern.
   # simplecov:disable branch — legacy-only arms; unreachable on the modern dogfood Ruby
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:122
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:109
   def visit_match_required_node(node); end
 
   # Entry point for a parsed file. On legacy Rubies the location of an
@@ -5227,54 +6714,54 @@ class SimpleCov::StaticCoverageExtractor::Visitor < ::Prism::Visitor
   # emitting anything. Modern Rubies don't need it (see
   # LocationConventions), so the pass is skipped there.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:74
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:47
   def visit_program_node(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:92
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:76
   def visit_unless_node(node); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:140
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:127
   def visit_until_node(node); end
 
   # `while` / `until` loops get a single `:body` arm. No synthetic
   # else (the loop either runs the body or doesn't).
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:135
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:122
   def visit_while_node(node); end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:189
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:176
   def build_tuple(type, location); end
 
   # simplecov:enable
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:176
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:163
   def emit_case_like(node, when_type); end
 
   # IfNode and UnlessNode share a shape (predicate + then body +
   # optional else/elsif) but expose the trailing arm under different
   # accessors. `if_like_else_location` hides that split.
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:150
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:137
   def emit_if_like(node, type); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:184
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:171
   def emit_loop(node, type); end
 
   # simplecov:disable — legacy-only (3.4 emits no branch for one-line patterns)
   #
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:168
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:155
   def emit_oneline_pattern(node, else_location); end
 
-  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:159
+  # pkg:gem/simplecov#lib/simplecov/static_coverage_extractor/visitor.rb:146
   def emit_safe_navigation(node); end
 end
 
 # Filter that matches when the source file's project path contains the
 # configured string at a path-segment boundary.
 #
-# pkg:gem/simplecov#lib/simplecov/filter.rb:50
+# pkg:gem/simplecov#lib/simplecov/filter.rb:66
 class SimpleCov::StringFilter < ::SimpleCov::Filter
   # Returns true when the given source file's filename matches the
   # string configured when initializing this Filter with StringFilter.new('somestring').
@@ -5282,17 +6769,107 @@ class SimpleCov::StringFilter < ::SimpleCov::Filter
   # and be followed by "/" or end-of-string, so "lib" matches "/lib/foo.rb" but not
   # "/app/models/library.rb".
   #
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:56
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:72
   def matches?(source_file); end
+
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:76
+  def path_only?; end
 
   private
 
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:66
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:86
   def compute_segment_pattern; end
 
-  # pkg:gem/simplecov#lib/simplecov/filter.rb:62
+  # pkg:gem/simplecov#lib/simplecov/filter.rb:82
   def segment_pattern; end
 end
+
+# Fills in coverage for files that were tracked (via `cover` / `track_files`)
+# but never loaded, so they count toward the denominators instead of being
+# absent from the report entirely.
+#
+# This is the mechanism; the merge-time policy of *when* to inject and
+# which criteria the simulated files carry lives in
+# `ResultMerger::UnloadedFiles` — easy names to confuse.
+#
+# Everything arrives as arguments rather than being read from the SimpleCov
+# singleton. The merge step performs this injection on behalf of the processes
+# that contributed to it, and it does not necessarily share their
+# configuration: a standalone `collate` never ran `SimpleCov.start`, so it has
+# no `cover` glob of its own and takes the tracked paths from the resultsets
+# instead. See #1250.
+#
+# pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:20
+module SimpleCov::UnloadedFileInjector
+  private
+
+  # Add simulated coverage for every path `coverage` does not already carry.
+  # Paths that are present are left alone, whoever put them there, which is
+  # what lets this run over resultsets a previous SimpleCov already injected
+  # into without double-counting or overwriting real data.
+  #
+  # Returns the augmented coverage and the set of paths that were added.
+  #
+  # pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:61
+  def call(coverage, paths, synthesize:, lines:); end
+
+  # Expand `globs` into absolute paths, relative to `root` rather than
+  # `Dir.pwd` — test runners that chdir (or CI scripts that invoke the suite
+  # from a subdirectory) would otherwise silently miss files and produce a
+  # different set per environment. See #1106.
+  # `reject:` are the producing process's path-decidable filters. Paths its
+  # own report would exclude must not be recorded as tracked, or a merge that
+  # does not share the configuration would simulate them back in. Before
+  # injection moved to the merge the producer filtered them out of its own
+  # result and they never reached a resultset. A block filter is handed the
+  # source file and may consult coverage that does not exist yet, so those
+  # still fall to the merging process's filter chain. See #1250.
+  #
+  # pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:34
+  def discover(globs, root:, reject: T.unsafe(nil)); end
+
+  # `SourceFile` reads source and builds lines lazily, so a path-only filter
+  # answers without anything here touching disk.
+  #
+  # pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:46
+  def rejected?(path, filters); end
+
+  class << self
+    # Add simulated coverage for every path `coverage` does not already carry.
+    # Paths that are present are left alone, whoever put them there, which is
+    # what lets this run over resultsets a previous SimpleCov already injected
+    # into without double-counting or overwriting real data.
+    #
+    # Returns the augmented coverage and the set of paths that were added.
+    #
+    # pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:61
+    def call(coverage, paths, synthesize:, lines:); end
+
+    # Expand `globs` into absolute paths, relative to `root` rather than
+    # `Dir.pwd` — test runners that chdir (or CI scripts that invoke the suite
+    # from a subdirectory) would otherwise silently miss files and produce a
+    # different set per environment. See #1106.
+    # `reject:` are the producing process's path-decidable filters. Paths its
+    # own report would exclude must not be recorded as tracked, or a merge that
+    # does not share the configuration would simulate them back in. Before
+    # injection moved to the merge the producer filtered them out of its own
+    # result and they never reached a resultset. A block filter is handed the
+    # source file and may consult coverage that does not exist yet, so those
+    # still fall to the merging process's filter chain. See #1250.
+    #
+    # pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:34
+    def discover(globs, root:, reject: T.unsafe(nil)); end
+
+    # `SourceFile` reads source and builds lines lazily, so a path-only filter
+    # answers without anything here touching disk.
+    #
+    # pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:46
+    def rejected?(path, filters); end
+  end
+end
+
+# pkg:gem/simplecov#lib/simplecov/unloaded_file_injector.rb:52
+SimpleCov::UnloadedFileInjector::NO_COVERAGE_YET = T.let(T.unsafe(nil), Hash)
 
 # Drop coverage entries whose paths live outside `SimpleCov.root` so the
 # report only reflects the project's own source. Vendored gems, stdlib
