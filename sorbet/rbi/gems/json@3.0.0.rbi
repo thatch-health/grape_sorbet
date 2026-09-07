@@ -144,18 +144,12 @@
 # Option +allow_duplicate_key+ specifies whether duplicate keys in objects
 # should be ignored or cause an error to be raised:
 #
-# When not specified:
-#   # The last value is used and a deprecation warning emitted.
-#   JSON.parse('{"a": 1, "a":2}') => {"a" => 2}
-#   # warning: detected duplicate keys in JSON object.
-#   # This will raise an error in json 3.0 unless enabled via `allow_duplicate_key: true`
+# When set to +false+, the default:
+#   JSON.parse('{"a": 1, "a":2}') => duplicate key at line 1 column 1 (JSON::ParserError)
 #
 # When set to +true+:
 #   # The last value is used.
-#   JSON.parse('{"a": 1, "a":2}') => {"a" => 2}
-#
-# When set to +false+, the future default:
-#   JSON.parse('{"a": 1, "a":2}') => duplicate key at line 1 column 1 (JSON::ParserError)
+#   JSON.parse('{"a": 1, "a":2}', allow_duplicate_key: true) => {"a" => 2}
 #
 # ---
 #
@@ -193,13 +187,11 @@
 # JavaScript style comments (either <tt>// comment</tt> or <tt>/* comment */</tt>);
 # defaults to +false+.
 #
-# When not specified, a deprecation warning is emitted if a comment is encountered.
+# When set to +false+, the default:
+#   JSON.parse('/* comment */ {"a": 1, "a":2}') # unexpected character: '/' at line 1 column 1 (JSON::ParserError)
 #
 # When set to +true+, comments are ignored:
-#   JSON.parse('/* comment */ {"a": 1, "a":2}') # => {"a" => 2}
-#
-# When set to +false+, the future default:
-#   JSON.parse('/* comment */ {"a": 1, "a":2}') # unexpected character: '/' at line 1 column 1 (JSON::ParserError)
+#   JSON.parse('/* comment */ {"a": 1, "a":2} // more comment') # => {"a" => 2}
 #
 # ---
 #
@@ -269,11 +261,6 @@
 # Use class \Set:
 #   ruby = JSON.parse(source, {array_class: Set})
 #   ruby # => #<Set: {"foo", 1.0, true, false, nil}>
-#
-# ---
-#
-# Option +create_additions+ (boolean) specifies whether to use \JSON additions in parsing.
-# See {\JSON Additions}[#module-JSON-label-JSON+Additions].
 #
 # === Generating \JSON
 #
@@ -363,18 +350,13 @@
 # hashes with duplicate keys should be allowed or produce an error.
 # defaults to emit a deprecation warning.
 #
-# With the default, (not set):
-#   Warning[:deprecated] = true
+# With the default, <tt>false</tt>:
 #   JSON.generate({ foo: 1, "foo" => 2 })
-#   # warning: detected duplicate key "foo" in {foo: 1, "foo" => 2}.
-#   # This will raise an error in json 3.0 unless enabled via `allow_duplicate_key: true`
-#   # => '{"foo":1,"foo":2}'
-#
-# With <tt>false</tt>
-#   JSON.generate({ foo: 1, "foo" => 2 }, allow_duplicate_key: false)
 #   # detected duplicate key "foo" in {foo: 1, "foo" => 2} (JSON::GeneratorError)
 #
-# In version 3.0, <tt>false</tt> will become the default.
+# With <tt>true</tt>
+#   JSON.generate({ foo: 1, "foo" => 2 }, allow_duplicate_key: true)
+#   # => '{"foo":1,"foo":2}'
 #
 # ---
 #
@@ -395,8 +377,9 @@
 #   # Raises  SystemStackError: stack level too deep
 #   JSON.generate(obj, max_nesting: false)
 #
-# Setting +max_nesting+ to +false+ can lead to a stackoverflow and may leave the program
-# in an unrecoverable state. It is discouraged.
+# Setting +max_nesting+ to +false+ or a very large number can lead to a stack overflow
+# which may leave the process in an unrecoverable state.
+# It is highly discouraged.
 #
 # ====== Escaping Options
 #
@@ -466,247 +449,12 @@
 #     }
 #   }
 #
-# == \JSON Additions
-#
-# Note that JSON Additions must only be used with trusted data, and is
-# deprecated.
-#
-# When you "round trip" a non-\String object from Ruby to \JSON and back,
-# you have a new \String, instead of the object you began with:
-#   ruby0 = Range.new(0, 2)
-#   json = JSON.generate(ruby0)
-#   json # => '0..2"'
-#   ruby1 = JSON.parse(json)
-#   ruby1 # => '0..2'
-#   ruby1.class # => String
-#
-# You can use \JSON _additions_ to preserve the original object.
-# The addition is an extension of a ruby class, so that:
-# - \JSON.generate stores more information in the \JSON string.
-# - \JSON.parse, called with option +create_additions+,
-#   uses that information to create a proper Ruby object.
-#
-# This example shows a \Range being generated into \JSON
-# and parsed back into Ruby, both without and with
-# the addition for \Range:
-#   ruby = Range.new(0, 2)
-#   # This passage does not use the addition for Range.
-#   json0 = JSON.generate(ruby)
-#   ruby0 = JSON.parse(json0)
-#   # This passage uses the addition for Range.
-#   require 'json/add/range'
-#   json1 = JSON.generate(ruby)
-#   ruby1 = JSON.parse(json1, create_additions: true)
-#   # Make a nice display.
-#   display = <<~EOT
-#     Generated JSON:
-#       Without addition:  #{json0} (#{json0.class})
-#       With addition:     #{json1} (#{json1.class})
-#     Parsed JSON:
-#       Without addition:  #{ruby0.inspect} (#{ruby0.class})
-#       With addition:     #{ruby1.inspect} (#{ruby1.class})
-#   EOT
-#   puts display
-#
-# This output shows the different results:
-#   Generated JSON:
-#     Without addition:  "0..2" (String)
-#     With addition:     {"json_class":"Range","a":[0,2,false]} (String)
-#   Parsed JSON:
-#     Without addition:  "0..2" (String)
-#     With addition:     0..2 (Range)
-#
-# The \JSON module includes additions for certain classes.
-# You can also craft custom additions.
-# See {Custom \JSON Additions}[#module-JSON-label-Custom+JSON+Additions].
-#
-# === Built-in Additions
-#
-# The \JSON module includes additions for certain classes.
-# To use an addition, +require+ its source:
-# - BigDecimal: <tt>require 'json/add/bigdecimal'</tt>
-# - Complex: <tt>require 'json/add/complex'</tt>
-# - Date: <tt>require 'json/add/date'</tt>
-# - DateTime: <tt>require 'json/add/date_time'</tt>
-# - Exception: <tt>require 'json/add/exception'</tt>
-# - OpenStruct: <tt>require 'json/add/ostruct'</tt>
-# - Range: <tt>require 'json/add/range'</tt>
-# - Rational: <tt>require 'json/add/rational'</tt>
-# - Regexp: <tt>require 'json/add/regexp'</tt>
-# - Set: <tt>require 'json/add/set'</tt>
-# - Struct: <tt>require 'json/add/struct'</tt>
-# - Symbol: <tt>require 'json/add/symbol'</tt>
-# - Time: <tt>require 'json/add/time'</tt>
-#
-# To reduce punctuation clutter, the examples below
-# show the generated \JSON via +puts+, rather than the usual +inspect+,
-#
-# \BigDecimal:
-#   require 'json/add/bigdecimal'
-#   ruby0 = BigDecimal(0) # 0.0
-#   json = JSON.generate(ruby0) # {"json_class":"BigDecimal","b":"27:0.0"}
-#   ruby1 = JSON.parse(json, create_additions: true) # 0.0
-#   ruby1.class # => BigDecimal
-#
-# \Complex:
-#   require 'json/add/complex'
-#   ruby0 = Complex(1+0i) # 1+0i
-#   json = JSON.generate(ruby0) # {"json_class":"Complex","r":1,"i":0}
-#   ruby1 = JSON.parse(json, create_additions: true) # 1+0i
-#   ruby1.class # Complex
-#
-# \Date:
-#   require 'json/add/date'
-#   ruby0 = Date.today # 2020-05-02
-#   json = JSON.generate(ruby0) # {"json_class":"Date","y":2020,"m":5,"d":2,"sg":2299161.0}
-#   ruby1 = JSON.parse(json, create_additions: true) # 2020-05-02
-#   ruby1.class # Date
-#
-# \DateTime:
-#   require 'json/add/date_time'
-#   ruby0 = DateTime.now # 2020-05-02T10:38:13-05:00
-#   json = JSON.generate(ruby0) # {"json_class":"DateTime","y":2020,"m":5,"d":2,"H":10,"M":38,"S":13,"of":"-5/24","sg":2299161.0}
-#   ruby1 = JSON.parse(json, create_additions: true) # 2020-05-02T10:38:13-05:00
-#   ruby1.class # DateTime
-#
-# \Exception (and its subclasses including \RuntimeError):
-#   require 'json/add/exception'
-#   ruby0 = Exception.new('A message') # A message
-#   json = JSON.generate(ruby0) # {"json_class":"Exception","m":"A message","b":null}
-#   ruby1 = JSON.parse(json, create_additions: true) # A message
-#   ruby1.class # Exception
-#   ruby0 = RuntimeError.new('Another message') # Another message
-#   json = JSON.generate(ruby0) # {"json_class":"RuntimeError","m":"Another message","b":null}
-#   ruby1 = JSON.parse(json, create_additions: true) # Another message
-#   ruby1.class # RuntimeError
-#
-# \OpenStruct:
-#   require 'json/add/ostruct'
-#   ruby0 = OpenStruct.new(name: 'Matz', language: 'Ruby') # #<OpenStruct name="Matz", language="Ruby">
-#   json = JSON.generate(ruby0) # {"json_class":"OpenStruct","t":{"name":"Matz","language":"Ruby"}}
-#   ruby1 = JSON.parse(json, create_additions: true) # #<OpenStruct name="Matz", language="Ruby">
-#   ruby1.class # OpenStruct
-#
-# \Range:
-#   require 'json/add/range'
-#   ruby0 = Range.new(0, 2) # 0..2
-#   json = JSON.generate(ruby0) # {"json_class":"Range","a":[0,2,false]}
-#   ruby1 = JSON.parse(json, create_additions: true) # 0..2
-#   ruby1.class # Range
-#
-# \Rational:
-#   require 'json/add/rational'
-#   ruby0 = Rational(1, 3) # 1/3
-#   json = JSON.generate(ruby0) # {"json_class":"Rational","n":1,"d":3}
-#   ruby1 = JSON.parse(json, create_additions: true) # 1/3
-#   ruby1.class # Rational
-#
-# \Regexp:
-#   require 'json/add/regexp'
-#   ruby0 = Regexp.new('foo') # (?-mix:foo)
-#   json = JSON.generate(ruby0) # {"json_class":"Regexp","o":0,"s":"foo"}
-#   ruby1 = JSON.parse(json, create_additions: true) # (?-mix:foo)
-#   ruby1.class # Regexp
-#
-# \Set:
-#   require 'json/add/set'
-#   ruby0 = Set.new([0, 1, 2]) # #<Set: {0, 1, 2}>
-#   json = JSON.generate(ruby0) # {"json_class":"Set","a":[0,1,2]}
-#   ruby1 = JSON.parse(json, create_additions: true) # #<Set: {0, 1, 2}>
-#   ruby1.class # Set
-#
-# \Struct:
-#   require 'json/add/struct'
-#   Customer = Struct.new(:name, :address) # Customer
-#   ruby0 = Customer.new("Dave", "123 Main") # #<struct Customer name="Dave", address="123 Main">
-#   json = JSON.generate(ruby0) # {"json_class":"Customer","v":["Dave","123 Main"]}
-#   ruby1 = JSON.parse(json, create_additions: true) # #<struct Customer name="Dave", address="123 Main">
-#   ruby1.class # Customer
-#
-# \Symbol:
-#   require 'json/add/symbol'
-#   ruby0 = :foo # foo
-#   json = JSON.generate(ruby0) # {"json_class":"Symbol","s":"foo"}
-#   ruby1 = JSON.parse(json, create_additions: true) # foo
-#   ruby1.class # Symbol
-#
-# \Time:
-#   require 'json/add/time'
-#   ruby0 = Time.now # 2020-05-02 11:28:26 -0500
-#   json = JSON.generate(ruby0) # {"json_class":"Time","s":1588436906,"n":840560000}
-#   ruby1 = JSON.parse(json, create_additions: true) # 2020-05-02 11:28:26 -0500
-#   ruby1.class # Time
-#
-#
-# === Custom \JSON Additions
-#
-# In addition to the \JSON additions provided,
-# you can craft \JSON additions of your own,
-# either for Ruby built-in classes or for user-defined classes.
-#
-# Here's a user-defined class +Foo+:
-#   class Foo
-#     attr_accessor :bar, :baz
-#     def initialize(bar, baz)
-#       self.bar = bar
-#       self.baz = baz
-#     end
-#   end
-#
-# Here's the \JSON addition for it:
-#   # Extend class Foo with JSON addition.
-#   class Foo
-#     # Serialize Foo object with its class name and arguments
-#     def to_json(*args)
-#       {
-#         JSON.create_id  => self.class.name,
-#         'a'             => [ bar, baz ]
-#       }.to_json(*args)
-#     end
-#     # Deserialize JSON string by constructing new Foo object with arguments.
-#     def self.json_create(object)
-#       new(*object['a'])
-#     end
-#   end
-#
-# Demonstration:
-#   require 'json'
-#   # This Foo object has no custom addition.
-#   foo0 = Foo.new(0, 1)
-#   json0 = JSON.generate(foo0)
-#   obj0 = JSON.parse(json0)
-#   # Lood the custom addition.
-#   require_relative 'foo_addition'
-#   # This foo has the custom addition.
-#   foo1 = Foo.new(0, 1)
-#   json1 = JSON.generate(foo1)
-#   obj1 = JSON.parse(json1, create_additions: true)
-#   #   Make a nice display.
-#   display = <<~EOT
-#     Generated JSON:
-#       Without custom addition:  #{json0} (#{json0.class})
-#       With custom addition:     #{json1} (#{json1.class})
-#     Parsed JSON:
-#       Without custom addition:  #{obj0.inspect} (#{obj0.class})
-#       With custom addition:     #{obj1.inspect} (#{obj1.class})
-#   EOT
-#   puts display
-#
-# Output:
-#
-#   Generated JSON:
-#     Without custom addition:  "#<Foo:0x0000000006534e80>" (String)
-#     With custom addition:     {"json_class":"Foo","a":[0,1]} (String)
-#   Parsed JSON:
-#     Without custom addition:  "#<Foo:0x0000000006534e80>" (String)
-#     With custom addition:     #<Foo:0x0000000006473bb8 @bar=0, @baz=1> (Foo)
-#
 # pkg:gem/json#lib/json/version.rb:3
 module JSON
   private
 
   # :call-seq:
-  #   JSON.dump(obj, io = nil, limit = nil)
+  #   JSON.dump(obj, io = nil, options = nil)
   #
   # Dumps +obj+ as a \JSON string, i.e. calls generate on the object and returns the result.
   #
@@ -715,7 +463,6 @@ module JSON
   # - Argument +io+, if given, should respond to method +write+;
   #   the \JSON \String is written to +io+, and +io+ is returned.
   #   If +io+ is not given, the \JSON \String is returned.
-  # - Argument +limit+, if given, is passed to JSON.generate as option +max_nesting+.
   #
   # ---
   #
@@ -733,28 +480,8 @@ module JSON
   # Output:
   #   {"foo":[0,1],"bar":{"baz":2,"bat":3},"bam":"bad"}
   #
-  # pkg:gem/json#lib/json/common.rb:941
-  def dump(obj, anIO = T.unsafe(nil), limit = T.unsafe(nil), kwargs = T.unsafe(nil)); end
-
-  # :call-seq:
-  #   JSON.fast_generate(obj, opts) -> new_string
-  #
-  # Arguments +obj+ and +opts+ here are the same as
-  # arguments +obj+ and +opts+ in JSON.generate.
-  #
-  # By default, generates \JSON data without checking
-  # for circular references in +obj+ (option +max_nesting+ set to +false+, disabled).
-  #
-  # Raises an exception if +obj+ contains circular references:
-  #   a = []; b = []; a.push(b); b.push(a)
-  #   # Raises SystemStackError (stack level too deep):
-  #   JSON.fast_generate(a)
-  #
-  # pkg:gem/json#lib/json/common.rb:471
-  def fast_generate(obj, opts = T.unsafe(nil)); end
-
-  # pkg:gem/json#lib/json/common.rb:986
-  def fast_unparse(*_arg0, **_arg1, &_arg2); end
+  # pkg:gem/json#lib/json/common.rb:754
+  def dump(obj, anIO = T.unsafe(nil), kwargs = T.unsafe(nil)); end
 
   # :call-seq:
   #   JSON.generate(obj, opts = nil) -> new_string
@@ -792,7 +519,7 @@ module JSON
   #   # Raises JSON::NestingError (nesting of 100 is too deep):
   #   JSON.generate(a)
   #
-  # pkg:gem/json#lib/json/common.rb:450
+  # pkg:gem/json#lib/json/common.rb:378
   def generate(obj, opts = T.unsafe(nil)); end
 
   # :call-seq:
@@ -800,16 +527,6 @@ module JSON
   #   JSON.load(source, proc = nil, options = {}) -> object
   #
   # Returns the Ruby objects created by parsing the given +source+.
-  #
-  # BEWARE: This method is meant to serialise data from trusted user input,
-  # like from your own database server or clients under your control, it could
-  # be dangerous to allow untrusted users to pass JSON sources into it.
-  # If you must use it, use JSON.unsafe_load instead to make it clear.
-  #
-  # Since JSON version 2.8.0, `load` emits a deprecation warning when a
-  # non native type is deserialized, without `create_additions` being explicitly
-  # enabled, and in JSON version 3.0, `load` will have `create_additions` disabled
-  # by default.
   #
   # - Argument +source+ must be, or be convertible to, a \String:
   #   - If +source+ responds to instance method +to_str+,
@@ -827,7 +544,6 @@ module JSON
   #   See details below.
   # - Argument +opts+, if given, contains a \Hash of options for the parsing.
   #   See {Parsing Options}[#module-JSON-label-Parsing+Options].
-  #   The default options can be changed via method JSON.load_default_options=.
   #
   # ---
   #
@@ -932,30 +648,30 @@ module JSON
   #      #<Admin:0x00000000064c41f8
   #      @attributes={"type"=>"Admin", "password"=>"0wn3d"}>}
   #
-  # pkg:gem/json#lib/json/common.rb:865
-  def load(source, proc = T.unsafe(nil), options = T.unsafe(nil)); end
+  # pkg:gem/json#lib/json/common.rb:706
+  def load(source, proc = T.unsafe(nil), allow_blank: T.unsafe(nil), **options); end
 
   # :call-seq:
-  #   JSON.load_file(path, opts={}) -> object
+  #   JSON.load_file(path, **) -> object
   #
   # Calls:
-  #   parse(File.read(path), opts)
+  #   parse(File.read(path), **)
   #
   # See method #parse.
   #
-  # pkg:gem/json#lib/json/common.rb:399
-  def load_file(filespec, opts = T.unsafe(nil)); end
+  # pkg:gem/json#lib/json/common.rb:327
+  def load_file(filespec, *_arg1, **_arg2, &_arg3); end
 
   # :call-seq:
-  #   JSON.load_file!(path, opts = {})
+  #   JSON.load_file!(path, **)
   #
   # Calls:
-  #   JSON.parse!(File.read(path, opts))
+  #   JSON.parse!(File.read(path), **)
   #
   # See method #parse!
   #
-  # pkg:gem/json#lib/json/common.rb:410
-  def load_file!(filespec, opts = T.unsafe(nil)); end
+  # pkg:gem/json#lib/json/common.rb:338
+  def load_file!(filespec, *_arg1, **_arg2, &_arg3); end
 
   # :call-seq:
   #   JSON.parse(source, opts) -> object
@@ -1002,11 +718,11 @@ module JSON
   # ---
   #
   # Raises an exception if +source+ is not valid JSON:
-  #   # Raises JSON::ParserError (783: unexpected token at ''):
-  #   JSON.parse('')
+  #   # Raises JSON::ParserError unexpected character: 'invalid' at line 1 column 1 :
+  #   JSON.parse('invalid')
   #
-  # pkg:gem/json#lib/json/common.rb:362
-  def parse(source, opts = T.unsafe(nil)); end
+  # pkg:gem/json#lib/json/common.rb:296
+  def parse(source, on_load: T.unsafe(nil), object_class: T.unsafe(nil), array_class: T.unsafe(nil), **options); end
 
   # :call-seq:
   #   JSON.parse!(source, opts) -> object
@@ -1020,8 +736,8 @@ module JSON
   #   which disables checking for nesting depth.
   # - Option +allow_nan+, if not provided, defaults to +true+.
   #
-  # pkg:gem/json#lib/json/common.rb:384
-  def parse!(source, opts = T.unsafe(nil)); end
+  # pkg:gem/json#lib/json/common.rb:316
+  def parse!(source, **options); end
 
   # :call-seq:
   #   JSON.pretty_generate(obj, opts = nil) -> new_string
@@ -1053,21 +769,8 @@ module JSON
   #     }
   #   }
   #
-  # pkg:gem/json#lib/json/common.rb:518
+  # pkg:gem/json#lib/json/common.rb:424
   def pretty_generate(obj, opts = T.unsafe(nil)); end
-
-  # pkg:gem/json#lib/json/common.rb:996
-  def pretty_unparse(*_arg0, **_arg1, &_arg2); end
-
-  # pkg:gem/json#lib/json/common.rb:1006
-  def restore(*_arg0, **_arg1, &_arg2); end
-
-  # :stopdoc:
-  # All these were meant to be deprecated circa 2009, but were just set as undocumented
-  # so usage still exist in the wild.
-  #
-  # pkg:gem/json#lib/json/common.rb:976
-  def unparse(*_arg0, **_arg1, &_arg2); end
 
   # :call-seq:
   #   JSON.unsafe_load(source, options = {}) -> object
@@ -1075,7 +778,7 @@ module JSON
   #
   # Returns the Ruby objects created by parsing the given +source+.
   #
-  # BEWARE: This method is meant to serialise data from trusted user input,
+  # BEWARE: This method is meant to deserialise data from trusted user input,
   # like from your own database server or clients under your control, it could
   # be dangerous to allow untrusted users to pass JSON sources into it.
   #
@@ -1095,7 +798,6 @@ module JSON
   #   See details below.
   # - Argument +opts+, if given, contains a \Hash of options for the parsing.
   #   See {Parsing Options}[#module-JSON-label-Parsing+Options].
-  #   The default options can be changed via method JSON.unsafe_load_default_options=.
   #
   # ---
   #
@@ -1200,8 +902,8 @@ module JSON
   #      #<Admin:0x00000000064c41f8
   #      @attributes={"type"=>"Admin", "password"=>"0wn3d"}>}
   #
-  # pkg:gem/json#lib/json/common.rb:694
-  def unsafe_load(source, proc = T.unsafe(nil), options = T.unsafe(nil)); end
+  # pkg:gem/json#lib/json/common.rb:576
+  def unsafe_load(source, proc = T.unsafe(nil), **options); end
 
   class << self
     # :call-seq:
@@ -1216,36 +918,11 @@ module JSON
     #   ruby = [0, 1, nil]
     #   JSON[ruby] # => '[0,1,null]'
     #
-    # pkg:gem/json#lib/json/common.rb:132
+    # pkg:gem/json#lib/json/common.rb:54
     def [](object, opts = T.unsafe(nil)); end
 
-    # pkg:gem/json#lib/json/common.rb:217
-    def _dump_default_options; end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def _load_default_options; end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def _unsafe_load_default_options; end
-
-    # Returns the current create identifier.
-    # See also JSON.create_id=.
-    #
-    # pkg:gem/json#lib/json/common.rb:245
-    def create_id; end
-
-    # Sets create identifier, which is used to decide if the _json_create_
-    # hook of a class should be called; initial value is +json_class+:
-    #   JSON.create_id # => 'json_class'
-    #
-    # pkg:gem/json#lib/json/common.rb:239
-    def create_id=(new_value); end
-
-    # pkg:gem/json#lib/json/common.rb:104
-    def deprecation_warning(message, uplevel = T.unsafe(nil)); end
-
     # :call-seq:
-    #   JSON.dump(obj, io = nil, limit = nil)
+    #   JSON.dump(obj, io = nil, options = nil)
     #
     # Dumps +obj+ as a \JSON string, i.e. calls generate on the object and returns the result.
     #
@@ -1254,7 +931,6 @@ module JSON
     # - Argument +io+, if given, should respond to method +write+;
     #   the \JSON \String is written to +io+, and +io+ is returned.
     #   If +io+ is not given, the \JSON \String is returned.
-    # - Argument +limit+, if given, is passed to JSON.generate as option +max_nesting+.
     #
     # ---
     #
@@ -1272,34 +948,8 @@ module JSON
     # Output:
     #   {"foo":[0,1],"bar":{"baz":2,"bat":3},"bam":"bad"}
     #
-    # pkg:gem/json#lib/json/common.rb:941
-    def dump(obj, anIO = T.unsafe(nil), limit = T.unsafe(nil), kwargs = T.unsafe(nil)); end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def dump_default_options; end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def dump_default_options=(val); end
-
-    # :call-seq:
-    #   JSON.fast_generate(obj, opts) -> new_string
-    #
-    # Arguments +obj+ and +opts+ here are the same as
-    # arguments +obj+ and +opts+ in JSON.generate.
-    #
-    # By default, generates \JSON data without checking
-    # for circular references in +obj+ (option +max_nesting+ set to +false+, disabled).
-    #
-    # Raises an exception if +obj+ contains circular references:
-    #   a = []; b = []; a.push(b); b.push(a)
-    #   # Raises SystemStackError (stack level too deep):
-    #   JSON.fast_generate(a)
-    #
-    # pkg:gem/json#lib/json/common.rb:471
-    def fast_generate(obj, opts = T.unsafe(nil)); end
-
-    # pkg:gem/json#lib/json/common.rb:986
-    def fast_unparse(*_arg0, **_arg1, &_arg2); end
+    # pkg:gem/json#lib/json/common.rb:754
+    def dump(obj, anIO = T.unsafe(nil), kwargs = T.unsafe(nil)); end
 
     # :call-seq:
     #   JSON.generate(obj, opts = nil) -> new_string
@@ -1337,17 +987,17 @@ module JSON
     #   # Raises JSON::NestingError (nesting of 100 is too deep):
     #   JSON.generate(a)
     #
-    # pkg:gem/json#lib/json/common.rb:450
+    # pkg:gem/json#lib/json/common.rb:378
     def generate(obj, opts = T.unsafe(nil)); end
 
     # Returns the JSON generator module that is used by JSON.
     #
-    # pkg:gem/json#lib/json/common.rb:188
+    # pkg:gem/json#lib/json/common.rb:112
     def generator; end
 
     # Set the module _generator_ to be used by JSON.
     #
-    # pkg:gem/json#lib/json/common.rb:156
+    # pkg:gem/json#lib/json/common.rb:80
     def generator=(generator); end
 
     # :call-seq:
@@ -1355,16 +1005,6 @@ module JSON
     #   JSON.load(source, proc = nil, options = {}) -> object
     #
     # Returns the Ruby objects created by parsing the given +source+.
-    #
-    # BEWARE: This method is meant to serialise data from trusted user input,
-    # like from your own database server or clients under your control, it could
-    # be dangerous to allow untrusted users to pass JSON sources into it.
-    # If you must use it, use JSON.unsafe_load instead to make it clear.
-    #
-    # Since JSON version 2.8.0, `load` emits a deprecation warning when a
-    # non native type is deserialized, without `create_additions` being explicitly
-    # enabled, and in JSON version 3.0, `load` will have `create_additions` disabled
-    # by default.
     #
     # - Argument +source+ must be, or be convertible to, a \String:
     #   - If +source+ responds to instance method +to_str+,
@@ -1382,7 +1022,6 @@ module JSON
     #   See details below.
     # - Argument +opts+, if given, contains a \Hash of options for the parsing.
     #   See {Parsing Options}[#module-JSON-label-Parsing+Options].
-    #   The default options can be changed via method JSON.load_default_options=.
     #
     # ---
     #
@@ -1487,36 +1126,30 @@ module JSON
     #      #<Admin:0x00000000064c41f8
     #      @attributes={"type"=>"Admin", "password"=>"0wn3d"}>}
     #
-    # pkg:gem/json#lib/json/common.rb:865
-    def load(source, proc = T.unsafe(nil), options = T.unsafe(nil)); end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def load_default_options; end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def load_default_options=(val); end
+    # pkg:gem/json#lib/json/common.rb:706
+    def load(source, proc = T.unsafe(nil), allow_blank: T.unsafe(nil), **options); end
 
     # :call-seq:
-    #   JSON.load_file(path, opts={}) -> object
+    #   JSON.load_file(path, **) -> object
     #
     # Calls:
-    #   parse(File.read(path), opts)
+    #   parse(File.read(path), **)
     #
     # See method #parse.
     #
-    # pkg:gem/json#lib/json/common.rb:399
-    def load_file(filespec, opts = T.unsafe(nil)); end
+    # pkg:gem/json#lib/json/common.rb:327
+    def load_file(filespec, *_arg1, **_arg2, &_arg3); end
 
     # :call-seq:
-    #   JSON.load_file!(path, opts = {})
+    #   JSON.load_file!(path, **)
     #
     # Calls:
-    #   JSON.parse!(File.read(path, opts))
+    #   JSON.parse!(File.read(path), **)
     #
     # See method #parse!
     #
-    # pkg:gem/json#lib/json/common.rb:410
-    def load_file!(filespec, opts = T.unsafe(nil)); end
+    # pkg:gem/json#lib/json/common.rb:338
+    def load_file!(filespec, *_arg1, **_arg2, &_arg3); end
 
     # :call-seq:
     #   JSON.parse(source, opts) -> object
@@ -1563,11 +1196,11 @@ module JSON
     # ---
     #
     # Raises an exception if +source+ is not valid JSON:
-    #   # Raises JSON::ParserError (783: unexpected token at ''):
-    #   JSON.parse('')
+    #   # Raises JSON::ParserError unexpected character: 'invalid' at line 1 column 1 :
+    #   JSON.parse('invalid')
     #
-    # pkg:gem/json#lib/json/common.rb:362
-    def parse(source, opts = T.unsafe(nil)); end
+    # pkg:gem/json#lib/json/common.rb:296
+    def parse(source, on_load: T.unsafe(nil), object_class: T.unsafe(nil), array_class: T.unsafe(nil), **options); end
 
     # :call-seq:
     #   JSON.parse!(source, opts) -> object
@@ -1581,17 +1214,17 @@ module JSON
     #   which disables checking for nesting depth.
     # - Option +allow_nan+, if not provided, defaults to +true+.
     #
-    # pkg:gem/json#lib/json/common.rb:384
-    def parse!(source, opts = T.unsafe(nil)); end
+    # pkg:gem/json#lib/json/common.rb:316
+    def parse!(source, **options); end
 
     # Returns the JSON parser class that is used by JSON.
     #
-    # pkg:gem/json#lib/json/common.rb:146
+    # pkg:gem/json#lib/json/common.rb:70
     def parser; end
 
     # Set the JSON parser class _parser_ to be used by JSON.
     #
-    # pkg:gem/json#lib/json/common.rb:149
+    # pkg:gem/json#lib/json/common.rb:73
     def parser=(parser); end
 
     # :call-seq:
@@ -1624,31 +1257,18 @@ module JSON
     #     }
     #   }
     #
-    # pkg:gem/json#lib/json/common.rb:518
+    # pkg:gem/json#lib/json/common.rb:424
     def pretty_generate(obj, opts = T.unsafe(nil)); end
-
-    # pkg:gem/json#lib/json/common.rb:996
-    def pretty_unparse(*_arg0, **_arg1, &_arg2); end
-
-    # pkg:gem/json#lib/json/common.rb:1006
-    def restore(*_arg0, **_arg1, &_arg2); end
 
     # Sets or Returns the JSON generator state class that is used by JSON.
     #
-    # pkg:gem/json#lib/json/common.rb:191
+    # pkg:gem/json#lib/json/common.rb:115
     def state; end
 
     # Sets or Returns the JSON generator state class that is used by JSON.
     #
-    # pkg:gem/json#lib/json/common.rb:191
+    # pkg:gem/json#lib/json/common.rb:115
     def state=(_arg0); end
-
-    # :stopdoc:
-    # All these were meant to be deprecated circa 2009, but were just set as undocumented
-    # so usage still exist in the wild.
-    #
-    # pkg:gem/json#lib/json/common.rb:976
-    def unparse(*_arg0, **_arg1, &_arg2); end
 
     # :call-seq:
     #   JSON.unsafe_load(source, options = {}) -> object
@@ -1656,7 +1276,7 @@ module JSON
     #
     # Returns the Ruby objects created by parsing the given +source+.
     #
-    # BEWARE: This method is meant to serialise data from trusted user input,
+    # BEWARE: This method is meant to deserialise data from trusted user input,
     # like from your own database server or clients under your control, it could
     # be dangerous to allow untrusted users to pass JSON sources into it.
     #
@@ -1676,7 +1296,6 @@ module JSON
     #   See details below.
     # - Argument +opts+, if given, contains a \Hash of options for the parsing.
     #   See {Parsing Options}[#module-JSON-label-Parsing+Options].
-    #   The default options can be changed via method JSON.unsafe_load_default_options=.
     #
     # ---
     #
@@ -1781,27 +1400,15 @@ module JSON
     #      #<Admin:0x00000000064c41f8
     #      @attributes={"type"=>"Admin", "password"=>"0wn3d"}>}
     #
-    # pkg:gem/json#lib/json/common.rb:694
-    def unsafe_load(source, proc = T.unsafe(nil), options = T.unsafe(nil)); end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def unsafe_load_default_options; end
-
-    # pkg:gem/json#lib/json/common.rb:217
-    def unsafe_load_default_options=(val); end
+    # pkg:gem/json#lib/json/common.rb:576
+    def unsafe_load(source, proc = T.unsafe(nil), **options); end
 
     private
 
-    # pkg:gem/json#lib/json/common.rb:1019
-    def const_missing(const_name); end
-
-    # pkg:gem/json#lib/json/common.rb:214
-    def deprecated_singleton_attr_accessor(*attrs); end
-
     # Called from the extension when a hash has both string and symbol keys
     #
-    # pkg:gem/json#lib/json/common.rb:196
-    def on_mixed_keys_hash(hash, do_raise); end
+    # pkg:gem/json#lib/json/common.rb:120
+    def on_mixed_keys_hash(hash); end
   end
 end
 
@@ -1815,7 +1422,7 @@ end
 #
 #   MyApp::JSONC_CODER.load(document)
 #
-# pkg:gem/json#lib/json/common.rb:1045
+# pkg:gem/json#lib/json/common.rb:784
 class JSON::Coder
   # :call-seq:
   #   JSON.new(options = nil, &block)
@@ -1841,8 +1448,8 @@ class JSON::Coder
   #
   #  puts MyApp::API_JSON_CODER.dump(Time.now.utc) # => "2025-01-21T08:41:44.286Z"
   #
-  # pkg:gem/json#lib/json/common.rb:1070
-  def initialize(options = T.unsafe(nil), &as_json); end
+  # pkg:gem/json#lib/json/common.rb:830
+  def initialize(object_class: T.unsafe(nil), array_class: T.unsafe(nil), on_load: T.unsafe(nil), **options, &as_json); end
 
   # call-seq:
   #   dump(object) -> String
@@ -1850,10 +1457,10 @@ class JSON::Coder
   #
   # Serialize the given object into a \JSON document.
   #
-  # pkg:gem/json#lib/json/common.rb:1088
+  # pkg:gem/json#lib/json/common.rb:851
   def dump(object, io = T.unsafe(nil)); end
 
-  # pkg:gem/json#lib/json/common.rb:1091
+  # pkg:gem/json#lib/json/common.rb:854
   def generate(object, io = T.unsafe(nil)); end
 
   # call-seq:
@@ -1861,7 +1468,7 @@ class JSON::Coder
   #
   # Parse the given \JSON document and return an equivalent Ruby object.
   #
-  # pkg:gem/json#lib/json/common.rb:1097
+  # pkg:gem/json#lib/json/common.rb:860
   def load(source); end
 
   # call-seq:
@@ -1869,12 +1476,18 @@ class JSON::Coder
   #
   # Parse the given \JSON document and return an equivalent Ruby object.
   #
-  # pkg:gem/json#lib/json/common.rb:1106
+  # pkg:gem/json#lib/json/common.rb:869
   def load_file(path); end
 
-  # pkg:gem/json#lib/json/common.rb:1100
+  # pkg:gem/json#lib/json/common.rb:863
   def parse(source); end
 end
+
+# pkg:gem/json#lib/json/common.rb:799
+JSON::Coder::EXCLUDED_GENERATOR_OPTIONS = T.let(T.unsafe(nil), Array)
+
+# pkg:gem/json#lib/json/common.rb:785
+JSON::Coder::PARSER_OPTIONS = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/json#lib/json/ext.rb:39
 class JSON::Ext::Generator::State
@@ -1887,20 +1500,6 @@ class JSON::Ext::Generator::State
   #
   # pkg:gem/json#lib/json/ext.rb:39
   def initialize(opts = T.unsafe(nil)); end
-
-  # call-seq: [](name)
-  #
-  # Returns the value returned by method +name+.
-  #
-  # pkg:gem/json#lib/json/ext/generator/state.rb:78
-  def [](name); end
-
-  # call-seq: []=(name, value)
-  #
-  # Sets the attribute name to value.
-  #
-  # pkg:gem/json#lib/json/ext/generator/state.rb:92
-  def []=(name, value); end
 
   # pkg:gem/json#lib/json/ext.rb:39
   def _generate_no_fallback(*_arg0); end
@@ -1951,15 +1550,6 @@ class JSON::Ext::Generator::State
 
   # pkg:gem/json#lib/json/ext.rb:39
   def depth=(_arg0); end
-
-  # pkg:gem/json#lib/json/ext.rb:39
-  def escape_slash; end
-
-  # pkg:gem/json#lib/json/ext.rb:39
-  def escape_slash=(_arg0); end
-
-  # pkg:gem/json#lib/json/ext.rb:39
-  def escape_slash?; end
 
   # pkg:gem/json#lib/json/ext.rb:39
   def generate(*_arg0); end
@@ -2098,53 +1688,53 @@ end
 # Note: no validation is performed on the provided string. It is the
 # responsibility of the caller to ensure the string contains valid JSON.
 #
-# pkg:gem/json#lib/json/common.rb:298
+# pkg:gem/json#lib/json/common.rb:232
 class JSON::Fragment < ::Struct
-  # pkg:gem/json#lib/json/common.rb:299
+  # pkg:gem/json#lib/json/common.rb:233
   def initialize(json); end
 
-  # pkg:gem/json#lib/json/common.rb:298
+  # pkg:gem/json#lib/json/common.rb:232
   def json; end
 
-  # pkg:gem/json#lib/json/common.rb:298
+  # pkg:gem/json#lib/json/common.rb:232
   def json=(_); end
 
-  # pkg:gem/json#lib/json/common.rb:307
+  # pkg:gem/json#lib/json/common.rb:241
   def to_json(state = T.unsafe(nil), *_arg1); end
 
   class << self
-    # pkg:gem/json#lib/json/common.rb:298
+    # pkg:gem/json#lib/json/common.rb:232
     def [](*_arg0); end
 
-    # pkg:gem/json#lib/json/common.rb:298
+    # pkg:gem/json#lib/json/common.rb:232
     def inspect; end
 
-    # pkg:gem/json#lib/json/common.rb:298
+    # pkg:gem/json#lib/json/common.rb:232
     def keyword_init?; end
 
-    # pkg:gem/json#lib/json/common.rb:298
+    # pkg:gem/json#lib/json/common.rb:232
     def members; end
 
-    # pkg:gem/json#lib/json/common.rb:298
+    # pkg:gem/json#lib/json/common.rb:232
     def new(*_arg0); end
   end
 end
 
 # This exception is raised if a generator or unparser error occurs.
 #
-# pkg:gem/json#lib/json/common.rb:268
+# pkg:gem/json#lib/json/common.rb:202
 class JSON::GeneratorError < ::JSON::JSONError
-  # pkg:gem/json#lib/json/common.rb:271
+  # pkg:gem/json#lib/json/common.rb:205
   def initialize(message, invalid_object = T.unsafe(nil)); end
 
-  # pkg:gem/json#lib/json/common.rb:276
+  # pkg:gem/json#lib/json/common.rb:210
   def detailed_message(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/json#lib/json/common.rb:269
+  # pkg:gem/json#lib/json/common.rb:203
   def invalid_object; end
 end
 
-# pkg:gem/json#lib/json/common.rb:1111
+# pkg:gem/json#lib/json/common.rb:874
 module JSON::GeneratorMethods
   # call-seq: to_json(*)
   #
@@ -2154,50 +1744,62 @@ module JSON::GeneratorMethods
   # it to a JSON string, and returns the result.
   # This is a fallback, if no special method #to_json was defined for some object.
   #
-  # pkg:gem/json#lib/json/common.rb:1119
+  # pkg:gem/json#lib/json/common.rb:882
   def to_json(state = T.unsafe(nil), *_arg1); end
 end
 
-# pkg:gem/json#lib/json/common.rb:367
-JSON::PARSE_L_OPTIONS = T.let(T.unsafe(nil), Hash)
-
-# pkg:gem/json#lib/json/common.rb:480
+# pkg:gem/json#lib/json/common.rb:386
 JSON::PRETTY_GENERATE_OPTIONS = T.let(T.unsafe(nil), Hash)
 
-# pkg:gem/json#lib/json/common.rb:152
+# pkg:gem/json#lib/json/common.rb:76
 JSON::Parser = JSON::Ext::Parser
 
 # This exception is raised if a parser error occurs.
 #
-# pkg:gem/json#lib/json/common.rb:259
+# pkg:gem/json#lib/json/common.rb:144
 class JSON::ParserError < ::JSON::JSONError
-  # pkg:gem/json#lib/json/common.rb:260
+  # Column number where the parser encountered an error.
+  # Is <tt>nil</tt> when raised by JSON::ResumableParser.
+  #
+  # pkg:gem/json#lib/json/common.rb:151
   def column; end
 
-  # pkg:gem/json#lib/json/common.rb:260
+  # Returns a best effort JSONPath string representing where in the document
+  # the parser encountered an error:
+  #
+  #   begin
+  #     JSON.parse('{"articles": [ { "title": invalid } ]}')
+  #   rescue JSON::ParserError => error
+  #     error.json_path # => "$.articles[0].title"
+  #   end
+  #
+  # pkg:gem/json#lib/json/common.rb:161
+  def json_path; end
+
+  # Line number where the parser encountered an error.
+  # Is <tt>nil</tt> when raised by JSON::ResumableParser.
+  #
+  # pkg:gem/json#lib/json/common.rb:147
   def line; end
+
+  private
+
+  # pkg:gem/json#lib/json/common.rb:173
+  def build_json_path(segments); end
 end
 
-# pkg:gem/json#lib/json/common.rb:8
+# pkg:gem/json#lib/json/common.rb:6
 module JSON::ParserOptions
   class << self
-    # pkg:gem/json#lib/json/common.rb:10
-    def prepare(opts); end
+    # pkg:gem/json#lib/json/common.rb:8
+    def on_load(on_load, object_class, array_class); end
 
     private
 
-    # pkg:gem/json#lib/json/common.rb:40
+    # pkg:gem/json#lib/json/common.rb:27
     def array_class_proc(array_class, on_load); end
 
-    # TODO: extract :create_additions support to another gem for version 3.0
-    #
-    # pkg:gem/json#lib/json/common.rb:52
-    def create_additions_proc(opts); end
-
-    # pkg:gem/json#lib/json/common.rb:95
-    def create_additions_warning; end
-
-    # pkg:gem/json#lib/json/common.rb:29
+    # pkg:gem/json#lib/json/common.rb:16
     def object_class_proc(object_class, on_load); end
   end
 end
@@ -2262,10 +1864,10 @@ class JSON::ResumableParser
   def value?; end
 end
 
-# pkg:gem/json#lib/json/common.rb:182
+# pkg:gem/json#lib/json/common.rb:106
 JSON::State = JSON::Ext::Generator::State
 
-# pkg:gem/json#lib/json/common.rb:1136
+# pkg:gem/json#lib/json/common.rb:899
 module Kernel
   private
 
@@ -2276,23 +1878,11 @@ module Kernel
   # The _opts_ argument is passed through to generate/parse respectively. See
   # generate and parse for their documentation.
   #
-  # pkg:gem/json#lib/json/common.rb:1175
+  # pkg:gem/json#lib/json/common.rb:908
   def JSON(object, opts = T.unsafe(nil)); end
-
-  # Outputs _objs_ to STDOUT as JSON strings in the shortest form, that is in
-  # one line.
-  #
-  # pkg:gem/json#lib/json/common.rb:1141
-  def j(*objs); end
-
-  # Outputs _objs_ to STDOUT as JSON strings in a pretty format, with
-  # indentation and over many lines.
-  #
-  # pkg:gem/json#lib/json/common.rb:1156
-  def jj(*objs); end
 end
 
-# pkg:gem/json#lib/json/common.rb:1180
+# pkg:gem/json#lib/json/common.rb:913
 class Object < ::BasicObject
   include ::Kernel
   include ::PP::ObjectMixin
