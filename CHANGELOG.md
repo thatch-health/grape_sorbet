@@ -1,3 +1,13 @@
+## 0.3.0 (2026-09-14)
+
+⚠️ This release is a BREAKING CHANGE. ⚠️
+
+grape_sorbet now targets grape >= 4.0 and is no longer compatible with older grape versions.
+
+- Update signatures for grape 4.0 (#98)
+- Add the missing `head` routing shim (#99)
+- Add a signature for `return_no_content` (#100)
+
 ## 0.2.0 (2026-06-30)
 
 ⚠️ This release is a BREAKING CHANGE. ⚠️
