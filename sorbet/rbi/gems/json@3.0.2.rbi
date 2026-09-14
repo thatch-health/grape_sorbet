@@ -47,13 +47,13 @@
 #
 # You can parse a \String containing \JSON data using
 # either of two methods:
-# - <tt>JSON.parse(source, opts)</tt>
-# - <tt>JSON.parse!(source, opts)</tt>
+# - <tt>JSON.parse(source, **opts)</tt>
+# - <tt>JSON.parse!(source, **opts)</tt>
 #
 # where
 # - +source+ is a Ruby object.
-# - +opts+ is a \Hash object containing options
-#   that control both input allowed and output formatting.
+# - +opts+ are keyword arguments that control both input
+#   allowed and output formatting.
 #
 # The difference between the two methods
 # is that JSON.parse! omits some checks
@@ -105,7 +105,7 @@
 #   ruby # => 1.0
 #   ruby.class # => Float
 #   ruby = JSON.parse('2.0e2')
-#   ruby # => 200
+#   ruby # => 200.0
 #   ruby.class # => Float
 # Boolean:
 #   ruby = JSON.parse('true')
@@ -134,10 +134,10 @@
 #   ruby # => [0, [1, [2, [3]]]]
 # Too deep:
 #   # Raises JSON::NestingError (nesting of 2 is too deep):
-#   JSON.parse(source, {max_nesting: 1})
+#   JSON.parse(source, max_nesting: 1)
 # Bad value:
-#   # Raises TypeError (wrong argument type Symbol (expected Fixnum)):
-#   JSON.parse(source, {max_nesting: :foo})
+#   # Raises TypeError (no implicit conversion of Symbol into Integer):
+#   JSON.parse(source, max_nesting: :foo)
 #
 # ---
 #
@@ -145,11 +145,11 @@
 # should be ignored or cause an error to be raised:
 #
 # When set to +false+, the default:
-#   JSON.parse('{"a": 1, "a":2}') => duplicate key at line 1 column 1 (JSON::ParserError)
+#   JSON.parse('{"a": 1, "a": 2}') # duplicate key "a" at line 1 column 1 (JSON::ParserError)
 #
 # When set to +true+:
 #   # The last value is used.
-#   JSON.parse('{"a": 1, "a":2}', allow_duplicate_key: true) => {"a" => 2}
+#   JSON.parse('{"a": 1, "a": 2}', allow_duplicate_key: true) # => {"a" => 2}
 #
 # ---
 #
@@ -158,15 +158,15 @@
 # defaults to +false+.
 #
 # With the default, +false+:
-#   # Raises JSON::ParserError (225: unexpected token at '[NaN]'):
+#   # Raises JSON::ParserError (unexpected token 'NaN]' at line 1 column 2):
 #   JSON.parse('[NaN]')
-#   # Raises JSON::ParserError (232: unexpected token at '[Infinity]'):
+#   # Raises JSON::ParserError (unexpected token 'Infinity]' at line 1 column 2):
 #   JSON.parse('[Infinity]')
-#   # Raises JSON::ParserError (248: unexpected token at '[-Infinity]'):
+#   # Raises JSON::ParserError (invalid number: '-Infinity]' at line 1 column 2):
 #   JSON.parse('[-Infinity]')
 # Allow:
 #   source = '[NaN, Infinity, -Infinity]'
-#   ruby = JSON.parse(source, {allow_nan: true})
+#   ruby = JSON.parse(source, allow_nan: true)
 #   ruby # => [NaN, Infinity, -Infinity]
 #
 # ---
@@ -188,10 +188,10 @@
 # defaults to +false+.
 #
 # When set to +false+, the default:
-#   JSON.parse('/* comment */ {"a": 1, "a":2}') # unexpected character: '/' at line 1 column 1 (JSON::ParserError)
+#   JSON.parse('/* comment */ {"a": 1, "a": 2}') # unexpected token '/*' at line 1 column 1 (JSON::ParserError)
 #
 # When set to +true+, comments are ignored:
-#   JSON.parse('/* comment */ {"a": 1, "a":2} // more comment') # => {"a" => 2}
+#   JSON.parse('/* comment */ {"a": 1} // more comment', allow_comments: true) # => {"a" => 1}
 #
 # ---
 #
@@ -200,7 +200,7 @@
 # defaults to +false+.
 #
 # With the default, +false+:
-#   JSON.parse(%{"Hello\nWorld"}) # invalid ASCII control character in string (JSON::ParserError)
+#   JSON.parse(%{"Hello\nWorld"}) # invalid ASCII control character in string: \nWorld" at line 2 column 0 (JSON::ParserError)
 #
 # When enabled:
 #   JSON.parse(%{"Hello\nWorld"}, allow_control_characters: true) # => "Hello\nWorld"
@@ -212,7 +212,7 @@
 # defaults to +false+.
 #
 # With the default, +false+:
-#   JSON.parse('"Hell\o"') # invalid escape character in string (JSON::ParserError)
+#   JSON.parse('"Hell\o"') # invalid escape character in string: '\o"' at line 1 column 6 (JSON::ParserError)
 #
 # When enabled:
 #   JSON.parse('"Hell\o"', allow_invalid_escape: true) # => "Hello"
@@ -231,8 +231,8 @@
 #   ruby = JSON.parse(source)
 #   ruby # => {"a"=>"foo", "b"=>1.0, "c"=>true, "d"=>false, "e"=>nil}
 # Use Symbols:
-#   ruby = JSON.parse(source, {symbolize_names: true})
-#   ruby # => {:a=>"foo", :b=>1.0, :c=>true, :d=>false, :e=>nil}
+#   ruby = JSON.parse(source, symbolize_names: true)
+#   ruby # => {a: "foo", b: 1.0, c: true, d: false, e: nil}
 #
 # ---
 #
@@ -245,7 +245,7 @@
 #   ruby = JSON.parse(source)
 #   ruby.class # => Hash
 # Use class \OpenStruct:
-#   ruby = JSON.parse(source, {object_class: OpenStruct})
+#   ruby = JSON.parse(source, object_class: OpenStruct)
 #   ruby # => #<OpenStruct a="foo", b=1.0, c=true, d=false, e=nil>
 #
 # ---
@@ -259,8 +259,8 @@
 #   ruby = JSON.parse(source)
 #   ruby.class # => Array
 # Use class \Set:
-#   ruby = JSON.parse(source, {array_class: Set})
-#   ruby # => #<Set: {"foo", 1.0, true, false, nil}>
+#   ruby = JSON.parse(source, array_class: Set)
+#   ruby # => Set["foo", 1.0, true, false, nil]
 #
 # === Generating \JSON
 #
@@ -322,22 +322,22 @@
 # a \String containing a \JSON string representation of the source:
 #   JSON.generate(:foo) # => '"foo"'
 #   JSON.generate(Complex(0, 0)) # => '"0+0i"'
-#   JSON.generate(Dir.new('.')) # => '"#<Dir>"'
+#   JSON.generate(Dir.new('.')) # => '"#<Dir:0x...>"'
 #
 # ==== Generating Options
 #
 # ====== Input Options
 #
 # Option +allow_nan+ (boolean) specifies whether
-# +NaN+, +Infinity+, and <tt>-Infinity</tt> may be generated;
+# +NaN+, +Infinity+, and +-Infinity+ may be generated;
 # defaults to +false+.
 #
 # With the default, +false+:
-#   # Raises JSON::GeneratorError (920: NaN not allowed in JSON):
+#   # Raises JSON::GeneratorError (NaN not allowed in JSON):
 #   JSON.generate(JSON::NaN)
-#   # Raises JSON::GeneratorError (917: Infinity not allowed in JSON):
+#   # Raises JSON::GeneratorError (Infinity not allowed in JSON):
 #   JSON.generate(JSON::Infinity)
-#   # Raises JSON::GeneratorError (917: -Infinity not allowed in JSON):
+#   # Raises JSON::GeneratorError (-Infinity not allowed in JSON):
 #   JSON.generate(JSON::MinusInfinity)
 #
 # Allow:
@@ -348,14 +348,14 @@
 #
 # Option +allow_duplicate_key+ (boolean) specifies whether
 # hashes with duplicate keys should be allowed or produce an error.
-# defaults to emit a deprecation warning.
+# Defaults to +false+, which raises an error.
 #
-# With the default, <tt>false</tt>:
-#   JSON.generate({ foo: 1, "foo" => 2 })
+# With the default, +false+:
+#   JSON.generate({foo: 1, "foo" => 2})
 #   # detected duplicate key "foo" in {foo: 1, "foo" => 2} (JSON::GeneratorError)
 #
-# With <tt>true</tt>
-#   JSON.generate({ foo: 1, "foo" => 2 }, allow_duplicate_key: true)
+# With +true+:
+#   JSON.generate({foo: 1, "foo" => 2}, allow_duplicate_key: true)
 #   # => '{"foo":1,"foo":2}'
 #
 # ---
@@ -368,13 +368,13 @@
 #   JSON.generate(obj) # => '[[[[[[0]]]]]]'
 #
 # Too deep:
-#   # Raises JSON::NestingError (nesting of 2 is too deep):
+#   # Raises JSON::NestingError (nesting of 2 is too deep. Did you try to serialize objects with circular references?):
 #   JSON.generate(obj, max_nesting: 2)
 #
 # With +false+:
 #   obj = []
 #   obj[0] = obj
-#   # Raises  SystemStackError: stack level too deep
+#   # Raises SystemStackError (stack level too deep):
 #   JSON.generate(obj, max_nesting: false)
 #
 # Setting +max_nesting+ to +false+ or a very large number can lead to a stack overflow
@@ -413,7 +413,7 @@
 #   inserted before the colon in each \JSON object's pair;
 #   defaults to the empty \String, <tt>''</tt>.
 # - Option +sort_keys+ (boolean or \Proc) controls whether and how the keys of a
-#   hash are sorted when generating the output; defaults to <tt>false</tt>.
+#   hash are sorted when generating the output; defaults to +false+.
 #   When +true+, keys are sorted lexicographically. When a \Proc, it receives
 #   the entire \Hash and must return a \Hash with its pairs in the desired
 #   order, allowing for arbitrary sort orders.
@@ -442,7 +442,7 @@
 #     "foo" : [
 #       "bar",
 #       "baz"
-#   ],
+#     ],
 #     "bat" : {
 #       "bam" : 0,
 #       "bad" : 1
@@ -454,16 +454,14 @@ module JSON
   private
 
   # :call-seq:
-  #   JSON.dump(obj, io = nil, options = nil)
+  #   JSON.dump(obj, io = nil, _deprecated_limit = nil, options = nil)
   #
   # Dumps +obj+ as a \JSON string, i.e. calls generate on the object and returns the result.
-  #
-  # The default options can be changed via method JSON.dump_default_options.
   #
   # - Argument +io+, if given, should respond to method +write+;
   #   the \JSON \String is written to +io+, and +io+ is returned.
   #   If +io+ is not given, the \JSON \String is returned.
-  #
+  # - Argument +_deprecated_limit+ is deprecated, pass the +:max_nesting+ option instead.
   # ---
   #
   # When argument +io+ is not given, returns the \JSON \String generated from +obj+:
@@ -480,8 +478,8 @@ module JSON
   # Output:
   #   {"foo":[0,1],"bar":{"baz":2,"bat":3},"bam":"bad"}
   #
-  # pkg:gem/json#lib/json/common.rb:754
-  def dump(obj, anIO = T.unsafe(nil), kwargs = T.unsafe(nil)); end
+  # pkg:gem/json#lib/json/common.rb:752
+  def dump(obj, anIO = T.unsafe(nil), _deprecated_limit = T.unsafe(nil), kwargs = T.unsafe(nil)); end
 
   # :call-seq:
   #   JSON.generate(obj, opts = nil) -> new_string
@@ -516,7 +514,7 @@ module JSON
   #
   # Raises an exception if +obj+ contains circular references:
   #   a = []; b = []; a.push(b); b.push(a)
-  #   # Raises JSON::NestingError (nesting of 100 is too deep):
+  #   # Raises JSON::NestingError (nesting of 100 is too deep. Did you try to serialize objects with circular references?):
   #   JSON.generate(a)
   #
   # pkg:gem/json#lib/json/common.rb:378
@@ -660,7 +658,7 @@ module JSON
   # See method #parse.
   #
   # pkg:gem/json#lib/json/common.rb:327
-  def load_file(filespec, *_arg1, **_arg2, &_arg3); end
+  def load_file(filespec, **options); end
 
   # :call-seq:
   #   JSON.load_file!(path, **)
@@ -671,7 +669,7 @@ module JSON
   # See method #parse!
   #
   # pkg:gem/json#lib/json/common.rb:338
-  def load_file!(filespec, *_arg1, **_arg2, &_arg3); end
+  def load_file!(filespec, **options); end
 
   # :call-seq:
   #   JSON.parse(source, opts) -> object
@@ -718,7 +716,7 @@ module JSON
   # ---
   #
   # Raises an exception if +source+ is not valid JSON:
-  #   # Raises JSON::ParserError unexpected character: 'invalid' at line 1 column 1 :
+  #   # Raises JSON::ParserError (unexpected character: 'invalid' at line 1 column 1):
   #   JSON.parse('invalid')
   #
   # pkg:gem/json#lib/json/common.rb:296
@@ -922,16 +920,14 @@ module JSON
     def [](object, opts = T.unsafe(nil)); end
 
     # :call-seq:
-    #   JSON.dump(obj, io = nil, options = nil)
+    #   JSON.dump(obj, io = nil, _deprecated_limit = nil, options = nil)
     #
     # Dumps +obj+ as a \JSON string, i.e. calls generate on the object and returns the result.
-    #
-    # The default options can be changed via method JSON.dump_default_options.
     #
     # - Argument +io+, if given, should respond to method +write+;
     #   the \JSON \String is written to +io+, and +io+ is returned.
     #   If +io+ is not given, the \JSON \String is returned.
-    #
+    # - Argument +_deprecated_limit+ is deprecated, pass the +:max_nesting+ option instead.
     # ---
     #
     # When argument +io+ is not given, returns the \JSON \String generated from +obj+:
@@ -948,8 +944,8 @@ module JSON
     # Output:
     #   {"foo":[0,1],"bar":{"baz":2,"bat":3},"bam":"bad"}
     #
-    # pkg:gem/json#lib/json/common.rb:754
-    def dump(obj, anIO = T.unsafe(nil), kwargs = T.unsafe(nil)); end
+    # pkg:gem/json#lib/json/common.rb:752
+    def dump(obj, anIO = T.unsafe(nil), _deprecated_limit = T.unsafe(nil), kwargs = T.unsafe(nil)); end
 
     # :call-seq:
     #   JSON.generate(obj, opts = nil) -> new_string
@@ -984,7 +980,7 @@ module JSON
     #
     # Raises an exception if +obj+ contains circular references:
     #   a = []; b = []; a.push(b); b.push(a)
-    #   # Raises JSON::NestingError (nesting of 100 is too deep):
+    #   # Raises JSON::NestingError (nesting of 100 is too deep. Did you try to serialize objects with circular references?):
     #   JSON.generate(a)
     #
     # pkg:gem/json#lib/json/common.rb:378
@@ -1138,7 +1134,7 @@ module JSON
     # See method #parse.
     #
     # pkg:gem/json#lib/json/common.rb:327
-    def load_file(filespec, *_arg1, **_arg2, &_arg3); end
+    def load_file(filespec, **options); end
 
     # :call-seq:
     #   JSON.load_file!(path, **)
@@ -1149,7 +1145,7 @@ module JSON
     # See method #parse!
     #
     # pkg:gem/json#lib/json/common.rb:338
-    def load_file!(filespec, *_arg1, **_arg2, &_arg3); end
+    def load_file!(filespec, **options); end
 
     # :call-seq:
     #   JSON.parse(source, opts) -> object
@@ -1196,7 +1192,7 @@ module JSON
     # ---
     #
     # Raises an exception if +source+ is not valid JSON:
-    #   # Raises JSON::ParserError unexpected character: 'invalid' at line 1 column 1 :
+    #   # Raises JSON::ParserError (unexpected character: 'invalid' at line 1 column 1):
     #   JSON.parse('invalid')
     #
     # pkg:gem/json#lib/json/common.rb:296
@@ -1422,12 +1418,12 @@ end
 #
 #   MyApp::JSONC_CODER.load(document)
 #
-# pkg:gem/json#lib/json/common.rb:784
+# pkg:gem/json#lib/json/common.rb:792
 class JSON::Coder
   # :call-seq:
-  #   JSON.new(options = nil, &block)
+  #   JSON::Coder.new(**options, &block)
   #
-  # Argument +options+, if given, contains a \Hash of options for both parsing and generating.
+  # Keyword arguments +options+, if given, are options for both parsing and generating.
   # See {Parsing Options}[rdoc-ref:JSON@Parsing+Options],
   # and {Generating Options}[rdoc-ref:JSON@Generating+Options].
   #
@@ -1448,7 +1444,7 @@ class JSON::Coder
   #
   #  puts MyApp::API_JSON_CODER.dump(Time.now.utc) # => "2025-01-21T08:41:44.286Z"
   #
-  # pkg:gem/json#lib/json/common.rb:830
+  # pkg:gem/json#lib/json/common.rb:838
   def initialize(object_class: T.unsafe(nil), array_class: T.unsafe(nil), on_load: T.unsafe(nil), **options, &as_json); end
 
   # call-seq:
@@ -1457,10 +1453,10 @@ class JSON::Coder
   #
   # Serialize the given object into a \JSON document.
   #
-  # pkg:gem/json#lib/json/common.rb:851
+  # pkg:gem/json#lib/json/common.rb:859
   def dump(object, io = T.unsafe(nil)); end
 
-  # pkg:gem/json#lib/json/common.rb:854
+  # pkg:gem/json#lib/json/common.rb:862
   def generate(object, io = T.unsafe(nil)); end
 
   # call-seq:
@@ -1468,7 +1464,7 @@ class JSON::Coder
   #
   # Parse the given \JSON document and return an equivalent Ruby object.
   #
-  # pkg:gem/json#lib/json/common.rb:860
+  # pkg:gem/json#lib/json/common.rb:868
   def load(source); end
 
   # call-seq:
@@ -1476,17 +1472,17 @@ class JSON::Coder
   #
   # Parse the given \JSON document and return an equivalent Ruby object.
   #
-  # pkg:gem/json#lib/json/common.rb:869
+  # pkg:gem/json#lib/json/common.rb:877
   def load_file(path); end
 
-  # pkg:gem/json#lib/json/common.rb:863
+  # pkg:gem/json#lib/json/common.rb:871
   def parse(source); end
 end
 
-# pkg:gem/json#lib/json/common.rb:799
+# pkg:gem/json#lib/json/common.rb:807
 JSON::Coder::EXCLUDED_GENERATOR_OPTIONS = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/json#lib/json/common.rb:785
+# pkg:gem/json#lib/json/common.rb:793
 JSON::Coder::PARSER_OPTIONS = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/json#lib/json/ext.rb:39
@@ -1734,7 +1730,7 @@ class JSON::GeneratorError < ::JSON::JSONError
   def invalid_object; end
 end
 
-# pkg:gem/json#lib/json/common.rb:874
+# pkg:gem/json#lib/json/common.rb:882
 module JSON::GeneratorMethods
   # call-seq: to_json(*)
   #
@@ -1744,7 +1740,7 @@ module JSON::GeneratorMethods
   # it to a JSON string, and returns the result.
   # This is a fallback, if no special method #to_json was defined for some object.
   #
-  # pkg:gem/json#lib/json/common.rb:882
+  # pkg:gem/json#lib/json/common.rb:890
   def to_json(state = T.unsafe(nil), *_arg1); end
 end
 
@@ -1759,7 +1755,7 @@ JSON::Parser = JSON::Ext::Parser
 # pkg:gem/json#lib/json/common.rb:144
 class JSON::ParserError < ::JSON::JSONError
   # Column number where the parser encountered an error.
-  # Is <tt>nil</tt> when raised by JSON::ResumableParser.
+  # Is +nil+ when raised by JSON::ResumableParser.
   #
   # pkg:gem/json#lib/json/common.rb:151
   def column; end
@@ -1777,7 +1773,7 @@ class JSON::ParserError < ::JSON::JSONError
   def json_path; end
 
   # Line number where the parser encountered an error.
-  # Is <tt>nil</tt> when raised by JSON::ResumableParser.
+  # Is +nil+ when raised by JSON::ResumableParser.
   #
   # pkg:gem/json#lib/json/common.rb:147
   def line; end
@@ -1867,7 +1863,7 @@ end
 # pkg:gem/json#lib/json/common.rb:106
 JSON::State = JSON::Ext::Generator::State
 
-# pkg:gem/json#lib/json/common.rb:899
+# pkg:gem/json#lib/json/common.rb:907
 module Kernel
   private
 
@@ -1878,11 +1874,11 @@ module Kernel
   # The _opts_ argument is passed through to generate/parse respectively. See
   # generate and parse for their documentation.
   #
-  # pkg:gem/json#lib/json/common.rb:908
+  # pkg:gem/json#lib/json/common.rb:916
   def JSON(object, opts = T.unsafe(nil)); end
 end
 
-# pkg:gem/json#lib/json/common.rb:913
+# pkg:gem/json#lib/json/common.rb:921
 class Object < ::BasicObject
   include ::Kernel
   include ::PP::ObjectMixin

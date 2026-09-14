@@ -37559,7 +37559,8 @@ class Prism::Translation::Ripper < ::Prism::Compiler
     #             [:bodystmt, [[:var_ref, [:@kw, "nil", [1, 9]]]], nil, nil, nil]]]]
     #
     # pkg:gem/prism#lib/prism/translation/ripper.rb:393
-    def sexp(src, filename = T.unsafe(nil), lineno = T.unsafe(nil), raise_errors: T.unsafe(nil)); end
+    sig { params(source: String, filename: String, lineno: Integer, raise_errors: T.untyped).returns(T.untyped) }
+    def sexp(source, filename = "-", lineno = 1, raise_errors: false); end
 
     # Parses +src+ and create S-exp tree.
     # This method is mainly for developer use.
@@ -37585,7 +37586,8 @@ class Prism::Translation::Ripper < ::Prism::Compiler
     #               nil]]]]
     #
     # pkg:gem/prism#lib/prism/translation/ripper.rb:428
-    def sexp_raw(src, filename = T.unsafe(nil), lineno = T.unsafe(nil), raise_errors: T.unsafe(nil)); end
+    sig { params(source: String, filename: String, lineno: Integer, raise_errors: T.untyped).returns(T.untyped) }
+    def sexp_raw(source, filename = "-", lineno = 1, raise_errors: false); end
 
     # Tokenizes the Ruby program and returns an array of strings.
     # The +filename+ and +lineno+ arguments are mostly ignored, since the

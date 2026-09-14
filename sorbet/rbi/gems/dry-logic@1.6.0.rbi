@@ -64,19 +64,6 @@ module Dry::Logic::Builder
   def call(&_arg0); end
 
   class << self
-    # Predicate and operation builder
-    #
-    # @block [Proc]
-    # @return [Builder::Result]
-    # @example Check if input is zero
-    #   is_zero = Dry::Logic::Builder.call do
-    #     negation { lt?(0) ^ gt?(0) }
-    #   end
-    #
-    #   p is_zero.call(1) # => false
-    #   p is_zero.call(0) # => true
-    #   p is_zero.call(-1) # => false
-    #
     # pkg:gem/dry-logic#lib/dry/logic/builder.rb:34
     def call(&_arg0); end
   end
