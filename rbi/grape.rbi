@@ -4,21 +4,20 @@
 module Grape
   module DSL
     module Desc
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/desc.rb#L8-L68
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/desc.rb#L8-L78
       sig do
         params(
           description: String,
-          legacy_options: T.untyped,
           options: T.untyped,
           config_block: T.nilable(T.proc.bind(Grape::Util::ApiDescription).void),
         ).void
       end
-      def desc(description, *legacy_options, **options, &config_block); end
+      def desc(description, **options, &config_block); end
     end
 
     module Helpers
       module BaseHelper
-        # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/helpers.rb#L103-L106
+        # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/helpers.rb#L103-L106
         sig do
           params(
             name: Symbol,
@@ -28,7 +27,7 @@ module Grape
         def params(name, &block); end
       end
 
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/helpers.rb#L6-L35
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/helpers.rb#L6-L35
       sig do
         params(
           new_modules: T.untyped,
@@ -39,7 +38,7 @@ module Grape
     end
 
     module InsideRoute
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/inside_route.rb#L21-L35
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/inside_route.rb#L21-L35
       sig do
         params(
           message: T.any(String, T::Hash[Symbol, T.untyped]),
@@ -51,17 +50,17 @@ module Grape
       end
       def error!(message, status = nil, additional_headers = nil, backtrace = nil, original_exception = nil); end
 
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/inside_route.rb#L59-L71
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/inside_route.rb#L65-L77
       sig { params(status: T.nilable(T.any(Integer, Symbol))).returns(Integer) }
       def status(status = nil); end
 
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/inside_route.rb#L158-L168
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/inside_route.rb#L164-L174
       sig { returns(Grape::Router::Route) }
       def route; end
     end
 
     module RequestResponse
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/request_response.rb#L85-L128
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/request_response.rb#L95-L126
       sig do
         params(
           args: Symbol,
@@ -90,7 +89,7 @@ module Grape
     end
 
     module Routing
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L203-L207
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
       sig do
         params(
           path: String,
@@ -100,7 +99,7 @@ module Grape
       end
       def delete(path = '/', **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L203-L207
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
       sig do
         params(
           path: String,
@@ -110,7 +109,7 @@ module Grape
       end
       def get(path = '/', **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L203-L207
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
       sig do
         params(
           path: String,
@@ -120,7 +119,7 @@ module Grape
       end
       def options(path = '/', **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L203-L207
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
       sig do
         params(
           path: String,
@@ -130,7 +129,7 @@ module Grape
       end
       def patch(path = '/', **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L203-L207
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
       sig do
         params(
           path: String,
@@ -140,7 +139,7 @@ module Grape
       end
       def post(path = '/', **options, &block); end
 
-      # @shim: https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L203-L207
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
       sig do
         params(
           path: String,
@@ -150,22 +149,34 @@ module Grape
       end
       def put(path = '/', **options, &block); end
 
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L169-L201
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
+      sig do
+        params(
+          path: String,
+          options: T.untyped,
+          block: T.nilable(T.proc.bind(Grape::Endpoint).void),
+        ).void
+      end
+      def query(path = '/', **options, &block); end
+
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L168-L211
       sig do
         params(
           methods: T.any(Symbol, String, T::Array[String]),
           paths: T.nilable(T.any(String, T::Array[String])),
-          route_options: T::Hash[Symbol, T.untyped],
+          requirements: T.nilable(T::Hash[Symbol, T.untyped]),
+          anchor: T::Boolean,
+          route_options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
-      def route(methods, paths = ['/'], route_options = {}, &block); end
+      def route(methods, paths = ['/'], requirements: nil, anchor: true, **route_options, &block); end
 
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/routing.rb#L241-L254
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L253-L271
       sig do
         params(
           param: Symbol,
-          requirements: T.nilable(T::Hash[Symbol, T.untyped]),
+          requirements: T.untyped,
           type: T.untyped,
           options: T.untyped,
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
@@ -175,14 +186,14 @@ module Grape
     end
 
     module Validations
-      # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/dsl/validations.rb#L6-L11
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/validations.rb#L6-L11
       sig { params(block: T.proc.bind(Grape::Validations::ParamsScope).void).void }
       def params(&block); end
     end
   end
 
   class Endpoint
-    # https://github.com/ruby-grape/grape/blob/v3.3.1/lib/grape/endpoint.rb#L14
+    # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/endpoint.rb#L14
     sig { returns(Grape::Request) }
     def request; end
   end

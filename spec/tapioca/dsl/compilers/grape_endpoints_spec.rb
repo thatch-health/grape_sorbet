@@ -123,14 +123,17 @@ module Tapioca
                     sig { params(path: String, options: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
                     def put(path = '/', **options, &block); end
 
+                    sig { params(path: String, options: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def query(path = '/', **options, &block); end
+
                     sig { params(space: T.untyped, requirements: T.untyped, options: T.untyped, block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
                     def resource(space = nil, requirements: nil, **options, &block); end
 
                     sig { params(space: T.untyped, requirements: T.untyped, options: T.untyped, block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
                     def resources(space = nil, requirements: nil, **options, &block); end
 
-                    sig { params(methods: T.any(Symbol, String, T::Array[String]), paths: T.nilable(T.any(String, T::Array[String])), route_options: T::Hash[Symbol, T.untyped], block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def route(methods, paths = ['/'], route_options = {}, &block); end
+                    sig { params(methods: T.any(Symbol, String, T::Array[String]), paths: T.nilable(T.any(String, T::Array[String])), requirements: T.nilable(T::Hash[Symbol, T.untyped]), anchor: T::Boolean, route_options: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def route(methods, paths = ['/'], requirements: nil, anchor: true, **route_options, &block); end
 
                     sig { params(param: Symbol, requirements: T.untyped, type: T.untyped, options: T.untyped, block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
                     def route_param(param, requirements: nil, type: nil, **options, &block); end
@@ -236,14 +239,17 @@ module Tapioca
                     sig { params(path: String, options: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
                     def put(path = '/', **options, &block); end
 
+                    sig { params(path: String, options: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def query(path = '/', **options, &block); end
+
                     sig { params(space: T.untyped, requirements: T.untyped, options: T.untyped, block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
                     def resource(space = nil, requirements: nil, **options, &block); end
 
                     sig { params(space: T.untyped, requirements: T.untyped, options: T.untyped, block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
                     def resources(space = nil, requirements: nil, **options, &block); end
 
-                    sig { params(methods: T.any(Symbol, String, T::Array[String]), paths: T.nilable(T.any(String, T::Array[String])), route_options: T::Hash[Symbol, T.untyped], block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
-                    def route(methods, paths = ['/'], route_options = {}, &block); end
+                    sig { params(methods: T.any(Symbol, String, T::Array[String]), paths: T.nilable(T.any(String, T::Array[String])), requirements: T.nilable(T::Hash[Symbol, T.untyped]), anchor: T::Boolean, route_options: T.untyped, block: T.nilable(T.proc.bind(PrivateEndpoint).void)).void }
+                    def route(methods, paths = ['/'], requirements: nil, anchor: true, **route_options, &block); end
 
                     sig { params(param: Symbol, requirements: T.untyped, type: T.untyped, options: T.untyped, block: T.nilable(T.proc.bind(T.class_of(PrivateAPIInstance)).void)).void }
                     def route_param(param, requirements: nil, type: nil, **options, &block); end
