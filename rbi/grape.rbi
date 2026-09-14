@@ -54,6 +54,10 @@ module Grape
       sig { params(status: T.nilable(T.any(Integer, Symbol))).returns(Integer) }
       def status(status = nil); end
 
+      # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/inside_route.rb#L107-L118
+      sig { void }
+      def return_no_content; end
+
       # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/inside_route.rb#L164-L174
       sig { returns(Grape::Router::Route) }
       def route; end
