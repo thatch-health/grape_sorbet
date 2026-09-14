@@ -85,6 +85,8 @@ GEM
       builder
       minitest (>= 5.0, < 7)
       ruby-progressbar
+    mocha (3.1.0)
+      ruby2_keywords (>= 0.0.5)
     mustermann (4.0.0)
     netrc (0.11.0)
     parallel (2.2.0)
@@ -150,6 +152,7 @@ GEM
       rubocop (>= 1.75.2)
       spoom (~> 1.8)
     ruby-progressbar (1.13.0)
+    ruby2_keywords (0.0.5)
     rubydex (0.4.1)
     rubydex (0.4.1-aarch64-linux)
     rubydex (0.4.1-arm64-darwin)
@@ -210,6 +213,7 @@ DEPENDENCIES
   irb
   minitest (~> 6.0)
   minitest-reporters (~> 1.4)
+  mocha
   rake (~> 13.0)
   rubocop
   rubocop-minitest
@@ -253,6 +257,7 @@ CHECKSUMS
   logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
   minitest (6.0.6) sha256=153ea36d1d987a62942382b61075745042a2b3123b1cd48f4c3675af9cc7d6f1
   minitest-reporters (1.8.0) sha256=8ce5280fb73ad3178ae525454df169b6f28c1b38b1d088ea91815d3a370ba384
+  mocha (3.1.0) sha256=75f42d69ebfb1f10b32489dff8f8431d37a418120ecdfc07afe3bc183d4e1d56
   mustermann (4.0.0) sha256=91f67411bb208d1d93c41e6128cb3b0f8ddd9ec7c45966f1007e1c43c08040d7
   netrc (0.11.0) sha256=de1ce33da8c99ab1d97871726cba75151113f117146becbe45aa85cb3dabee3f
   parallel (2.2.0) sha256=e1059c5fd7b649558a0aec38a769f06a42942bdb40503d005a59c352fe011cd8
@@ -279,6 +284,7 @@ CHECKSUMS
   rubocop-shopify (3.0.2) sha256=c2479c2781550dabbbb5850880f42eb36e37527711f10de89c3d11eb0cb31361
   rubocop-sorbet (0.16.0) sha256=7e6970a4de3fcd1c9453aff007f55b09ae617bbb68182591b2668328f6997988
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
+  ruby2_keywords (0.0.5) sha256=ffd13740c573b7301cf7a2e61fc857b2a8e3d3aff32545d6f8300d8bae10e3ef
   rubydex (0.4.1) sha256=9856af8bfbe656eed95449dd9e2c8239a74662b4bb8563e4b99221dbc065a34a
   rubydex (0.4.1-aarch64-linux) sha256=abc1c9eb22479f60dd015fa81373163c5a71f2700b76bced1282631686bd6271
   rubydex (0.4.1-arm64-darwin) sha256=d23720253876d88fb98954e5d3a1ef9696a269697acf50e3ab53cdfbb2b66b96
