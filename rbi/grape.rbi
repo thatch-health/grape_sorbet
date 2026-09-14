@@ -117,6 +117,16 @@ module Grape
           block: T.nilable(T.proc.bind(Grape::Endpoint).void),
         ).void
       end
+      def head(path = '/', **options, &block); end
+
+      # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
+      sig do
+        params(
+          path: String,
+          options: T.untyped,
+          block: T.nilable(T.proc.bind(Grape::Endpoint).void),
+        ).void
+      end
       def options(path = '/', **options, &block); end
 
       # @shim: https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L213-L217
