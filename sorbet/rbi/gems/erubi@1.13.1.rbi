@@ -15,8 +15,6 @@ module Erubi
   def h(_arg0); end
 
   class << self
-    # Escape characters with their HTML/XML equivalents.
-    #
     # pkg:gem/erubi#lib/erubi.rb:49
     def h(_arg0); end
   end

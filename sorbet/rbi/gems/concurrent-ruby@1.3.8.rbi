@@ -108,42 +108,9 @@ module Concurrent
   def monotonic_time(unit = T.unsafe(nil)); end
 
   class << self
-    # Abort a currently running transaction - see `Concurrent::atomically`.
-    #
     # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/tvar.rb:148
     def abort_transaction; end
 
-    # Run a block that reads and writes `TVar`s as a single atomic transaction.
-    # With respect to the value of `TVar` objects, the transaction is atomic, in
-    # that it either happens or it does not, consistent, in that the `TVar`
-    # objects involved will never enter an illegal state, and isolated, in that
-    # transactions never interfere with each other. You may recognise these
-    # properties from database transactions.
-    #
-    # There are some very important and unusual semantics that you must be aware of:
-    #
-    # * Most importantly, the block that you pass to atomically may be executed
-    #     more than once. In most cases your code should be free of
-    #     side-effects, except for via TVar.
-    #
-    # * If an exception escapes an atomically block it will abort the transaction.
-    #
-    # * It is undefined behaviour to use callcc or Fiber with atomically.
-    #
-    # * If you create a new thread within an atomically, it will not be part of
-    #     the transaction. Creating a thread counts as a side-effect.
-    #
-    # Transactions within transactions are flattened to a single transaction.
-    #
-    # @example
-    #   a = new TVar(100_000)
-    #   b = new TVar(100)
-    #
-    #   Concurrent::atomically do
-    #     a.value -= 10
-    #     b.value += 10
-    #   end
-    #
     # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/tvar.rb:148
     def atomically; end
 
@@ -198,20 +165,6 @@ module Concurrent
     # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/concern/logging.rb:73
     def create_stdlib_logger(level = T.unsafe(nil), output = T.unsafe(nil)); end
 
-    # Dataflow allows you to create a task that will be scheduled when all of its data dependencies are available.
-    # {include:file:docs-source/dataflow.md}
-    #
-    # @param [Future] inputs zero or more `Future` operations that this dataflow depends upon
-    #
-    # @yield The operation to perform once all the dependencies are met
-    # @yieldparam [Future] inputs each of the `Future` inputs to the dataflow
-    # @yieldreturn [Object] the result of the block operation
-    #
-    # @return [Object] the result of all the operations
-    #
-    # @raise [ArgumentError] if no block is given
-    # @raise [ArgumentError] if any of the inputs are not `IVar`s
-    #
     # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/dataflow.rb:37
     def dataflow(*inputs, &block); end
 
@@ -282,24 +235,9 @@ module Concurrent
     # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/configuration.rb:73
     def global_timer_set; end
 
-    # Leave a transaction without committing or aborting - see `Concurrent::atomically`.
-    #
     # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/tvar.rb:148
     def leave_transaction; end
 
-    # @!macro monotonic_get_time
-    #
-    #   Returns the current time as tracked by the application monotonic clock.
-    #
-    #   @param [Symbol] unit the time unit to be returned, can be either
-    #     :float_second, :float_millisecond, :float_microsecond, :second,
-    #     :millisecond, :microsecond, or :nanosecond default to :float_second.
-    #
-    #   @return [Float] The current monotonic time since some unspecified
-    #     starting point
-    #
-    #   @!macro monotonic_clock_warning
-    #
     # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/utility/monotonic_time.rb:18
     def monotonic_time(unit = T.unsafe(nil)); end
 

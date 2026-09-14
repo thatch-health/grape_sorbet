@@ -450,153 +450,57 @@ module DRb
   def uri; end
 
   class << self
-    # Get the configuration of the current server.
-    #
-    # If there is no current server, this returns the default configuration.
-    # See #current_server and DRbServer::make_config.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1887
     def config; end
 
-    # Get the 'current' server.
-    #
-    # In the context of execution taking place within the main
-    # thread of a dRuby server (typically, as a result of a remote
-    # call on the server or one of its objects), the current
-    # server is that server.  Otherwise, the current server is
-    # the primary server.
-    #
-    # If the above rule fails to find a server, a DRbServerNotFound
-    # error is raised.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1845
     def current_server; end
 
-    # Retrieves the server with the given +uri+.
-    #
-    # See also regist_server and remove_server.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1987
     def fetch_server(uri); end
 
-    # Get the front object of the current server.
-    #
-    # This raises a DRbServerNotFound error if there is no current server.
-    # See #current_server.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1896
     def front; end
 
-    # Is +uri+ the URI for the current local server?
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1876
     def here?(uri); end
 
-    # Set the default ACL to +acl+.
-    #
-    # See DRb::DRbServer.default_acl.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1941
     def install_acl(acl); end
 
-    # Set the default id conversion object.
-    #
-    # This is expected to be an instance such as DRb::DRbIdConv that responds to
-    # #to_id and #to_obj that can convert objects to and from DRb references.
-    #
-    # See DRbServer#default_id_conv.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1933
     def install_id_conv(idconv); end
 
     # pkg:gem/drb#lib/drb/drb.rb:1947
     def mutex; end
 
-    # The primary local dRuby server.
-    #
-    # This is the server created by the #start_service call.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1827
     def primary_server; end
 
     # pkg:gem/drb#lib/drb/drb.rb:1827
     def primary_server=(_arg0); end
 
-    # Registers +server+ with DRb.
-    #
-    # This is called when a new DRb::DRbServer is created.
-    #
-    # If there is no primary server then +server+ becomes the primary server.
-    #
-    # Example:
-    #
-    #  require 'drb'
-    #
-    #  s = DRb::DRbServer.new # automatically calls regist_server
-    #  DRb.fetch_server s.uri #=> #<DRb::DRbServer:0x...>
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1968
     def regist_server(server); end
 
-    # Removes +server+ from the list of registered servers.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1979
     def remove_server(server); end
 
-    # Start a dRuby server locally.
-    #
-    # The new dRuby server will become the primary server, even
-    # if another server is currently the primary server.
-    #
-    # +uri+ is the URI for the server to bind to.  If nil,
-    # the server will bind to random port on the default local host
-    # name and use the default dRuby protocol.
-    #
-    # +front+ is the server's front object.  This may be nil.
-    #
-    # +config+ is the configuration for the new server.  This may
-    # be nil.
-    #
-    # See DRbServer::new.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1821
     def start_service(uri = T.unsafe(nil), front = T.unsafe(nil), config = T.unsafe(nil)); end
 
-    # Stop the local dRuby server.
-    #
-    # This operates on the primary server.  If there is no primary
-    # server currently running, it is a noop.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1855
     def stop_service; end
 
-    # Get the thread of the primary server.
-    #
-    # This returns nil if there is no primary server.  See #primary_server.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1922
     def thread; end
 
-    # Get a reference id for an object using the current server.
-    #
-    # This raises a DRbServerNotFound error if there is no current server.
-    # See #current_server.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1913
     def to_id(obj); end
 
-    # Convert a reference into an object using the current server.
-    #
-    # This raises a DRbServerNotFound error if there is no current server.
-    # See #current_server.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1914
     def to_obj(ref); end
 
-    # Get the URI defining the local dRuby space.
-    #
-    # This is the URI of the current server.  See #current_server.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:1869
     def uri; end
   end
@@ -955,45 +859,18 @@ module DRb::DRbProtocol
   def uri_option(uri, config, first = T.unsafe(nil)); end
 
   class << self
-    # Add a new protocol to the DRbProtocol module.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:755
     def add_protocol(prot); end
 
     # pkg:gem/drb#lib/drb/drb.rb:835
     def auto_load(uri); end
 
-    # Open a client connection to +uri+ with the configuration +config+.
-    #
-    # The DRbProtocol module asks each registered protocol in turn to
-    # try to open the URI.  Each protocol signals that it does not handle that
-    # URI by raising a DRbBadScheme error.  If no protocol recognises the
-    # URI, then a DRbBadURI error is raised.  If a protocol accepts the
-    # URI, but an error occurs in opening it, a DRbConnError is raised.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:781
     def open(uri, config, first = T.unsafe(nil)); end
 
-    # Open a server listening for connections at +uri+ with
-    # configuration +config+.
-    #
-    # The DRbProtocol module asks each registered protocol in turn to
-    # try to open a server at the URI.  Each protocol signals that it does
-    # not handle that URI by raising a DRbBadScheme error.  If no protocol
-    # recognises the URI, then a DRbBadURI error is raised.  If a protocol
-    # accepts the URI, but an error occurs in opening it, the underlying
-    # error is passed on to the caller.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:805
     def open_server(uri, config, first = T.unsafe(nil)); end
 
-    # Parse +uri+ into a [uri, option] pair.
-    #
-    # The DRbProtocol module asks each registered protocol in turn to
-    # try to parse the URI.  Each protocol signals that it does not handle that
-    # URI by raising a DRbBadScheme error.  If no protocol recognises the
-    # URI, then a DRbBadURI error is raised.
-    #
     # pkg:gem/drb#lib/drb/drb.rb:828
     def uri_option(uri, config, first = T.unsafe(nil)); end
   end
