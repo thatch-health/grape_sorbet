@@ -13,7 +13,7 @@ jobs:
     # We only want to check the metadata on pull_request events from Dependabot
     # itself, any subsequent pushes to the PR should just skip this step so we
     # don't go into a loop on commits created by the other jobs.
-    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]' }}
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]' }} # zizmor: ignore[bot-conditions]
     outputs:
       package-ecosystem: ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
       dependency-names: ${{ steps.dependabot-metadata.outputs.dependency-names }}
