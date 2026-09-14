@@ -30,7 +30,10 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
-          bundler-cache: true
+          bundler-cache: false
+
+      - name: Install gems
+        run: bundle install --jobs 4
 
       - name: Release Gem
         if: contains(github.ref, 'refs/tags/v')
