@@ -1,8 +1,21 @@
 # See https://git-scm.com/docs/gitattributes for more about git attribute files.
 
-*.rbi linguist-language=Ruby
+# Store and check out all text files with LF, on all platforms.
+# This agrees with end_of_line in .editorconfig.
+* text=auto eol=lf
 
-# Mark Tapioca RBI shims as generated.
-sorbet/rbi/annotations/** linguist-generated
-sorbet/rbi/dsl/** linguist-generated
-sorbet/rbi/gems/** linguist-generated
+# Show the enclosing function or section in diff hunk headers.
+*.gemspec diff=ruby
+*.rake diff=ruby
+*.rb diff=ruby
+*.rbi diff=ruby
+Gemfile diff=ruby
+Rakefile diff=ruby
+bin/* diff=ruby
+*.md diff=markdown
+
+# Linguist needs no rule for *.rbi files. It knows the extension.
+#
+# Tapioca writes a .gitattributes file in sorbet/rbi/annotations, sorbet/rbi/dsl
+# and sorbet/rbi/gems. Those files set linguist-vendored or linguist-generated.
+# Do not repeat those rules here.
