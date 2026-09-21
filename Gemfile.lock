@@ -56,7 +56,7 @@ GEM
       zeitwerk (~> 2.6)
     erb (6.0.7)
     erubi (1.13.1)
-    grape (4.0.0)
+    grape (4.0.1)
       activesupport (>= 7.2)
       dry-configurable (>= 1.0)
       dry-types (>= 1.1)
@@ -160,15 +160,15 @@ GEM
     rubydex (0.4.1-x86_64-linux)
     securerandom (0.4.1)
     simplecov (1.3.0)
-    sorbet (0.6.13499)
-      sorbet-static (= 0.6.13499)
-    sorbet-runtime (0.6.13499)
-    sorbet-static (0.6.13499-aarch64-linux)
-    sorbet-static (0.6.13499-universal-darwin)
-    sorbet-static (0.6.13499-x86_64-linux)
-    sorbet-static-and-runtime (0.6.13499)
-      sorbet (= 0.6.13499)
-      sorbet-runtime (= 0.6.13499)
+    sorbet (0.6.13505)
+      sorbet-static (= 0.6.13505)
+    sorbet-runtime (0.6.13505)
+    sorbet-static (0.6.13505-aarch64-linux)
+    sorbet-static (0.6.13505-universal-darwin)
+    sorbet-static (0.6.13505-x86_64-linux)
+    sorbet-static-and-runtime (0.6.13505)
+      sorbet (= 0.6.13505)
+      sorbet-runtime (= 0.6.13505)
     spoom (1.8.7)
       erubi (>= 1.10.0)
       prism (>= 0.28.0)
@@ -177,12 +177,12 @@ GEM
       rexml (>= 3.2.6)
       sorbet-static-and-runtime (>= 0.5.10187)
       thor (>= 0.19.2)
-    tapioca (0.19.2)
+    tapioca (0.20.0)
       benchmark
       bundler (>= 2.2.25)
       netrc (>= 0.11.0)
       parallel (>= 1.21.0)
-      rbi (>= 0.3.7)
+      rbi (>= 0.4.1)
       require-hooks (>= 0.2.2)
       rubydex (>= 0.1.0.beta10)
       sorbet-static-and-runtime (>= 0.6.12698)
@@ -245,7 +245,7 @@ CHECKSUMS
   dry-types (1.9.1) sha256=baebeecdb9f8395d6c9d227b62011279440943e3ef2468fe8ccc1ba11467f178
   erb (6.0.7) sha256=c5ca6dc25b0ef974a44dc8f59fe847577122483b1968a38dec305c60bf91ee92
   erubi (1.13.1) sha256=a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9
-  grape (4.0.0) sha256=15f93f2754776623397642d6acc3362c62c4c1b48791acab276356a48512816e
+  grape (4.0.1) sha256=a7e522b7eb8ca823c3440beb7e83d1613b8682ffdfa0015fbe8f29007d4b1224
   grape-entity (1.1.0) sha256=ab6a1004e57791834e8497d5e85a3c101b72144d8ca31462a26e6d0a380c3d89
   grape_sorbet (0.3.0)
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
@@ -292,14 +292,14 @@ CHECKSUMS
   rubydex (0.4.1-x86_64-linux) sha256=4e2c8398c9fc585485b54edd28f5ecf76b5a02255e177b6f8402e9d2afffd51b
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   simplecov (1.3.0) sha256=d9886307863c1ead47657dcbed869bfffd82318808b09014d8f0ff77dcfe7492
-  sorbet (0.6.13499) sha256=e76cf02a8e5b279f63b3fac80568dab02c28d9c3065cae88b76eb71262fe1b77
-  sorbet-runtime (0.6.13499) sha256=8c58d7df13178c614733c0d4c05fd8e2f01ef09192e5cb4217082dcbbbd20fbc
-  sorbet-static (0.6.13499-aarch64-linux) sha256=93392b4e40c975ba239051430d7a7b1be8e2befc0f51c163c5888446824b5247
-  sorbet-static (0.6.13499-universal-darwin) sha256=bdc0cabf2af0511d37d55d2619bd9af3ae63815935abda4956198d0bd72a6857
-  sorbet-static (0.6.13499-x86_64-linux) sha256=fb7d826ae2886298896497a0ef13f70008ba48ce04885cfd91de2bb0bd85f797
-  sorbet-static-and-runtime (0.6.13499) sha256=fbf85862218c0df62dd384dc908f2397a0cdef4fb247a8718f7890b5b3502153
+  sorbet (0.6.13505) sha256=642071230b941e0ecccaed4bcdd826ddf7ab79f829c43cc5385ae90f4c2b5b24
+  sorbet-runtime (0.6.13505) sha256=999b604242829ec42d977c901412f873fa72cd6babceef68eba4df0382a7cb03
+  sorbet-static (0.6.13505-aarch64-linux) sha256=7c46ff14d52800ffb25b1700dfee56a68b3a922189c0e03cb9b827950687ef99
+  sorbet-static (0.6.13505-universal-darwin) sha256=68a0bdc8724e34282a1e122769413b0eba4200589cf9e3684d875d859639d4a4
+  sorbet-static (0.6.13505-x86_64-linux) sha256=11ceaa9d6803c065e630bb6f1d7f9fdd9ec1864e489466cb3e18e9e30e25c1b5
+  sorbet-static-and-runtime (0.6.13505) sha256=c36a39571fe91964612456d15d90fa1a0dda1b03a0aa4be28a52336bf4d633ff
   spoom (1.8.7) sha256=81960502cdf23aa991f015988aa5dd43325e23ae4318b8e00d541299cbdb70f6
-  tapioca (0.19.2) sha256=938731b07811aee8d23871b1aee8861d464fbaf2cfffbf79a62b0c869a5120ec
+  tapioca (0.20.0) sha256=b375ed7bf51d2c86c09543eafedd0de85513634187c0f7a062615af8bb9347a0
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
   tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b
