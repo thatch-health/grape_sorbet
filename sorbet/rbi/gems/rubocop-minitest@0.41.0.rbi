@@ -8,7 +8,7 @@
 # pkg:gem/rubocop-minitest#lib/rubocop/minitest.rb:3
 module RuboCop; end
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/argument_range_helper.rb:4
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest.rb:4
 module RuboCop::Cop; end
 
 # Methods that calculate and return `Parser::Source::Ranges`.
@@ -47,8 +47,13 @@ end
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/in_delta_mixin.rb:8
 RuboCop::Cop::InDeltaMixin::MSG = T.let(T.unsafe(nil), String)
 
-# pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/instance_of_assertion_handleable.rb:5
-module RuboCop::Cop::Minitest; end
+# Cops for the `Minitest` department. The department's cops are registered for lazy loading and their files,
+# along with the mixins they use, are loaded on demand.
+#
+# pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest.rb:13
+module RuboCop::Cop::Minitest
+  extend ::RuboCop::Cop::LazyLoader
+end
 
 # Enforces the test to use `assert_empty` instead of using `assert(object.empty?)`.
 #
@@ -336,7 +341,7 @@ class RuboCop::Cop::Minitest::AssertMatch < ::RuboCop::Cop::Base
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_match.rb:59
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_match.rb:58
   def order_expected_and_actual(expected, actual); end
 end
 
@@ -664,10 +669,10 @@ class RuboCop::Cop::Minitest::AssertSame < ::RuboCop::Cop::Base
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_same.rb:58
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_same.rb:57
   def message(expected_node, actual_node, message_node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_same.rb:63
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/assert_same.rb:62
   def remove_method_call(send_node, corrector); end
 end
 
@@ -907,25 +912,25 @@ class RuboCop::Cop::Minitest::EmptyLineBeforeAssertionMethods < ::RuboCop::Cop::
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:52
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:51
   def accept_previous_line?(previous_line_node, node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:43
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:42
   def assertion_method(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:73
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:72
   def heredoc?(last_argument); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:77
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:76
   def no_empty_line?(previous_line_node, node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:87
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:86
   def register_offense(node, previous_line_node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:63
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:62
   def use_assertion_method_at_last_of_block?(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:59
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/empty_line_before_assertion_methods.rb:58
   def use_heredoc_argument?(node); end
 end
 
@@ -1061,6 +1066,19 @@ class RuboCop::Cop::Minitest::GlobalExpectations < ::RuboCop::Cop::Base
 
   private
 
+  # Replacing the whole receiver would overlap the correction of a matcher call nested
+  # in that receiver (`a.must_equal(b).must_equal(c)`), so only the DSL method selector
+  # is replaced and new DSL calls are wrapped around the receiver instead.
+  #
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/global_expectations.rb:150
+  def autocorrect(corrector, node, receiver, method); end
+
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/global_expectations.rb:164
+  def autocorrect_block_matcher(corrector, receiver); end
+
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/global_expectations.rb:160
+  def dsl_method_selector(receiver); end
+
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/global_expectations.rb:118
   def method_allowed?(method); end
 
@@ -1086,7 +1104,7 @@ RuboCop::Cop::Minitest::GlobalExpectations::DSL_METHODS = T.let(T.unsafe(nil), A
 RuboCop::Cop::Minitest::GlobalExpectations::MSG = T.let(T.unsafe(nil), String)
 
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/global_expectations.rb:93
-RuboCop::Cop::Minitest::GlobalExpectations::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Array)
+RuboCop::Cop::Minitest::GlobalExpectations::RESTRICT_ON_SEND = T.let(T.unsafe(nil), Set)
 
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/global_expectations.rb:90
 RuboCop::Cop::Minitest::GlobalExpectations::VALUE_MATCHERS = T.let(T.unsafe(nil), Array)
@@ -1167,10 +1185,10 @@ class RuboCop::Cop::Minitest::LifecycleHooksOrder < ::RuboCop::Cop::Base
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/lifecycle_hooks_order.rb:90
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/lifecycle_hooks_order.rb:89
   def autocorrect(corrector, previous_node, node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/lifecycle_hooks_order.rb:84
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/lifecycle_hooks_order.rb:83
   def hooks_and_test_cases(class_node); end
 end
 
@@ -1267,13 +1285,13 @@ class RuboCop::Cop::Minitest::MultipleAssertions < ::RuboCop::Cop::Base
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:62
   def assertions_count_based_on_type(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:77
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:82
   def assertions_count_in_assignment(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:99
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:104
   def assertions_count_in_branches(branches); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:103
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/multiple_assertions.rb:108
   def max_assertions; end
 end
 
@@ -1837,7 +1855,7 @@ class RuboCop::Cop::Minitest::RefuteMatch < ::RuboCop::Cop::Base
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/refute_match.rb:61
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/refute_match.rb:60
   def order_expected_and_actual(expected, actual); end
 end
 
@@ -2061,10 +2079,10 @@ class RuboCop::Cop::Minitest::RefuteSame < ::RuboCop::Cop::Base
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/refute_same.rb:58
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/refute_same.rb:57
   def message(expected_node, actual_node, message_node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/refute_same.rb:63
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/refute_same.rb:62
   def remove_method_call(send_node, corrector); end
 end
 
@@ -2388,7 +2406,7 @@ class RuboCop::Cop::Minitest::UselessAssertion < ::RuboCop::Cop::Base
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/useless_assertion.rb:67
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/useless_assertion.rb:66
   def empty_composite?(node); end
 
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/minitest/useless_assertion.rb:44
@@ -2449,34 +2467,37 @@ module RuboCop::Cop::MinitestExplorationHelpers
 
   private
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:117
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:124
   def assertion_method?(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:129
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:136
   def assertion_prefix_method?(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:97
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:104
   def assertions(def_node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:111
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:118
   def assertions_count(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:82
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:89
   def class_def_nodes(class_node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:125
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:132
   def lifecycle_hook_method?(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:77
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:84
   def lifecycle_hooks(class_node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:73
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:80
   def test_block?(block_node); end
+
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:65
+  def test_blocks(node, found = T.unsafe(nil)); end
 
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:47
   def test_case?(node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:93
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:100
   def test_case_name?(name); end
 
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:55
@@ -2485,7 +2506,7 @@ module RuboCop::Cop::MinitestExplorationHelpers
   # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:43
   def test_class?(class_node); end
 
-  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:67
+  # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:74
   def test_method?(def_node, visibility_check: T.unsafe(nil)); end
 end
 
@@ -2502,7 +2523,7 @@ RuboCop::Cop::MinitestExplorationHelpers::LIFECYCLE_HOOK_METHODS = T.let(T.unsaf
 RuboCop::Cop::MinitestExplorationHelpers::LIFECYCLE_HOOK_METHODS_IN_ORDER = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:26
-RuboCop::Cop::MinitestExplorationHelpers::MATCHER_METHODS = T.let(T.unsafe(nil), Array)
+RuboCop::Cop::MinitestExplorationHelpers::MATCHER_METHODS = T.let(T.unsafe(nil), Set)
 
 # pkg:gem/rubocop-minitest#lib/rubocop/cop/mixin/minitest_exploration_helpers.rb:13
 RuboCop::Cop::MinitestExplorationHelpers::VALUE_MATCHERS = T.let(T.unsafe(nil), Array)
