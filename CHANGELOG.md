@@ -1,3 +1,7 @@
+## Unreleased
+
+- Support `helpers` blocks (`helpers do ... end`)
+
 ## 0.3.0 (2026-09-14)
 
 ⚠️ This release is a BREAKING CHANGE. ⚠️
