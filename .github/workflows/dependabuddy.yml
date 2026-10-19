@@ -32,7 +32,7 @@ jobs:
     if: needs.fetch-dependabot-metadata.outputs.package-ecosystem == 'bundler'
 
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: app-token
         with:
           client-id: ${{ vars.THATCH_DEPENDABUDDY_CLIENT_ID }}
@@ -52,7 +52,7 @@ jobs:
           git config user.email "300683223+thatch-dependabuddy[bot]@users.noreply.github.com"
         shell: bash
 
-      - uses: ruby/setup-ruby@e81a8fa391b11a595c1b7ed84177cc0fe02faf83 # v1.328.0
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           bundler-cache: true
 
