@@ -67,6 +67,9 @@ module Tapioca
       # end
       # ~~~
       #
+      # For a `helpers do ... end` block, the compiler copies the methods of the block into `PrivateEndpoint`.
+      # It also includes the endpoint DSL modules in `API`, because Sorbet puts the methods of the block in `API`.
+      #
       class GrapeEndpoints < Tapioca::Dsl::Compiler
         extend T::Sig
 
@@ -81,6 +84,7 @@ module Tapioca
 
           root.create_class(api_class_name) do |api|
             create_classes_and_includes(api)
+            create_helper_context(api)
 
             create_callbacks_methods(api)
             create_request_response_methods(api)
@@ -105,6 +109,25 @@ module Tapioca
 
         # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/routing.rb#L219-L246
         NAMESPACE_METHODS = [:namespace, :group, :resource, :resources, :segment].freeze
+
+        # https://github.com/ruby-grape/grape/blob/v4.0.1/lib/grape/endpoint.rb#L10-L12
+        ENDPOINT_MODULES = ["::Grape::DSL::Settings", "::Grape::DSL::Headers", "::Grape::DSL::InsideRoute"].freeze
+
+        # https://github.com/ruby-grape/grape/blob/v4.0.1/lib/grape/endpoint.rb#L14-L26
+        ENDPOINT_READERS = T.let(
+          {
+            "api" => "T.untyped",
+            "cookies" => "T.untyped",
+            "env" => "T.untyped",
+            "logger" => "T.untyped",
+            "options" => "T.untyped",
+            "params" => "T.untyped",
+            "request" => "::Grape::Request",
+            "response_cookies" => "T.untyped",
+            "source" => "T.untyped",
+          }.freeze,
+          T::Hash[String, String],
+        )
 
         private
 
@@ -132,13 +155,65 @@ module Tapioca
         def create_endpoint_class(api)
           superclass = "::Grape::Endpoint"
 
-          named_helper_mods = constant.inheritable_setting.helpers.reject { |mod| mod.name.nil? }
-
           api.create_class(EndpointClassName, superclass_name: superclass) do |klass|
-            named_helper_mods.each do |mod|
-              klass.create_include(mod.name)
+            named_helper_modules.each do |mod|
+              klass.create_include(T.must(mod.name))
+            end
+
+            # Grape includes the module of a `helpers` block into the endpoint, but the module has no name.
+            # Thus, copy its methods.
+            anonymous_helper_methods.each do |method_def, visibility|
+              klass.create_method(
+                method_def.name.to_s,
+                parameters: compile_method_parameters_to_rbi(method_def),
+                return_type: compile_method_return_type_to_rbi(method_def),
+                visibility: visibility,
+              )
             end
           end
+        end
+
+        # Sorbet puts the methods of a `helpers` block in the API class, not in the endpoint.
+        # Thus, give the API class the endpoint methods that these helper methods can call.
+        sig { params(api: RBI::Scope).void }
+        def create_helper_context(api)
+          return if anonymous_helper_methods.empty?
+
+          ENDPOINT_MODULES.each { |mod| api.create_include(mod) }
+          named_helper_modules.each { |mod| api.create_include(T.must(mod.name)) }
+
+          helper_method_names = anonymous_helper_methods.map { |method_def, _| method_def.name.to_s }
+          ENDPOINT_READERS.each do |name, type|
+            next if helper_method_names.include?(name)
+
+            api.create_method(name, return_type: type)
+          end
+        end
+
+        sig { returns(T::Array[T::Module[T.anything]]) }
+        def named_helper_modules
+          @named_helper_modules ||= T.let(
+            helper_modules.reject { |mod| mod.name.nil? },
+            T.nilable(T::Array[T::Module[T.anything]]),
+          )
+        end
+
+        sig { returns(T::Array[[UnboundMethod, RBI::Visibility]]) }
+        def anonymous_helper_methods
+          @anonymous_helper_methods ||= T.let(
+            helper_modules.select { |mod| mod.name.nil? }.flat_map do |mod|
+              public_methods = mod.public_instance_methods(false).map { |name| [name, RBI::Public.new] }
+              private_methods = mod.private_instance_methods(false).map { |name| [name, RBI::Private.new] }
+
+              (public_methods + private_methods).map { |name, visibility| [mod.instance_method(name), visibility] }
+            end.sort_by { |method_def, _| method_def.name },
+            T.nilable(T::Array[[UnboundMethod, RBI::Visibility]]),
+          )
+        end
+
+        sig { returns(T::Array[T::Module[T.anything]]) }
+        def helper_modules
+          constant.inheritable_setting.helpers
         end
 
         sig { params(api: RBI::Scope).void }
