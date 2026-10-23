@@ -26,7 +26,7 @@ class ProgressBar::Base
   def initialize(options = T.unsafe(nil)); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:36
-  def clear(*_arg0, **_arg1, &_arg2); end
+  def clear(*, **, &); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:137
   def decrement; end
@@ -50,7 +50,7 @@ class ProgressBar::Base
   def inspect; end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:36
-  def log(*_arg0, **_arg1, &_arg2); end
+  def log(*, **, &); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:102
   def pause; end
@@ -59,7 +59,7 @@ class ProgressBar::Base
   def paused?; end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:41
-  def progress(*_arg0, **_arg1, &_arg2); end
+  def progress(*, **, &); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:145
   def progress=(new_progress); end
@@ -68,7 +68,7 @@ class ProgressBar::Base
   def progress_mark=(mark); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:36
-  def refresh(*_arg0, **_arg1, &_arg2); end
+  def refresh(*, **, &); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:157
   def remainder_mark=(mark); end
@@ -104,7 +104,7 @@ class ProgressBar::Base
   def to_s(new_format = T.unsafe(nil)); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:41
-  def total(*_arg0, **_arg1, &_arg2); end
+  def total(*, **, &); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/base.rb:149
   def total=(new_total); end
@@ -670,10 +670,10 @@ class ProgressBar::Outputs::NonTty < ::ProgressBar::Output
   def last_update_length; end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/outputs/non_tty.rb:36
-  def refresh_with_format_change(*_arg0); end
+  def refresh_with_format_change(*); end
 
   # pkg:gem/ruby-progressbar#lib/ruby-progressbar/outputs/non_tty.rb:32
-  def resolve_format(*_arg0); end
+  def resolve_format(*); end
 
   protected
 

@@ -438,10 +438,10 @@ class Mocha::Central::Null < ::Mocha::Central
   def initialize(&block); end
 
   # pkg:gem/mocha#lib/mocha/central.rb:11
-  def stub(*_arg0); end
+  def stub(*); end
 
   # pkg:gem/mocha#lib/mocha/central.rb:15
-  def unstub(*_arg0); end
+  def unstub(*); end
 end
 
 # pkg:gem/mocha#lib/mocha/change_state_side_effect.rb:4
@@ -1495,7 +1495,7 @@ class Mocha::Expectation
   #   end
   #
   # pkg:gem/mocha#lib/mocha/expectation.rb:324
-  def with(*expected_parameters_or_matchers, **_arg1, &matching_block); end
+  def with(*expected_parameters_or_matchers, **, &matching_block); end
 
   # Modifies expectation so that the expected method must be called with a block.
   #
@@ -2126,7 +2126,7 @@ class Mocha::Mock
   # @private
   #
   # pkg:gem/mocha#lib/mocha/mock.rb:319
-  def method_missing(symbol, *arguments, **_arg2, &block); end
+  def method_missing(symbol, *arguments, **, &block); end
 
   # @private
   #
@@ -2382,10 +2382,10 @@ end
 # pkg:gem/mocha#lib/mocha/mockery.rb:19
 class Mocha::Mockery::Null < ::Mocha::Mockery
   # pkg:gem/mocha#lib/mocha/mockery.rb:24
-  def add_mock(*_arg0); end
+  def add_mock(*); end
 
   # pkg:gem/mocha#lib/mocha/mockery.rb:28
-  def add_state_machine(*_arg0); end
+  def add_state_machine(*); end
 
   # pkg:gem/mocha#lib/mocha/mockery.rb:32
   def stubba; end

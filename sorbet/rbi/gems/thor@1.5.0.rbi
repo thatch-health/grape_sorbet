@@ -1656,13 +1656,13 @@ module Thor::Base::ClassMethods
   def arguments; end
 
   # pkg:gem/thor#lib/thor/base.rb:163
-  def attr_accessor(*_arg0); end
+  def attr_accessor(*); end
 
   # pkg:gem/thor#lib/thor/base.rb:155
-  def attr_reader(*_arg0); end
+  def attr_reader(*); end
 
   # pkg:gem/thor#lib/thor/base.rb:159
-  def attr_writer(*_arg0); end
+  def attr_writer(*); end
 
   # pkg:gem/thor#lib/thor/base.rb:194
   def check_default_type; end
@@ -2398,10 +2398,10 @@ class Thor::Group
     # Returns commands ready to be printed.
     #
     # pkg:gem/thor#lib/thor/group.rb:199
-    def printable_commands(*_arg0); end
+    def printable_commands(*); end
 
     # pkg:gem/thor#lib/thor/group.rb:205
-    def printable_tasks(*_arg0); end
+    def printable_tasks(*); end
 
     # Remove a previously added invocation.
     #
@@ -3217,7 +3217,7 @@ class Thor::Shell::Basic
   # Thor::Shell::Basic class.
   #
   # pkg:gem/thor#lib/thor/shell/basic.rb:258
-  def set_color(string, *_arg1); end
+  def set_color(string, *); end
 
   # Asks the user a question and returns true if the user replies "y" or
   # "yes".

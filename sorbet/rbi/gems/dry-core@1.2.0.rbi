@@ -17,13 +17,6 @@ module Dry
     # Equalizer has been originally imported from the equalizer gem created by Dan Kubb
     #
     # @api public
-    # Build an equalizer module for the inclusion in other class
-    #
-    # ## Credits
-    #
-    # Equalizer has been originally imported from the equalizer gem created by Dan Kubb
-    #
-    # @api public
     #
     # pkg:gem/dry-core#lib/dry/core.rb:52
     def Equalizer(*keys, **options); end
@@ -183,7 +176,7 @@ module Dry::Core::Cache
   #   the same argument values)
   #
   # pkg:gem/dry-core#lib/dry/core/cache.rb:51
-  def fetch_or_store(*args, &_arg1); end
+  def fetch_or_store(*args, &); end
 
   # @api private
   #
@@ -210,7 +203,7 @@ module Dry::Core::Cache::Methods
   # @return [Object] block's return value
   #
   # pkg:gem/dry-core#lib/dry/core/cache.rb:63
-  def fetch_or_store(*_arg0, **_arg1, &_arg2); end
+  def fetch_or_store(*, **, &); end
 end
 
 # Internal support module for class-level settings
@@ -761,7 +754,7 @@ module Dry::Core::Container::Mixin
   #       very helpful. This is a step toward doing that.
   #
   # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:218
-  def each(&_arg0); end
+  def each(&); end
 
   # Calls block once for each key in container, passing the key as a parameter.
   #
@@ -772,7 +765,7 @@ module Dry::Core::Container::Mixin
   # @api public
   #
   # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:201
-  def each_key(&_arg0); end
+  def each_key(&); end
 
   # Enable stubbing functionality into the current container
   #
@@ -843,7 +836,7 @@ module Dry::Core::Container::Mixin
   # @api public
   #
   # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:253
-  def namespace(namespace, &_arg1); end
+  def namespace(namespace, &); end
 
   # Register an item with the container to be resolved later
   #
@@ -877,7 +870,7 @@ module Dry::Core::Container::Mixin
   # @api public
   #
   # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:131
-  def resolve(key, &_arg1); end
+  def resolve(key, &); end
 
   class << self
     # @private
@@ -897,7 +890,7 @@ end
 # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:70
 module Dry::Core::Container::Mixin::Initializer
   # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:71
-  def initialize(*_arg0, **_arg1, &_arg2); end
+  def initialize(*, **, &); end
 end
 
 # pkg:gem/dry-core#lib/dry/core/container/mixin.rb:48
@@ -974,10 +967,10 @@ class Dry::Core::Container::NamespaceDSL < ::SimpleDelegator
   def import(namespace); end
 
   # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:41
-  def namespace(namespace, &_arg1); end
+  def namespace(namespace, &); end
 
   # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:37
-  def register(key, *_arg1, **_arg2, &_arg3); end
+  def register(key, *, **, &); end
 
   # pkg:gem/dry-core#lib/dry/core/container/namespace_dsl.rb:51
   def resolve(key); end
@@ -1067,7 +1060,7 @@ class Dry::Core::Container::Resolver
   #       registered would be very helpful. This is a step toward doing that.
   #
   # pkg:gem/dry-core#lib/dry/core/container/resolver.rb:84
-  def each(container, &_arg1); end
+  def each(container, &); end
 
   # Calls block once for each key in container, passing the key as a parameter.
   #
@@ -1078,7 +1071,7 @@ class Dry::Core::Container::Resolver
   # @api public
   #
   # pkg:gem/dry-core#lib/dry/core/container/resolver.rb:69
-  def each_key(container, &_arg1); end
+  def each_key(container, &); end
 
   # Check whether an items is registered under the given key
   #
@@ -1675,7 +1668,7 @@ module Dry::Core::Memoizable::ClassInterface::BasicObject
   include ::Dry::Core::Memoizable::ClassInterface::Base
 
   # pkg:gem/dry-core#lib/dry/core/memoizable.rb:26
-  def new(*_arg0, **_arg1); end
+  def new(*, **); end
 end
 
 # pkg:gem/dry-core#lib/dry/core/memoizable.rb:33
@@ -1683,7 +1676,7 @@ module Dry::Core::Memoizable::ClassInterface::Object
   include ::Dry::Core::Memoizable::ClassInterface::Base
 
   # pkg:gem/dry-core#lib/dry/core/memoizable.rb:36
-  def new(*_arg0, **_arg1); end
+  def new(*, **); end
 end
 
 # pkg:gem/dry-core#lib/dry/core/memoizable.rb:6

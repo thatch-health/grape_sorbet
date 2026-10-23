@@ -684,7 +684,7 @@ class DRb::DRbObject
   def hash; end
 
   # pkg:gem/drb#lib/drb/drb.rb:1163
-  def method_missing(msg_id, *a, **_arg2, &b); end
+  def method_missing(msg_id, *a, **, &b); end
 
   # pkg:gem/drb#lib/drb/drb.rb:1215
   def pretty_print(q); end

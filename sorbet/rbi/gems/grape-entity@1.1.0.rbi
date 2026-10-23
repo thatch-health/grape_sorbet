@@ -470,7 +470,7 @@ class Grape::Entity::Condition::Base
 
   class << self
     # pkg:gem/grape-entity#lib/grape_entity/condition/base.rb:7
-    def new(inverse, *_arg1, **_arg2, &_arg3); end
+    def new(inverse, *, **, &); end
   end
 end
 
@@ -743,7 +743,7 @@ class Grape::Entity::Exposure::Base
 
   class << self
     # pkg:gem/grape-entity#lib/grape_entity/exposure/base.rb:12
-    def new(attribute, options, conditions, *_arg3, **_arg4, &_arg5); end
+    def new(attribute, options, conditions, *, **, &); end
   end
 end
 
@@ -1012,25 +1012,25 @@ class Grape::Entity::Options
   def ==(other); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:12
-  def [](*_arg0, **_arg1, &_arg2); end
+  def [](*, **, &); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:12
-  def dig(*_arg0, **_arg1, &_arg2); end
+  def dig(*, **, &); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:12
-  def empty?(*_arg0, **_arg1, &_arg2); end
+  def empty?(*, **, &); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:75
   def except_fields(for_key = T.unsafe(nil)); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:12
-  def fetch(*_arg0, **_arg1, &_arg2); end
+  def fetch(*, **, &); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:61
   def for_nesting(key); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:12
-  def key?(*_arg0, **_arg1, &_arg2); end
+  def key?(*, **, &); end
 
   # pkg:gem/grape-entity#lib/grape_entity/options.rb:22
   def merge(new_opts); end
