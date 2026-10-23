@@ -130,7 +130,7 @@ class RuboCop::Cop::Rake::DuplicateNamespace < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::Rake::Helper::OnNamespace
 
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_namespace.rb:35
-  def initialize(*_arg0); end
+  def initialize(*); end
 
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_namespace.rb:67
   def message_for_dup(previous:, current:, namespace:); end
@@ -173,7 +173,7 @@ class RuboCop::Cop::Rake::DuplicateTask < ::RuboCop::Cop::Base
   include ::RuboCop::Cop::Rake::Helper::OnTask
 
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_task.rb:31
-  def initialize(*_arg0); end
+  def initialize(*); end
 
   # pkg:gem/rubocop-rake#lib/rubocop/cop/rake/duplicate_task.rb:66
   def message_for_dup(previous:, current:, task_name:); end

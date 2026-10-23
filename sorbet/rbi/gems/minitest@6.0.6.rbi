@@ -54,7 +54,6 @@ end
 # this is gonna break some shit?
 # for ruby 3
 # :stopdoc:
-# :stopdoc:
 # :startdoc:
 #
 # pkg:gem/minitest#lib/minitest/parallel.rb:3
@@ -802,106 +801,106 @@ end
 # pkg:gem/minitest#lib/minitest/expectations.rb:20
 module Minitest::Expectations
   # pkg:gem/minitest#lib/minitest/expectations.rb:116
-  def must_be(*args, **_arg1); end
+  def must_be(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:47
-  def must_be_close_to(*args, **_arg1); end
+  def must_be_close_to(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:29
-  def must_be_empty(*args, **_arg1); end
+  def must_be_empty(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:76
-  def must_be_instance_of(*args, **_arg1); end
+  def must_be_instance_of(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:85
-  def must_be_kind_of(*args, **_arg1); end
+  def must_be_kind_of(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:103
-  def must_be_nil(*args, **_arg1); end
+  def must_be_nil(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:161
-  def must_be_same_as(*args, **_arg1); end
+  def must_be_same_as(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:170
-  def must_be_silent(*args, **_arg1); end
+  def must_be_silent(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:49
-  def must_be_within_delta(*args, **_arg1); end
+  def must_be_within_delta(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:58
-  def must_be_within_epsilon(*args, **_arg1); end
+  def must_be_within_epsilon(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:38
-  def must_equal(*args, **_arg1); end
+  def must_equal(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:67
-  def must_include(*args, **_arg1); end
+  def must_include(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:94
-  def must_match(*args, **_arg1); end
+  def must_match(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:125
-  def must_output(*args, **_arg1); end
+  def must_output(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:134
-  def must_pattern_match(*args, **_arg1); end
+  def must_pattern_match(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:143
-  def must_raise(*args, **_arg1); end
+  def must_raise(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:152
-  def must_respond_to(*args, **_arg1); end
+  def must_respond_to(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:179
-  def must_throw(*args, **_arg1); end
+  def must_throw(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:188
-  def path_must_exist(*args, **_arg1); end
+  def path_must_exist(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:197
-  def path_wont_exist(*args, **_arg1); end
+  def path_wont_exist(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:293
-  def wont_be(*args, **_arg1); end
+  def wont_be(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:224
-  def wont_be_close_to(*args, **_arg1); end
+  def wont_be_close_to(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:206
-  def wont_be_empty(*args, **_arg1); end
+  def wont_be_empty(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:253
-  def wont_be_instance_of(*args, **_arg1); end
+  def wont_be_instance_of(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:262
-  def wont_be_kind_of(*args, **_arg1); end
+  def wont_be_kind_of(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:280
-  def wont_be_nil(*args, **_arg1); end
+  def wont_be_nil(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:320
-  def wont_be_same_as(*args, **_arg1); end
+  def wont_be_same_as(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:226
-  def wont_be_within_delta(*args, **_arg1); end
+  def wont_be_within_delta(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:235
-  def wont_be_within_epsilon(*args, **_arg1); end
+  def wont_be_within_epsilon(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:215
-  def wont_equal(*args, **_arg1); end
+  def wont_equal(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:244
-  def wont_include(*args, **_arg1); end
+  def wont_include(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:271
-  def wont_match(*args, **_arg1); end
+  def wont_match(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:302
-  def wont_pattern_match(*args, **_arg1); end
+  def wont_pattern_match(*args, **); end
 
   # pkg:gem/minitest#lib/minitest/expectations.rb:311
-  def wont_respond_to(*args, **_arg1); end
+  def wont_respond_to(*args, **); end
 end
 
 # Provides a simple set of guards that you can use in your tests
@@ -1653,6 +1652,9 @@ class Minitest::Test < ::Minitest::Runnable
   include ::Minitest::Assertions
   include ::Minitest::Test::LifecycleHooks
   include ::Minitest::Guard
+  include ::Mocha::ParameterMatchers::Methods
+  include ::Mocha::Hooks
+  include ::Mocha::API
   extend ::Minitest::Guard
 
   # LifecycleHooks

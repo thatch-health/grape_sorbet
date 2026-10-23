@@ -826,15 +826,15 @@ class URI::Generic
 
   # merge
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1164
+  # pkg:gem/uri#lib/uri/generic.rb:1176
   def +(oth); end
 
-  # pkg:gem/uri#lib/uri/generic.rb:1294
+  # pkg:gem/uri#lib/uri/generic.rb:1306
   def -(oth); end
 
   # Compares two URIs.
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1399
+  # pkg:gem/uri#lib/uri/generic.rb:1411
   def ==(oth); end
 
   # pkg:gem/uri#lib/uri/generic.rb:994
@@ -869,7 +869,7 @@ class URI::Generic
   #   uri.coerce("http://foo.com")
   #   #=> [#<URI::HTTP http://foo.com>, #<URI::HTTP http://my.example.com>]
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1478
+  # pkg:gem/uri#lib/uri/generic.rb:1490
   def coerce(oth); end
 
   # Components of the URI in the order.
@@ -894,7 +894,7 @@ class URI::Generic
 
   # Compares with _oth_ for Hash.
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1413
+  # pkg:gem/uri#lib/uri/generic.rb:1425
   def eql?(oth); end
 
   # Returns a proxy URI.
@@ -913,7 +913,7 @@ class URI::Generic
   # http_proxy is not used too if the variable is case insensitive.
   # CGI_HTTP_PROXY can be used instead.
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1504
+  # pkg:gem/uri#lib/uri/generic.rb:1516
   def find_proxy(env = T.unsafe(nil)); end
 
   # Returns the fragment component of the URI.
@@ -949,7 +949,7 @@ class URI::Generic
 
   # Returns the hash value.
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1408
+  # pkg:gem/uri#lib/uri/generic.rb:1420
   def hash; end
 
   # Returns true if URI is hierarchical.
@@ -1046,7 +1046,7 @@ class URI::Generic
   # pkg:gem/uri#lib/uri/generic.rb:685
   def hostname=(v); end
 
-  # pkg:gem/uri#lib/uri/generic.rb:1455
+  # pkg:gem/uri#lib/uri/generic.rb:1467
   def inspect; end
 
   # == Args
@@ -1066,7 +1066,7 @@ class URI::Generic
   #   uri.merge("/main.rbx?page=1")
   #   # => "http://my.example.com/main.rbx?page=1"
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1124
+  # pkg:gem/uri#lib/uri/generic.rb:1136
   def merge(oth); end
 
   # == Args
@@ -1086,7 +1086,7 @@ class URI::Generic
   #   uri.merge!("/main.rbx?page=1")
   #   uri.to_s  # => "http://my.example.com/main.rbx?page=1"
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1096
+  # pkg:gem/uri#lib/uri/generic.rb:1108
   def merge!(oth); end
 
   # Returns normalized URI.
@@ -1101,12 +1101,12 @@ class URI::Generic
   # * scheme and host are converted to lowercase,
   # * an empty path component is set to "/".
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1331
+  # pkg:gem/uri#lib/uri/generic.rb:1343
   def normalize; end
 
   # Destructive version of #normalize.
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1340
+  # pkg:gem/uri#lib/uri/generic.rb:1352
   def normalize!; end
 
   # Returns the opaque part of the URI.
@@ -1287,7 +1287,7 @@ class URI::Generic
   #   uri.route_from('http://my.example.com')
   #   #=> #<URI::Generic /main.rbx?page=1>
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1274
+  # pkg:gem/uri#lib/uri/generic.rb:1286
   def route_from(oth); end
 
   # == Args
@@ -1307,7 +1307,7 @@ class URI::Generic
   #   uri.route_to('http://my.example.com/main.rbx?page=1')
   #   #=> #<URI::Generic /main.rbx?page=1>
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1314
+  # pkg:gem/uri#lib/uri/generic.rb:1326
   def route_to(oth); end
 
   # Returns the scheme component of the URI.
@@ -1357,15 +1357,15 @@ class URI::Generic
   #   uri.select(:userinfo, :host, :path)
   #   # => ["myuser:mypass", "my.example.com", "/test.rbx"]
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1444
+  # pkg:gem/uri#lib/uri/generic.rb:1456
   def select(*components); end
 
   # Constructs String from URI.
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1355
+  # pkg:gem/uri#lib/uri/generic.rb:1367
   def to_s; end
 
-  # pkg:gem/uri#lib/uri/generic.rb:1394
+  # pkg:gem/uri#lib/uri/generic.rb:1406
   def to_str; end
 
   # Returns the user component (without URI decoding).
@@ -1391,7 +1391,7 @@ class URI::Generic
   #
   #   uri = URI.parse("http://john:S3nsit1ve@my.example.com")
   #   uri.user = "sam"
-  #   uri.to_s  #=> "http://sam:V3ry_S3nsit1ve@my.example.com"
+  #   uri.to_s  #=> "http://sam@my.example.com"
   #
   # pkg:gem/uri#lib/uri/generic.rb:471
   def user=(user); end
@@ -1410,7 +1410,7 @@ class URI::Generic
 
   # Returns an Array of the components defined from the COMPONENT Array.
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1420
+  # pkg:gem/uri#lib/uri/generic.rb:1432
   def component_ary; end
 
   # Protected setter for the authority info (+user+, +password+, +host+
@@ -1573,12 +1573,12 @@ class URI::Generic
 
   # :stopdoc:
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1206
+  # pkg:gem/uri#lib/uri/generic.rb:1218
   def route_from0(oth); end
 
   # :stopdoc:
   #
-  # pkg:gem/uri#lib/uri/generic.rb:1167
+  # pkg:gem/uri#lib/uri/generic.rb:1179
   def route_from_path(src, dst); end
 
   # Returns an Array of the path split on '/'.
@@ -1630,7 +1630,7 @@ class URI::Generic
     # pkg:gem/uri#lib/uri/generic.rb:32
     def default_port; end
 
-    # pkg:gem/uri#lib/uri/generic.rb:1570
+    # pkg:gem/uri#lib/uri/generic.rb:1582
     def use_proxy?(hostname, addr, port, no_proxy); end
 
     # pkg:gem/uri#lib/uri/generic.rb:63

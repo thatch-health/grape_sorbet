@@ -38,7 +38,7 @@ class Dry::Inflector
   #   end
   #
   # pkg:gem/dry-inflector#lib/dry/inflector.rb:33
-  def initialize(&_arg0); end
+  def initialize(&); end
 
   # pkg:gem/dry-inflector#lib/dry/inflector.rb:70
   def camelize(input); end

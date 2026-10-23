@@ -2176,7 +2176,7 @@ class RBS::CLI::ColoredIO
   def initialize(stdout:); end
 
   # pkg:gem/rbs#lib/rbs/cli/colored_io.rb:28
-  def puts(*_arg0, **_arg1, &_arg2); end
+  def puts(*, **, &); end
 
   # pkg:gem/rbs#lib/rbs/cli/colored_io.rb:20
   def puts_green(string); end
@@ -3291,7 +3291,7 @@ class RBS::DefinitionError < ::RBS::BaseError; end
 # pkg:gem/rbs#lib/rbs/errors.rb:23
 module RBS::DetailedMessageable
   # pkg:gem/rbs#lib/rbs/errors.rb:24
-  def detailed_message(highlight: T.unsafe(nil), **_arg1); end
+  def detailed_message(highlight: T.unsafe(nil), **); end
 end
 
 # pkg:gem/rbs#lib/rbs/diff.rb:4
@@ -6496,7 +6496,7 @@ end
 # pkg:gem/rbs#lib/rbs/types.rb:17
 module RBS::Types::NoTypeName
   # pkg:gem/rbs#lib/rbs/types.rb:18
-  def map_type_name(&_arg0); end
+  def map_type_name(&); end
 end
 
 # pkg:gem/rbs#lib/rbs/types.rb:655

@@ -45,7 +45,7 @@ end
 # pkg:gem/dry-logic#lib/dry/logic/builder.rb:8
 module Dry::Logic::Builder
   # pkg:gem/dry-logic#lib/dry/logic/builder.rb:35
-  def build(&_arg0); end
+  def build(&); end
 
   # Predicate and operation builder
   #
@@ -61,11 +61,11 @@ module Dry::Logic::Builder
   #   p is_zero.call(-1) # => false
   #
   # pkg:gem/dry-logic#lib/dry/logic/builder.rb:31
-  def call(&_arg0); end
+  def call(&); end
 
   class << self
     # pkg:gem/dry-logic#lib/dry/logic/builder.rb:34
-    def call(&_arg0); end
+    def call(&); end
   end
 end
 
@@ -85,7 +85,7 @@ class Dry::Logic::Builder::Context
   # @see Builder#call
   #
   # pkg:gem/dry-logic#lib/dry/logic/builder.rb:47
-  def call(&_arg0); end
+  def call(&); end
 
   # Defines custom predicate
   #
@@ -207,7 +207,7 @@ end
 # pkg:gem/dry-logic#lib/dry/logic/operations/and.rb:6
 class Dry::Logic::Operations::And < ::Dry::Logic::Operations::Binary
   # pkg:gem/dry-logic#lib/dry/logic/operations/and.rb:9
-  def initialize(*_arg0, **_arg1); end
+  def initialize(*, **); end
 
   # pkg:gem/dry-logic#lib/dry/logic/operations/and.rb:38
   def [](input); end
@@ -585,7 +585,7 @@ module Dry::Logic::Predicates::Methods
   def odd?(input); end
 
   # pkg:gem/dry-logic#lib/dry/logic/predicates.rb:209
-  def predicate(name, &_arg1); end
+  def predicate(name, &); end
 
   # This overrides Object#respond_to? so we need to make it compatible
   #

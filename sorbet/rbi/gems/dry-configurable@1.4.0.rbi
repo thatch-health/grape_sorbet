@@ -145,7 +145,7 @@ module Dry::Configurable::ClassMethods
   # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/class_methods.rb:41
-  def setting(*_arg0, **_arg1, &_arg2); end
+  def setting(*, **, &); end
 
   # Returns the defined settings for the class.
   #
@@ -461,7 +461,7 @@ module Dry::Configurable::Initializer
   # @api private
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/instance_methods.rb:14
-  def initialize(*_arg0, **_arg1); end
+  def initialize(*, **); end
 end
 
 # Instance-level API when `Dry::Configurable` is included in a class
@@ -636,7 +636,7 @@ class Dry::Configurable::Settings
   # @api public
   #
   # pkg:gem/dry-configurable#lib/dry/configurable/settings.rb:72
-  def each(&_arg0); end
+  def each(&); end
 
   # Returns true if a setting for the given name is defined.
   #

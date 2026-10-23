@@ -3399,7 +3399,7 @@ class Regexp::Syntax::V3_5_0 < ::Regexp::Syntax::V3_2_0; end
 class Regexp::Syntax::V4_0_0 < ::Regexp::Syntax::V3_5_0; end
 
 # pkg:gem/regexp_parser#lib/regexp_parser/syntax/version_lookup.rb:64
-Regexp::Syntax::V4_0_6 = Regexp::Syntax::V4_0_0
+Regexp::Syntax::V4_0_9 = Regexp::Syntax::V4_0_0
 
 # pkg:gem/regexp_parser#lib/regexp_parser/syntax/version_lookup.rb:6
 Regexp::Syntax::VERSION_CONST_REGEXP = T.let(T.unsafe(nil), Regexp)

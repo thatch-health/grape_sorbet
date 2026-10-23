@@ -7,7 +7,6 @@
 
 # {include:file:README.md}
 # load native parts first
-# load native parts first
 #
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/constants.rb:1
 module Concurrent
@@ -1506,7 +1505,7 @@ end
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/async.rb:269
 module Concurrent::Async::ClassMethods
   # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/async.rb:270
-  def new(*args, **_arg1, &block); end
+  def new(*args, **, &block); end
 end
 
 # Atoms provide a way to manage shared, synchronous, independent state.
@@ -2276,10 +2275,6 @@ end
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/errors.rb:9
 class Concurrent::CancelledOperationError < ::Concurrent::Error; end
 
-# @!visibility private
-# @!visibility private
-# @!visibility private
-# @!visibility private
 # @!visibility private
 #
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/map.rb:7
@@ -9823,20 +9818,10 @@ class Concurrent::ThreadPoolExecutor < ::Concurrent::RubyThreadPoolExecutor; end
 Concurrent::ThreadPoolExecutorImplementation = Concurrent::RubyThreadPoolExecutor
 
 # @!visibility private
-# @!visibility private
-# @!visibility private
-# @!visibility private
-# @!visibility private
-# @!visibility private
 #
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/thread_safe/util.rb:4
 module Concurrent::ThreadSafe; end
 
-# @!visibility private
-# @!visibility private
-# @!visibility private
-# @!visibility private
-# @!visibility private
 # @!visibility private
 #
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/thread_safe/util.rb:7
@@ -10452,9 +10437,6 @@ class Concurrent::Tuple
   def volatile_set(i, value); end
 end
 
-# @!visibility private
-# @!visibility private
-# @!visibility private
 # @!visibility private
 #
 # pkg:gem/concurrent-ruby#lib/concurrent-ruby/concurrent/utility/engine.rb:3
