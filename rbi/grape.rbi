@@ -25,6 +25,10 @@ module Grape
           ).void
         end
         def params(name, &block); end
+
+        # Grape only extends modules with BaseHelper. This lets `helpers` blocks call `extend T::Sig`.
+        sig { params(modules: T::Module[T.anything]).returns(T.self_type) }
+        def extend(*modules); end
       end
 
       # https://github.com/ruby-grape/grape/blob/v4.0.0/lib/grape/dsl/helpers.rb#L6-L35
