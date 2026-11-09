@@ -11,7 +11,7 @@
 #   :header - version from HTTP Accept header.
 #   :accept_version_header - version from HTTP Accept-Version header
 #   :path   - version from uri. e.g. /v1/resource
-#   :param  - version from uri query string, e.g. /v1/resource?apiver=v1
+#   :param  - version from uri query string, e.g. /resource?apiver=v1
 # See individual classes for details.
 # Act like a Grape::Router::Route but for greedy_match
 # see @neutral_map
@@ -32,7 +32,7 @@ module Grape
     # that had already shipped, and every custom `behavior` lambda -- how a Rails
     # app consumes deprecations -- was handed the same wrong number.
     #
-    # pkg:gem/grape#lib/grape.rb:105
+    # pkg:gem/grape#lib/grape.rb:108
     def deprecator; end
   end
 end
@@ -45,31 +45,41 @@ class Grape::API
   extend ::Grape::Mountable
 
   class << self
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def base(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def base=(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:29
+    # pkg:gem/grape#lib/grape/api.rb:36
     def base_instance; end
 
-    # pkg:gem/grape#lib/grape/api.rb:29
+    # pkg:gem/grape#lib/grape/api.rb:36
     def base_instance=(_arg0); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def base_instance?(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
-    def call(*, **, &); end
+    # The interface point between Rack and Grape; it accepts a request from
+    # Rack and ultimately returns an array of three values: the status, the
+    # headers, and the body. See [the rack specification]
+    # (https://github.com/rack/rack/blob/main/SPEC.rdoc) for more.
+    # NOTE: This will only be called on an API directly mounted on RACK
+    #
+    # Not delegated with the rest because it runs on every request, and a
+    # Forwardable delegator checks its target with +defined?+ and forwards
+    # through +...+ each time: about as much again as the call it makes.
+    #
+    # pkg:gem/grape#lib/grape/api.rb:61
+    def call(env); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def change!(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def compile!(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def configuration(*, **, &); end
 
     # Configure an API from the outside. If a block is given, it'll pass a
@@ -78,22 +88,22 @@ class Grape::API
     # The configuration set here is accessible from inside an API with
     # `configuration` as normal.
     #
-    # pkg:gem/grape#lib/grape/api.rb:67
+    # pkg:gem/grape#lib/grape/api.rb:93
     def configure; end
 
     # Initialize the instance variables on the remountable class, and the base_instance
     # an instance that will be used to create the set up but will not be mounted
     #
-    # pkg:gem/grape#lib/grape/api.rb:46
+    # pkg:gem/grape#lib/grape/api.rb:67
     def initial_setup(base_instance_parent); end
 
-    # pkg:gem/grape#lib/grape/api.rb:29
+    # pkg:gem/grape#lib/grape/api.rb:36
     def instances; end
 
-    # pkg:gem/grape#lib/grape/api.rb:29
+    # pkg:gem/grape#lib/grape/api.rb:36
     def instances=(_arg0); end
 
-    # pkg:gem/grape#lib/grape/api.rb:31
+    # pkg:gem/grape#lib/grape/api.rb:38
     def method_missing(method, *, **, &); end
 
     # The remountable class can have a configuration hash to provide some dynamic class-level variables.
@@ -101,84 +111,81 @@ class Grape::API
     # depending on where the endpoint is mounted. Use with care, if you find yourself using configuration
     # too much, you may actually want to provide a new API rather than remount it.
     #
-    # pkg:gem/grape#lib/grape/api.rb:79
+    # pkg:gem/grape#lib/grape/api.rb:105
     def mount_instance(configuration: T.unsafe(nil)); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def new(*, **, &); end
 
-    # Redefines all methods so that are forwarded to add_setup and be recorded
+    # Redefines all methods so that are forwarded to add_setup and be recorded.
+    # A read (see SETTING_READERS) is answered by the last instance, which is
+    # where add_setup takes its answer from, without being recorded.
     #
-    # pkg:gem/grape#lib/grape/api.rb:54
+    # pkg:gem/grape#lib/grape/api.rb:77
     def override_all_methods!; end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def recognize_path(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def reset!(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:31
+    # pkg:gem/grape#lib/grape/api.rb:38
     def respond_to_missing?(name, include_private = T.unsafe(nil)); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def routes(*, **, &); end
 
-    # pkg:gem/grape#lib/grape/api.rb:41
+    # pkg:gem/grape#lib/grape/api.rb:49
     def top_level_setting(*, **, &); end
 
     private
 
     # Adds a new stage to the set up require to get a Grape::API up and running
     #
-    # pkg:gem/grape#lib/grape/api.rb:107
+    # pkg:gem/grape#lib/grape/api.rb:133
     def add_setup(**step); end
 
-    # pkg:gem/grape#lib/grape/api.rb:149
+    # pkg:gem/grape#lib/grape/api.rb:179
     def any_lazy?(args); end
 
-    # pkg:gem/grape#lib/grape/api.rb:153
+    # pkg:gem/grape#lib/grape/api.rb:183
     def evaluate_arguments(configuration, *args); end
 
     # When inherited, will create a list of all instances (times the API was mounted)
     # It will listen to the setup required to mount that endpoint, and replicate it on any new instance
     #
-    # pkg:gem/grape#lib/grape/api.rb:91
+    # pkg:gem/grape#lib/grape/api.rb:117
     def inherited(api); end
 
     # Updating all previously mounted classes in the case that new methods have been executed.
     #
-    # pkg:gem/grape#lib/grape/api.rb:119
+    # pkg:gem/grape#lib/grape/api.rb:145
     def refresh_mount_step; end
 
     # Replays the set up to produce an API as defined in this class, can be called
     # on classes that inherit from Grape::API
     #
-    # pkg:gem/grape#lib/grape/api.rb:100
+    # pkg:gem/grape#lib/grape/api.rb:126
     def replay_setup_on(instance); end
 
-    # pkg:gem/grape#lib/grape/api.rb:131
+    # pkg:gem/grape#lib/grape/api.rb:157
     def replay_step_on(instance, method:, args:, kwargs:, block:); end
+
+    # pkg:gem/grape#lib/grape/api.rb:169
+    def setting_read?(method, args, kwargs, block); end
 
     # Skips steps that contain arguments to be lazily executed (on re-mount time)
     #
-    # pkg:gem/grape#lib/grape/api.rb:144
+    # pkg:gem/grape#lib/grape/api.rb:174
     def skip_immediate_run?(instance, args, kwargs); end
   end
 end
 
-# pkg:gem/grape#lib/grape/api.rb:15
-class Grape::API::Boolean
-  class << self
-    # pkg:gem/grape#lib/grape/api.rb:19
-    def build(val); end
-  end
-end
+# pkg:gem/grape#lib/grape/api.rb:31
+class Grape::API::Boolean; end
 
-# pkg:gem/grape#lib/grape/api.rb:16
-Grape::API::Boolean::VALUES = T.let(T.unsafe(nil), Array)
-
-# pkg:gem/grape#lib/grape/api.rb:13
+# pkg:gem/grape#lib/grape/api.rb:29
 Grape::API::Helpers = Grape::DSL::Helpers::BaseHelper
 
 # The API Instance class, is the engine behind Grape::API. Each class that inherits
@@ -195,18 +202,20 @@ class Grape::API::Instance
   extend ::Grape::DSL::Middleware
   extend ::Grape::DSL::RequestResponse
   extend ::Grape::DSL::Routing
+  extend ::Grape::DSL::Mounting
+  extend ::Grape::DSL::Versioning
   extend ::Grape::DSL::Helpers
   extend ::Grape::Middleware::Auth::DSL
 
   # Builds the routes from the defined endpoints, effectively compiling
   # this API into a usable form.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:105
+  # pkg:gem/grape#lib/grape/api/instance.rb:106
   def initialize; end
 
   # Handle a request. See Rack documentation for what `env` is.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:118
+  # pkg:gem/grape#lib/grape/api/instance.rb:125
   def call(env); end
 
   # Some requests may return a HTTP 404 error if grape cannot find a matching
@@ -215,7 +224,7 @@ class Grape::API::Instance
   # looking for a matching route on other resources.
   #
   # In some applications (e.g. mounting grape on rails), one might need to trap
-  # errors from reaching upstream. This is effectivelly done by unsetting
+  # errors from reaching upstream. This is effectively done by unsetting
   # X-Cascade. Default :cascade is true.
   #
   # Resolved in the constructor rather than per request: answering it walks
@@ -223,10 +232,10 @@ class Grape::API::Instance
   # were compiled and frozen from -- changing those has to go through
   # +change!+, which discards this instance.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:146
+  # pkg:gem/grape#lib/grape/api/instance.rb:157
   def cascade?; end
 
-  # pkg:gem/grape#lib/grape/api/instance.rb:101
+  # pkg:gem/grape#lib/grape/api/instance.rb:102
   def router; end
 
   private
@@ -236,25 +245,43 @@ class Grape::API::Instance
   # will return an HTTP 405 response for any HTTP method that the resource
   # cannot handle.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:158
+  # pkg:gem/grape#lib/grape/api/instance.rb:169
   def add_head_not_allowed_methods_and_options_methods; end
 
-  # pkg:gem/grape#lib/grape/api/instance.rb:166
+  # The methods +routes+ answer, with HEAD alongside GET unless the API
+  # declared +do_not_route_head!+.
+  #
+  # pkg:gem/grape#lib/grape/api/instance.rb:204
+  def allowed_methods_for(routes, setting); end
+
+  # The greedy route answering 405 and auto-OPTIONS for the path +routes+
+  # share. Most of the configuration is taken from the last endpoint.
+  #
+  # pkg:gem/grape#lib/grape/api/instance.rb:191
+  def associate_greedy_route(routes, setting); end
+
+  # pkg:gem/grape#lib/grape/api/instance.rb:177
   def collect_route_config_per_pattern(all_routes); end
 
-  # Backs {#cascade?}; called once, from the constructor.
+  # +lint!+ declared at the top of this API, or Grape.config.lint: one
+  # Rack::Lint around the router then checks every response the API gives
+  # -- an endpoint's, the 404 the router answers itself, a mounted Rack
+  # app's -- exactly once. Linting inside each endpoint's stack instead
+  # missed the last two, and wrapping a second Rack::Lint around those
+  # breaks a middleware that calls +to_ary+ on the body, as Rack::ETag does.
+  # Called once, from the constructor.
   #
-  # pkg:gem/grape#lib/grape/api/instance.rb:187
-  def resolve_cascade; end
+  # pkg:gem/grape#lib/grape/api/instance.rb:218
+  def lint?; end
 
   class << self
-    # pkg:gem/grape#lib/grape/api/instance.rb:30
+    # pkg:gem/grape#lib/grape/api/instance.rb:32
     def base; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:32
+    # pkg:gem/grape#lib/grape/api/instance.rb:34
     def base=(grape_api); end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:37
+    # pkg:gem/grape#lib/grape/api/instance.rb:39
     def base_instance?; end
 
     # This is the interface point between Rack and Grape; it accepts a request
@@ -262,65 +289,80 @@ class Grape::API::Instance
     # the headers, and the body. See [the rack specification]
     # (http://www.rubydoc.info/github/rack/rack/master/file/SPEC) for more.
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:56
+    # pkg:gem/grape#lib/grape/api/instance.rb:58
     def call(env); end
 
     # Wipe the compiled API so we can recompile after changes were made.
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:73
+    # pkg:gem/grape#lib/grape/api/instance.rb:75
     def change!; end
 
     # Returns the compiled instance, so callers serve the one they
     # compiled rather than re-reading @instance — +change!+ can nil it
     # between the two reads (see #call / #recognize_path).
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:63
+    # pkg:gem/grape#lib/grape/api/instance.rb:65
     def compile!; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:24
+    # pkg:gem/grape#lib/grape/api/instance.rb:26
     def configuration; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:24
+    # pkg:gem/grape#lib/grape/api/instance.rb:26
     def configuration=(_arg0); end
 
     # see Grape::Router#recognize_path
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:68
+    # pkg:gem/grape#lib/grape/api/instance.rb:70
     def recognize_path(path); end
 
     # Clears all defined routes, endpoints, etc., on this API.
     #
-    # pkg:gem/grape#lib/grape/api/instance.rb:46
+    # pkg:gem/grape#lib/grape/api/instance.rb:48
     def reset!; end
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:26
+    # pkg:gem/grape#lib/grape/api/instance.rb:28
     def to_s; end
 
     protected
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:79
+    # pkg:gem/grape#lib/grape/api/instance.rb:81
     def inherit_settings(other_settings); end
 
     private
 
-    # pkg:gem/grape#lib/grape/api/instance.rb:94
+    # pkg:gem/grape#lib/grape/api/instance.rb:96
     def inherited(subclass); end
   end
 end
 
-# pkg:gem/grape#lib/grape/api/instance.rb:21
+# pkg:gem/grape#lib/grape/api/instance.rb:23
 Grape::API::Instance::Boolean = Grape::API::Boolean
 
-# Class methods that we want to call on the API rather than on the API object
+# Class methods that we want to call on the API rather than on the API object.
+# +inherit_settings+ is protected on the base instance, and +.methods+ answers
+# protected methods too, so it has to be named here for {.override_all_methods!}
+# to leave it alone. +base+ is read on the API class itself whenever a mount
+# is refreshed, so recording it would refresh every mount below it again.
 #
-# pkg:gem/grape#lib/grape/api.rb:11
+# pkg:gem/grape#lib/grape/api.rb:15
 Grape::API::NON_OVERRIDABLE = T.let(T.unsafe(nil), Array)
+
+# DSL methods that answer a setting when called with nothing to set -- no
+# argument, keyword or block -- and change none. Such a call is a read, and
+# is answered without being recorded: as a setup step it was replayed on
+# every mount and, like any step, refreshed every mount made before it,
+# which discards the compiled API, so a read after boot made the next
+# request recompile it. +helpers+ is left out: called bare it includes the
+# helpers in scope and calls +change!+ itself.
+#
+# pkg:gem/grape#lib/grape/api.rb:24
+Grape::API::SETTING_READERS = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/grape#lib/grape/content_types.rb:4
 module Grape::ContentTypes
   private
 
-  # pkg:gem/grape#lib/grape/content_types.rb:18
+  # pkg:gem/grape#lib/grape/content_types.rb:29
   def content_types_for(from_settings); end
 
   # Every format under both spellings in one plain Hash, so a lookup is a
@@ -333,7 +375,7 @@ module Grape::ContentTypes
   # so a middleware constructed directly with String keys still answers to
   # either spelling, as the indifferent hash did.
   #
-  # pkg:gem/grape#lib/grape/content_types.rb:37
+  # pkg:gem/grape#lib/grape/content_types.rb:54
   def lookup_for(from_settings); end
 
   # The media type of a content-type header: the part before any `;`
@@ -342,14 +384,21 @@ module Grape::ContentTypes
   # nil content type. Skips the split (and its allocation) when there are no
   # parameters, which is the common case.
   #
-  # pkg:gem/grape#lib/grape/content_types.rb:46
+  # pkg:gem/grape#lib/grape/content_types.rb:63
   def media_type(content_type); end
 
-  # pkg:gem/grape#lib/grape/content_types.rb:22
+  # Identity rather than +==+ for the defaults, and the pairs rather than
+  # the registry for the cache key, because Hash equality ignores order and
+  # this table's order is the API's preference: the +*/*+ every browser
+  # sends picks the first media type declared. Compared by value, the first
+  # registry built with a set of content types fixed that order for every
+  # later one declaring the same set in another order.
+  #
+  # pkg:gem/grape#lib/grape/content_types.rb:39
   def mime_types_for(from_settings); end
 
   class << self
-    # pkg:gem/grape#lib/grape/content_types.rb:18
+    # pkg:gem/grape#lib/grape/content_types.rb:29
     def content_types_for(from_settings); end
 
     # Every format under both spellings in one plain Hash, so a lookup is a
@@ -362,7 +411,7 @@ module Grape::ContentTypes
     # so a middleware constructed directly with String keys still answers to
     # either spelling, as the indifferent hash did.
     #
-    # pkg:gem/grape#lib/grape/content_types.rb:37
+    # pkg:gem/grape#lib/grape/content_types.rb:54
     def lookup_for(from_settings); end
 
     # The media type of a content-type header: the part before any `;`
@@ -371,10 +420,17 @@ module Grape::ContentTypes
     # nil content type. Skips the split (and its allocation) when there are no
     # parameters, which is the common case.
     #
-    # pkg:gem/grape#lib/grape/content_types.rb:46
+    # pkg:gem/grape#lib/grape/content_types.rb:63
     def media_type(content_type); end
 
-    # pkg:gem/grape#lib/grape/content_types.rb:22
+    # Identity rather than +==+ for the defaults, and the pairs rather than
+    # the registry for the cache key, because Hash equality ignores order and
+    # this table's order is the API's preference: the +*/*+ every browser
+    # sends picks the first media type declared. Compared by value, the first
+    # registry built with a set of content types fixed that order for every
+    # later one declaring the same set in another order.
+    #
+    # pkg:gem/grape#lib/grape/content_types.rb:39
     def mime_types_for(from_settings); end
   end
 end
@@ -384,9 +440,19 @@ end
 # pkg:gem/grape#lib/grape/content_types.rb:8
 Grape::ContentTypes::DEFAULTS = T.let(T.unsafe(nil), Hash)
 
-# pkg:gem/grape#lib/grape/content_types.rb:74
+# Formats known by more than one name. A request naming one of them -- by
+# extension, +?format=+ or +default_format+ -- is served under whichever
+# the API declared, so declaring +:md+ answers +.markdown+ too, through
+# the formatter, parser and error formatter declared for +:md+. Both
+# spellings are keys: an extension arrives as a String, +default_format+
+# as a Symbol.
+#
+# pkg:gem/grape#lib/grape/content_types.rb:24
+Grape::ContentTypes::FORMAT_SYNONYMS = T.let(T.unsafe(nil), Hash)
+
+# pkg:gem/grape#lib/grape/content_types.rb:91
 class Grape::ContentTypes::LookupCache < ::Grape::Util::Cache
-  # pkg:gem/grape#lib/grape/content_types.rb:75
+  # pkg:gem/grape#lib/grape/content_types.rb:92
   def initialize; end
 end
 
@@ -394,20 +460,20 @@ end
 Grape::ContentTypes::MIME_TYPES = T.let(T.unsafe(nil), Hash)
 
 # Both tables below are derived from nothing but the content-type registry,
-# and one content-type-aware middleware is built per API instance — so an
-# app mounting N APIs held N copies of tables it only ever reads. Keying
-# the cache on the registry itself collapses them: Hash keys compare by
-# value, so every API that registers the same content types shares one
-# table.
+# and every endpoint builds its own content-type-aware middlewares — so an
+# app held one copy per endpoint of tables it only ever reads. Keying the
+# cache on the registry collapses them: keys compare by value, so every
+# registry with the same content types shares one table -- declared in
+# the same order, for MimeTypesCache (see #mime_types_for).
 #
 # Both the key and the table are frozen: the caller's registry stays
 # reachable (through +middleware.options[:content_types]+, among others)
 # and mutating a live key would corrupt a cache that is now shared
 # process-wide.
 #
-# pkg:gem/grape#lib/grape/content_types.rb:65
+# pkg:gem/grape#lib/grape/content_types.rb:82
 class Grape::ContentTypes::MimeTypesCache < ::Grape::Util::Cache
-  # pkg:gem/grape#lib/grape/content_types.rb:66
+  # pkg:gem/grape#lib/grape/content_types.rb:83
   def initialize; end
 end
 
@@ -424,7 +490,7 @@ class Grape::Cookies
   # pkg:gem/grape#lib/grape/cookies.rb:28
   def []=(name, value); end
 
-  # see https://github.com/rack/rack/blob/main/lib/rack/utils.rb#L338-L340
+  # Same attributes Rack::Utils uses to delete a cookie
   #
   # pkg:gem/grape#lib/grape/cookies.rb:34
   def delete(name, **opts); end
@@ -447,7 +513,7 @@ end
 # pkg:gem/grape#lib/grape/cookies.rb:7
 Grape::Cookies::DELETED_COOKIES_ATTRS = T.let(T.unsafe(nil), Hash)
 
-# pkg:gem/grape#lib/grape/api.rb:13
+# pkg:gem/grape#lib/grape/api.rb:29
 module Grape::DSL; end
 
 # pkg:gem/grape#lib/grape/dsl/callbacks.rb:5
@@ -474,12 +540,13 @@ module Grape::DSL::Declared
   # consisting only of keys that have been declared by a
   # `params` statement against the current/target endpoint or parent
   # namespaces.
-  # @param params [Hash] The initial hash to filter. Usually this will just be `params`
-  # @param options [Hash] Can pass `:include_missing`, `:stringify` and `:include_parent_namespaces`
-  # options. `:include_parent_namespaces` defaults to true, hence must be set to false if
-  # you want only to return params declared against the current/target endpoint.
+  # @param passed_params [Hash] The initial hash to filter. Usually this will just be `params`
+  # @param include_parent_namespaces [Boolean] false to only return params declared against the current/target endpoint
+  # @param include_missing [Boolean] include declared params that were not passed
+  # @param evaluate_given [Boolean] drop params whose +given+ condition is not met
+  # @param stringify [Boolean] return String keys
   #
-  # pkg:gem/grape#lib/grape/dsl/declared.rb:22
+  # pkg:gem/grape#lib/grape/dsl/declared.rb:23
   def declared(passed_params, include_parent_namespaces: T.unsafe(nil), include_missing: T.unsafe(nil), evaluate_given: T.unsafe(nil), stringify: T.unsafe(nil)); end
 end
 
@@ -500,8 +567,7 @@ module Grape::DSL::Desc
   # @param description [String] descriptive string for this endpoint
   #   or namespace
   # @param options [Hash] other properties you can set to describe the
-  #   endpoint or namespace. Optional. Pass these as keyword arguments;
-  #   passing a positional options Hash is deprecated.
+  #   endpoint or namespace, as keyword arguments. Optional.
   # @option options :detail [String] additional detail about this endpoint
   # @option options :summary [String] summary for this endpoint
   # @option options :params [Hash] param types and info. normally, you set
@@ -544,21 +610,20 @@ module Grape::DSL::Desc
   #       # ...
   #     end
   #
-  # pkg:gem/grape#lib/grape/dsl/desc.rb:56
+  # pkg:gem/grape#lib/grape/dsl/desc.rb:55
   def desc(description, **options, &config_block); end
 end
 
 # pkg:gem/grape#lib/grape/dsl/entity.rb:5
 module Grape::DSL::Entity
   # Attempt to locate the Entity class for a given object, if not given
-  # explicitly. This is done by looking for the presence of Klass::Entity,
-  # where Klass is the class of the `object` parameter, or one of its
-  # ancestors. Object is excluded from the search: top-level constants
-  # live on it, so a global ::Entity class is not a representer.
+  # explicitly: a +represent+ registration or Klass::Entity for the object's
+  # class or an ancestor, then the same for its element class. Object is
+  # excluded: a global ::Entity class is not a representer.
   # @param object [Object] the object to locate the Entity class for
   # @return [Class] the located Entity class, or nil if none is found
   #
-  # pkg:gem/grape#lib/grape/dsl/entity.rb:52
+  # pkg:gem/grape#lib/grape/dsl/entity.rb:45
   def entity_class_for_obj(object); end
 
   # Allows you to make use of Grape Entities by setting
@@ -589,6 +654,12 @@ module Grape::DSL::Entity
 
   private
 
+  # The +Entity+ constant of the nearest of +klass+'s ancestors defining
+  # one, when it can represent.
+  #
+  # pkg:gem/grape#lib/grape/dsl/entity.rb:100
+  def conventional_entity_for(klass); end
+
   # The class standing in for a collection or wrapper: ActiveRecord::Relation
   # and the like expose #klass, anything else falls back to the class of its
   # first element.
@@ -604,31 +675,41 @@ module Grape::DSL::Entity
   # @param object [Object] the object to represent.
   # @return [Class, nil]
   #
-  # pkg:gem/grape#lib/grape/dsl/entity.rb:72
+  # pkg:gem/grape#lib/grape/dsl/entity.rb:78
   def element_class(object); end
 
   # @param klass [Class, nil] the class to look an entity up for.
+  # @param representations [Hash, nil] the +represent+ registrations in scope.
   # @return [Class, nil] the registered or conventionally named entity.
   #
-  # pkg:gem/grape#lib/grape/dsl/entity.rb:80
-  def entity_for_class(klass); end
+  # pkg:gem/grape#lib/grape/dsl/entity.rb:87
+  def entity_for_class(klass, representations); end
 
+  # The embeds go straight into the call: collected into a Hash of their
+  # own and splatted, they cost every +present+ a second Hash.
+  #
   # @param entity_class [Class] the entity class to use for representation.
   # @param object [Object] the object to represent.
   # @param options [Hash] additional options forwarded to the entity's `represent` call.
   # @return the representation of the given object as done through the given entity_class.
   #
-  # pkg:gem/grape#lib/grape/dsl/entity.rb:100
+  # pkg:gem/grape#lib/grape/dsl/entity.rb:115
   def entity_representation_for(entity_class, object, options); end
+
+  # +representation+ merged into the body an earlier +present+ set: under
+  # +key+ when there is one, and whole when it came from an entity.
+  #
+  # pkg:gem/grape#lib/grape/dsl/entity.rb:56
+  def merged_with_body(representation, key, entity_class); end
 end
 
 # pkg:gem/grape#lib/grape/dsl/headers.rb:5
 module Grape::DSL::Headers
   # This method has four responsibilities:
-  # 1. Set a specifc header value by key
-  # 2. Retrieve a specifc header value by key
+  # 1. Set a specific header value by key
+  # 2. Retrieve a specific header value by key
   # 3. Retrieve all headers that have been set
-  # 4. Delete a specifc header key-value pair
+  # 4. Delete a specific header key-value pair
   #
   # pkg:gem/grape#lib/grape/dsl/headers.rb:11
   def header(key = T.unsafe(nil), val = T.unsafe(nil)); end
@@ -642,8 +723,8 @@ module Grape::DSL::Helpers
   # Add helper methods that will be accessible from any
   # endpoint within this namespace (and child namespaces).
   #
-  # When called without a block, all known helpers within this scope
-  # are included.
+  # When called with neither modules nor a block, returns a module
+  # including all known helpers within this scope.
   #
   # @param [Array] new_modules optional array of modules to include
   # @param [Block] block optional block of methods to include
@@ -689,36 +770,33 @@ module Grape::DSL::Helpers
 
   # When +Grape.config.warn_on_helper_overrides+ is enabled, emit a
   # warning to +$stderr+ for any helper method that masks an instance
-  # method on +Grape::Endpoint+. Helpers are mixed into the endpoint's
-  # singleton class and therefore take precedence over +Endpoint+
-  # instance methods — usually intentional, but a common source of
-  # surprise when the framework gains a method that already collides
-  # with an existing helper name.
+  # method on +Grape::Endpoint+. Helpers are included into a subclass of
+  # the endpoint (see Endpoint#build_prototype), so they take precedence.
   #
-  # pkg:gem/grape#lib/grape/dsl/helpers.rb:85
+  # pkg:gem/grape#lib/grape/dsl/helpers.rb:82
   def warn_on_endpoint_overrides(mod); end
 end
 
 # This module extends user defined helpers
 # to provide some API-specific functionality.
 #
-# pkg:gem/grape#lib/grape/dsl/helpers.rb:100
+# pkg:gem/grape#lib/grape/dsl/helpers.rb:97
 module Grape::DSL::Helpers::BaseHelper
-  # pkg:gem/grape#lib/grape/dsl/helpers.rb:101
+  # pkg:gem/grape#lib/grape/dsl/helpers.rb:98
   def api; end
 
-  # pkg:gem/grape#lib/grape/dsl/helpers.rb:101
+  # pkg:gem/grape#lib/grape/dsl/helpers.rb:98
   def api=(_arg0); end
 
-  # pkg:gem/grape#lib/grape/dsl/helpers.rb:108
+  # pkg:gem/grape#lib/grape/dsl/helpers.rb:105
   def api_changed(new_api); end
 
-  # pkg:gem/grape#lib/grape/dsl/helpers.rb:103
+  # pkg:gem/grape#lib/grape/dsl/helpers.rb:100
   def params(name, &block); end
 
   protected
 
-  # pkg:gem/grape#lib/grape/dsl/helpers.rb:115
+  # pkg:gem/grape#lib/grape/dsl/helpers.rb:112
   def process_named_params; end
 end
 
@@ -727,7 +805,7 @@ module Grape::DSL::InsideRoute
   include ::Grape::DSL::Declared
   include ::Grape::DSL::Entity
 
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:180
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:186
   def api_format(format); end
 
   # Allows you to define the response body as something other than the
@@ -741,18 +819,18 @@ module Grape::DSL::InsideRoute
   #
   #   GET /body # => "Body"
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:96
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:102
   def body(value = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:17
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:25
   def configuration; end
 
   # Set response content-type
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:80
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:86
   def content_type(val = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:184
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:190
   def context; end
 
   # End the request and display an error to the
@@ -760,14 +838,15 @@ module Grape::DSL::InsideRoute
   #
   # @param message [String] The message to display.
   # @param status [Integer] The HTTP Status Code. Defaults to default_error_status, 500 if not set.
-  # @param additional_headers [Hash] Addtional headers for the response.
+  # @param additional_headers [Hash] Additional headers for the response.
   # @param backtrace [Array<String>] The backtrace of the exception that caused the error.
   # @param original_exception [Exception] The original exception that caused the error.
+  # @raise [Grape::Exceptions::Halt] always, carrying the response.
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:29
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:38
   def error!(message, status = T.unsafe(nil), additional_headers = T.unsafe(nil), backtrace = T.unsafe(nil), original_exception = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:176
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:182
   def http_version; end
 
   # Redirect to a new url.
@@ -776,7 +855,7 @@ module Grape::DSL::InsideRoute
   # @param permanent [Boolean] default false.
   # @param body default a short message including the URL.
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:42
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:51
   def redirect(url, permanent: T.unsafe(nil), body: T.unsafe(nil)); end
 
   # Allows you to explicitly return no content.
@@ -789,7 +868,7 @@ module Grape::DSL::InsideRoute
   #
   #   DELETE /12 # => 204 No Content, ""
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:116
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:122
   def return_no_content; end
 
   # Returns route information for the current request.
@@ -801,26 +880,26 @@ module Grape::DSL::InsideRoute
   #     route.description
   #   end
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:172
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:178
   def route; end
 
   # Allows you to send a file to the client via sendfile.
   #
   # @example
   #   get '/file' do
-  #     sendfile FileStreamer.new(...)
+  #     sendfile '/path/to/file'
   #   end
   #
   #   GET /file # => "contents of file"
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:128
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:134
   def sendfile(value = T.unsafe(nil)); end
 
   # Set or retrieve the HTTP status code.
   #
   # @param status [Integer] The HTTP Status Code to return for this request.
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:68
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:78
   def status(status = T.unsafe(nil)); end
 
   # Allows you to define the response as a streamable object.
@@ -839,12 +918,12 @@ module Grape::DSL::InsideRoute
   # * https://github.com/rack/rack/blob/99293fa13d86cd48021630fcc4bd5acc9de5bdc3/lib/rack/chunked.rb
   # * https://github.com/rack/rack/blob/99293fa13d86cd48021630fcc4bd5acc9de5bdc3/lib/rack/etag.rb
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:152
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:158
   def stream(value = T.unsafe(nil)); end
 
-  # The API version as specified in the URL.
+  # The API version negotiated for this request.
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:13
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:21
   def version; end
 
   private
@@ -856,12 +935,12 @@ module Grape::DSL::InsideRoute
   # env: +Grape::Request+ wraps the very same Hash and answers
   # +request_method+ with the same lookup, two method calls further down.
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:205
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:211
   def default_status; end
 
   # Wraps a stream +value+ into a body that responds to +:each+.
   #
-  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:191
+  # pkg:gem/grape#lib/grape/dsl/inside_route.rb:197
   def stream_body(value); end
 end
 
@@ -870,32 +949,45 @@ end
 # pkg:gem/grape#lib/grape/dsl/inside_route.rb:10
 Grape::DSL::InsideRoute::MethodNotYetAvailable = Grape::DSL::Declared::MethodNotYetAvailable
 
+# The body #redirect renders when the caller gives none, by status.
+#
+# pkg:gem/grape#lib/grape/dsl/inside_route.rb:13
+Grape::DSL::InsideRoute::REDIRECT_MESSAGES = T.let(T.unsafe(nil), Hash)
+
 # pkg:gem/grape#lib/grape/dsl/logger.rb:5
 module Grape::DSL::Logger
-  # Set or retrive the configured logger. If none was configured, this
+  # Set or retrieve the configured logger. If none was configured, this
   # method will create a new one, logging to stdout.
+  #
+  # A logger belongs to the API it is set on, and to the APIs mounted
+  # under it that set none of their own. It used to be kept in the
+  # process-wide settings, so setting one on any API replaced it on every
+  # other. Only the default is still shared: an API that sets a level on
+  # it at class level reads it off its base instance, and has to find
+  # that level again on each instance it is mounted as.
   # @param logger [Object] the new logger to use
   #
-  # pkg:gem/grape#lib/grape/dsl/logger.rb:9
+  # pkg:gem/grape#lib/grape/dsl/logger.rb:16
   def logger(logger = T.unsafe(nil)); end
 end
 
 # pkg:gem/grape#lib/grape/dsl/middleware.rb:5
 module Grape::DSL::Middleware
-  # pkg:gem/grape#lib/grape/dsl/middleware.rb:20
+  # pkg:gem/grape#lib/grape/dsl/middleware.rb:17
   def insert(*args, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/middleware.rb:20
+  # pkg:gem/grape#lib/grape/dsl/middleware.rb:17
   def insert_after(*args, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/middleware.rb:20
+  # pkg:gem/grape#lib/grape/dsl/middleware.rb:17
   def insert_before(*args, &block); end
 
   # Retrieve an array of the middleware classes
   # and arguments that are currently applied to the
-  # application.
+  # application, each ending in the block it was
+  # given, +nil+ when none.
   #
-  # pkg:gem/grape#lib/grape/dsl/middleware.rb:31
+  # pkg:gem/grape#lib/grape/dsl/middleware.rb:26
   def middleware; end
 
   # Apply a custom middleware to the API. Applies
@@ -909,30 +1001,106 @@ module Grape::DSL::Middleware
   def use(middleware_class, *args, &block); end
 end
 
+# pkg:gem/grape#lib/grape/dsl/mounting.rb:5
+module Grape::DSL::Mounting
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:6
+  def given(conditional_option, &); end
+
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:16
+  def mount(mounts, opts = T.unsafe(nil)); end
+
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:12
+  def mounted(&block); end
+
+  private
+
+  # A mounted Grape API is stored as the throwaway instance +mount+ built
+  # for it, never as the class that was written, so endpoints are matched on
+  # the base API both of them share -- and on where it was mounted, the
+  # path and the current namespace: the same API mounted at two paths, or
+  # in two namespaces, is two mounts, and refreshing one must leave the
+  # other in place.
+  #
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:86
+  def drop_endpoints_mounted_for(mounts); end
+
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:135
+  def evaluate_as_instance_with_configuration(block, lazy: T.unsafe(nil)); end
+
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:119
+  def mounted_at?(endpoint, app, paths, namespace); end
+
+  # The settings the endpoint mounting +app+ at +path+ is built with. Past
+  # #mount's +mount_instance+ branch, a Grape app is an already instantiated
+  # Grape::API::Instance (vs. a bare Rack app): it inherits this API's
+  # settings and is built from its own.
+  #
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:49
+  def mounted_setting(app, path); end
+
+  # A bare app mounts at the root. The test is +Hash+ rather than
+  # +respond_to?(:each_pair)+ because a Struct or an OpenStruct answers that
+  # too, and neither can express an app => path mapping — their keys are
+  # member names. Reading one as a mapping would silently mount nonsense
+  # instead of mounting the app itself.
+  #
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:115
+  def normalize_mounts(mounts); end
+
+  # Re-mount +mounts+, replacing any endpoint already mounted for the same
+  # base API rather than adding a second one. Called by
+  # {Grape::API.refresh_mount_step} when a class-level method runs after the
+  # API was mounted.
+  #
+  # A bare Rack app is put back where it was mounted. It is routed as an
+  # ANY route, and those are tried in the order they were declared, so
+  # re-mounting it last let a catch-all declared after it answer first. A
+  # mounted Grape API still moves to the end: its routes answer for
+  # specific methods, where moving them would change which of two
+  # routes on the same path answers.
+  #
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:70
+  def refresh_mounted_api(mounts, opts = T.unsafe(nil)); end
+
+  # A Grape API keeps every instance +mount+ builds for it, so that steps
+  # recorded later replay onto each (see Grape::API::Instance.base=). Once
+  # the endpoint serving one is dropped, nothing serves it: its API lets go
+  # of it, and of the instances built for the APIs mounted inside it.
+  # Otherwise every refresh left another copy of each mounted API behind.
+  #
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:103
+  def release_mount_instance(mounted); end
+
+  # Two mounts refer to the same app when they share the same base Grape
+  # API. +mount+ turns every mounted Grape API into a throwaway
+  # +mount_instance+ (a fresh +Class.new+ per mount), so object identity
+  # never holds across mounts; comparing the base is the real signal.
+  # Plain Rack apps have no base and are mounted as-is, so they fall back
+  # to object identity.
+  #
+  # pkg:gem/grape#lib/grape/dsl/mounting.rb:129
+  def same_mounted_app?(mounted, app); end
+end
+
 # Defines DSL methods, meant to be applied to a ParamsScope, which define
 # and describe the parameters accepted by an endpoint, or all endpoints
 # within a namespace.
 #
 # pkg:gem/grape#lib/grape/dsl/parameters.rb:8
 module Grape::DSL::Parameters
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:152
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:145
   def all_or_none_of(*attrs, message: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:152
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:145
   def at_least_one_of(*attrs, message: T.unsafe(nil)); end
 
-  # Set the module used to build the request.params.
+  # Set the builder used to build the request.params.
   #
-  # @param build_with the ParamBuilder module to use when building request.params
-  #   Available builders are:
-  #
-  #     * Grape::Extensions::ActiveSupport::HashWithIndifferentAccess::ParamBuilder (default)
-  #     * Grape::Extensions::Hash::ParamBuilder
-  #     * Grape::Extensions::Hashie::Mash::ParamBuilder
+  # @param build_with [Symbol] +:hash_with_indifferent_access+ (default,
+  #   see +Grape.config.param_builder+), +:hash+ or +:hashie_mash+
   #
   # @example
   #
-  #     require 'grape/extenstions/hashie_mash'
   #     class API < Grape::API
   #       desc "Get collection"
   #       params do
@@ -944,109 +1112,44 @@ module Grape::DSL::Parameters
   #       end
   #     end
   #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:31
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:26
   def build_with(build_with); end
 
   # Test for whether a certain parameter has been defined in this params
   # block yet.
   # @return [Boolean] whether the parameter has been defined
   #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:175
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:168
   def declared_param?(param); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:152
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:145
   def exactly_one_of(*attrs, message: T.unsafe(nil)); end
 
   # Define a block of validations which should be applied if and only if
   # the given parameter is present. The parameters are not nested.
-  # @param attr [Symbol] the parameter which, if present, triggers the
-  #   validations
-  # @raise Grape::Exceptions::UnknownParameter if `attr` has not been
+  # @param attrs [Array<Symbol, Hash>] the parameters which, if present (or
+  #   passing the Proc they map to), trigger the validations
+  # @raise Grape::Exceptions::UnknownParameter if one has not been
   #   defined in this scope yet
   # @yield a parameter definition DSL
   #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:164
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:157
   def given(*attrs, &); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:186
-  def group(*attrs, using: T.unsafe(nil), except: T.unsafe(nil), as: T.unsafe(nil), **opts, &); end
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:178
+  def group(*attrs, using: T.unsafe(nil), except: T.unsafe(nil), as: T.unsafe(nil), **opts, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:73
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:68
   def includes(*names, **options); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:152
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:145
   def mutually_exclusive(*attrs, message: T.unsafe(nil)); end
 
-  # Allow, but don't require, one or more parameters for the current
-  #   endpoint.
-  # @param (see #requires)
-  # @option (see #requires)
-  #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:137
-  def optional(*attrs, using: T.unsafe(nil), except: T.unsafe(nil), as: T.unsafe(nil), **opts, &); end
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:130
+  def optional(*attrs, using: T.unsafe(nil), except: T.unsafe(nil), as: T.unsafe(nil), **opts, &block); end
 
-  # @param params [Hash] initial hash of parameters
-  # @return hash of parameters relevant for the current scope
-  # @api private
-  #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:193
-  def params(params); end
-
-  # Require one or more parameters for the current endpoint.
-  #
-  # @param attrs list of parameters names, or, if :using is
-  #   passed as an option, which keys to include (:all or :none) from
-  #   the :using hash. Passing the options as a trailing positional Hash
-  #   is deprecated; pass them as keyword arguments instead.
-  # @option attrs :type [Class] the type to coerce this parameter to before
-  #   passing it to the endpoint. See {Grape::Validations::Types} for a list of
-  #   types that are supported automatically. Custom classes may be used
-  #   where they define a class-level `::parse` method, or in conjunction
-  #   with the `:coerce_with` parameter. `JSON` may be supplied to denote
-  #   `JSON`-formatted objects or arrays of objects. `Array[JSON]` accepts
-  #   the same values as `JSON` but will wrap single objects in an `Array`.
-  # @option attrs :types [Array<Class>] may be supplied in place of +:type+
-  #   to declare an attribute that has multiple allowed types. See
-  #   {Validations::Types::MultipleTypeCoercer} for more details on coercion
-  #   and validation rules for variant-type parameters.
-  # @option attrs :desc [String] description to document this parameter
-  # @option attrs :default [Object] default value, if parameter is optional
-  # @option attrs :values [Array] permissable values for this field. If any
-  #   other value is given, it will be handled as a validation error
-  # @option attrs :using [Hash[Symbol => Hash]] a hash defining keys and
-  #   options, like that returned by {Grape::Entity#documentation}. The value
-  #   of each key is an options hash accepting the same parameters
-  # @option attrs :except [Array[Symbol]] a list of keys to exclude from
-  #   the :using Hash. The meaning of this depends on if :all or :none was
-  #   passed; :all + :except will make the :except fields optional, whereas
-  #   :none + :except will make the :except fields required
-  # @option attrs :coerce_with [#parse, #call] method to be used when coercing
-  #   the parameter to the type named by `attrs[:type]`. Any class or object
-  #   that defines `::parse` or `::call` may be used.
-  #
-  # @example
-  #
-  #     params do
-  #       # Basic usage: require a parameter of a certain type
-  #       requires :user_id, type: Integer
-  #
-  #       # You don't need to specify type; String is default
-  #       requires :foo
-  #
-  #       # Multiple params can be specified at once if they share
-  #       # the same options.
-  #       requires :x, :y, :z, type: Date
-  #
-  #       # Nested parameters can be handled as hashes. You must
-  #       # pass in a block, within which you can use any of the
-  #       # parameters DSL methods.
-  #       requires :user, type: Hash do
-  #         requires :name, type: String
-  #       end
-  #     end
-  #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:127
-  def requires(*attrs, using: T.unsafe(nil), except: T.unsafe(nil), as: T.unsafe(nil), **opts, &); end
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:130
+  def requires(*attrs, using: T.unsafe(nil), except: T.unsafe(nil), as: T.unsafe(nil), **opts, &block); end
 
   # Include reusable params rules among current.
   # You can define reusable params with helpers method.
@@ -1070,25 +1173,21 @@ module Grape::DSL::Parameters
   #       end
   #     end
   #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:56
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:51
   def use(*names, **options); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:72
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:67
   def use_scope(*names, **options); end
 
   # Define common settings for one or more parameters
   # @param (see #requires)
   # @option (see #requires)
   #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:146
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:140
   def with(**opts, &); end
 
   private
 
-  # @deprecated A trailing positional options Hash is deprecated; pass keyword
-  #   arguments instead. Before Ruby 3 keyword separation this Hash was pulled
-  #   off the argument list by `extract_options!`; now it lands in the splat and
-  #   would silently be treated as a parameter name.
   # +requires+ and +optional+ differ only in whether what they declare is
   # required, so the declaration itself lives here.
   #
@@ -1097,40 +1196,42 @@ module Grape::DSL::Parameters
   # other bucket", while +optional+ has no other bucket — +:all+ ignores
   # +except+ and +:none+ uses it to drop fields entirely.
   #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:211
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:189
   def declare(attrs, opts, required:, using:, except:, as:, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:239
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:228
   def first_hash_key_or_param(parameter); end
 
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:227
+  # A trailing positional options Hash (deprecated): since Ruby 3 keyword
+  # separation it lands in the splat and would be read as a parameter name.
+  #
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:216
   def legacy_options?(args); end
-
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:243
-  def map_params(params, element, is_array: T.unsafe(nil)); end
 
   # Re-invokes +method_name+ with the trailing Hash splatted as keyword
   # arguments, so Ruby routes its keys to the same place they would have
   # reached had the caller omitted the braces.
   #
-  # pkg:gem/grape#lib/grape/dsl/parameters.rb:234
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:223
   def redispatch_legacy_options(method_name, args, opts, &); end
-end
 
-# pkg:gem/grape#lib/grape/dsl/parameters.rb:188
-Grape::DSL::Parameters::EmptyOptionalValue = T.let(T.unsafe(nil), Object)
+  # +opts+ over the options of the +with+ blocks enclosing the declaration.
+  #
+  # pkg:gem/grape#lib/grape/dsl/parameters.rb:210
+  def with_group_options(opts); end
+end
 
 # pkg:gem/grape#lib/grape/dsl/request_response.rb:5
 module Grape::DSL::RequestResponse
   # Specify additional content-types, e.g.:
   #   content_type :xls, 'application/vnd.ms-excel'
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:65
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:67
   def content_type(key, val); end
 
   # All available content types.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:70
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:72
   def content_types; end
 
   # Specify a default error formatter, by the name it is registered under.
@@ -1138,16 +1239,16 @@ module Grape::DSL::RequestResponse
   # +ErrorFormatter::Txt+ — the fallback the lookup applied — so a typo
   # read back as a working setting and silently rendered errors as text.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:43
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:45
   def default_error_formatter(new_formatter_name = T.unsafe(nil)); end
 
   # Specify the default status code for errors.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:75
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:77
   def default_error_status(new_status = T.unsafe(nil)); end
 
   # Specify the default format for the API's serializers.
-  # May be `:json` or `:txt` (default).
+  # e.g. `:json`, `:xml` or `:txt` (default).
   #
   # pkg:gem/grape#lib/grape/dsl/request_response.rb:8
   def default_format(new_format = T.unsafe(nil)); end
@@ -1157,23 +1258,26 @@ module Grape::DSL::RequestResponse
   # one thing the registration cannot mean: the format then resolves as if
   # the call had never been made. Reject it here, where the mistake is.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:56
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:58
   def error_formatter(format, options = T.unsafe(nil), with: T.unsafe(nil)); end
 
   # Specify the format for the API's serializers.
   # May be `:json`, `:xml`, `:txt`, etc.
+  # A format no content type is registered for used to be assigned before
+  # the check that rejects it, so a rescued call left the API formatting
+  # with a format it had just refused, and no default error formatter.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:16
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:19
   def format(new_format = T.unsafe(nil)); end
 
   # Specify a custom formatter for a content-type.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:30
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:32
   def formatter(content_type, new_formatter); end
 
   # Specify a custom parser for a content-type.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:35
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:37
   def parser(content_type, new_parser); end
 
   # Allows you to specify a default representation entity for a
@@ -1197,17 +1301,29 @@ module Grape::DSL::RequestResponse
   # @param model_class [Class] The model class that will be represented.
   # @option options [Class] :with The entity class that will represent the model.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:148
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:141
   def represent(model_class, with:); end
 
+  # Allows you to rescue certain exceptions that occur to return
+  # a grape error rather than raising all the way to the
+  # server level.
+  #
+  # @example Rescue from custom exceptions
+  #     class ExampleAPI < Grape::API
+  #       class CustomError < StandardError; end
+  #
+  #       rescue_from CustomError
+  #     end
+  #
   # @overload rescue_from(*exception_classes, **options)
   #   @param [Array] exception_classes A list of classes that you want to rescue, or
   #     one of the meta selectors +:all+, +:grape_exceptions+,
   #     +:internal_grape_exceptions+. Meta selectors must be used alone;
   #     mixing with exception classes raises +ArgumentError+.
-  #   @param [Block] block Execution block to handle the given exception.
-  #   @param [Proc] with Execution proc to handle the given exception as an alternative
-  #     to passing a block.
+  #   @param [Block] block Execution block to handle the given exception; a
+  #     trailing Proc argument works too.
+  #   @param [Proc, Symbol, String] with Alternative to a block; a Symbol or
+  #     String names an endpoint method.
   #   @param [Boolean] rescue_subclasses Also rescue subclasses of exception classes;
   #     defaults to +true+.
   #   @param [Boolean] backtrace Include the rescued exception's backtrace in the
@@ -1215,27 +1331,28 @@ module Grape::DSL::RequestResponse
   #   @param [Boolean] original_exception Include +inspect+ of the rescued exception
   #     in the rescue response body.
   #
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:109
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:112
   def rescue_from(*args, with: T.unsafe(nil), rescue_subclasses: T.unsafe(nil), backtrace: T.unsafe(nil), original_exception: T.unsafe(nil), &block); end
 
   private
 
-  # pkg:gem/grape#lib/grape/dsl/request_response.rb:156
+  # Registers +handler+ under +meta_selector+, or for each of the
+  # +exception_classes+ when there is none.
+  #
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:160
+  def add_rescue_handler(meta_selector, exception_classes, handler, rescue_subclasses); end
+
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:149
   def extract_handler(args, with:, block:); end
+
+  # A +with:+ handler as +rescue_from+ stores it: a Proc, or the name of a
+  # method to call.
+  #
+  # pkg:gem/grape#lib/grape/dsl/request_response.rb:175
+  def with_handler(with); end
 end
 
-# Allows you to rescue certain exceptions that occur to return
-# a grape error rather than raising all the way to the
-# server level.
-#
-# @example Rescue from custom exceptions
-#     class ExampleAPI < Grape::API
-#       class CustomError < StandardError; end
-#
-#       rescue_from CustomError
-#     end
-#
-# pkg:gem/grape#lib/grape/dsl/request_response.rb:92
+# pkg:gem/grape#lib/grape/dsl/request_response.rb:83
 Grape::DSL::RequestResponse::META_RESCUE_SELECTORS = T.let(T.unsafe(nil), Array)
 
 # Immutable value object holding the response-shaping booleans accepted
@@ -1281,51 +1398,39 @@ end
 
 # pkg:gem/grape#lib/grape/dsl/routing.rb:5
 module Grape::DSL::Routing
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:104
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:23
   def build_with(build_with); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:18
-  def cascade(value = T.unsafe(nil)); end
-
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def delete(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:122
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:41
   def do_not_document!; end
 
   # Do not route HEAD requests to GET requests automatically.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:109
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:28
   def do_not_route_head!; end
 
   # Do not automatically route OPTIONS.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:114
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:33
   def do_not_route_options!; end
 
   # pkg:gem/grape#lib/grape/dsl/routing.rb:6
   def endpoints; end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def get(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:8
-  def given(conditional_option, &); end
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:116
+  def group(space = T.unsafe(nil), requirements: T.unsafe(nil), **, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:243
-  def group(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
-
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def head(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:118
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:37
   def lint!; end
-
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:126
-  def mount(mounts, opts = T.unsafe(nil)); end
-
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:14
-  def mounted(&block); end
 
   # Declare a "namespace", which prefixes all subordinate routes with its
   # name. Any endpoints within a namespace, group, resource or segment,
@@ -1340,34 +1445,34 @@ module Grape::DSL::Routing
   #       end
   #     end
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:231
-  def namespace(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:104
+  def namespace(space = T.unsafe(nil), requirements: T.unsafe(nil), **, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def options(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def patch(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def post(path = T.unsafe(nil), **options, &block); end
 
   # Define a root URL prefix for your entire API.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:88
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:9
   def prefix(prefix = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def put(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:214
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:87
   def query(path = T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:244
-  def resource(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:117
+  def resource(space = T.unsafe(nil), requirements: T.unsafe(nil), **, &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:245
-  def resources(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:118
+  def resources(space = T.unsafe(nil), requirements: T.unsafe(nil), **, &block); end
 
   # Defines a route that will be recognized
   # by the Grape API.
@@ -1385,21 +1490,22 @@ module Grape::DSL::Routing
   #     end
   #   end
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:183
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:60
   def route(methods, paths = T.unsafe(nil), requirements: T.unsafe(nil), anchor: T.unsafe(nil), **route_options, &); end
 
   # This method allows you to quickly define a parameter route segment
   # in your API.
   #
   # @param param [Symbol] The name of the parameter you wish to declare.
-  # @option options [Regexp, Class, Symbol] The constraint the declared parameter must meet — a Regexp, or a capture type such as +Integer+.
+  # @param requirements [Regexp, Class, Symbol] The constraint the parameter must meet.
+  # @param type [Class] Declares the parameter with this type.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:258
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:132
   def route_param(param, requirements: T.unsafe(nil), type: T.unsafe(nil), **, &); end
 
   # An array of API routes.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:249
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:122
   def routes; end
 
   # Create a scope without affecting the URL.
@@ -1407,125 +1513,46 @@ module Grape::DSL::Routing
   # @param _name [Symbol] Purely placebo, just allows to name the scope to
   # make the code more readable.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:98
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:19
   def scope(_name = T.unsafe(nil), &block); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:246
-  def segment(space = T.unsafe(nil), requirements: T.unsafe(nil), **options, &block); end
-
-  # Specify an API version.
-  #
-  # Called without arguments, returns the most recently declared version
-  # (or +nil+). Called with one or more version strings, registers them
-  # and stores a {Grape::DSL::VersionOptions} value object on the
-  # inheritable settings; when given a block, the registration applies
-  # within a nested namespace.
-  #
-  # @example API with legacy support.
-  #   class MyAPI < Grape::API
-  #     version 'v2'
-  #
-  #     get '/main' do
-  #       {some: 'data'}
-  #     end
-  #
-  #     version 'v1' do
-  #       get '/main' do
-  #         {legacy: 'data'}
-  #       end
-  #     end
-  #   end
-  #
-  # @param args [Array<String, Symbol>] one or more version identifiers.
-  # @param using [Symbol] versioning strategy — one of +:path+ (default),
-  #   +:header+, +:param+, or +:accept_version_header+.
-  # @param cascade [Boolean] forward to subsequent routes via the
-  #   +X-Cascade+ header on version mismatch. Defaults to +true+.
-  # @param parameter [String] name of the query/body parameter that
-  #   carries the version when +using: :param+. Defaults to +'apiver'+.
-  # @param strict [Boolean] reject requests that don't supply a usable
-  #   version (header strategies). Defaults to +false+.
-  # @param vendor [String, nil] vendor segment for the +:header+
-  #   strategy (+application/vnd.<vendor>-<version>+); required when
-  #   +using: :header+.
-  # @yield optional block to scope routes under this version.
-  # @return [String, nil] the most recently declared version.
-  # @raise [Grape::Exceptions::MissingVendorOption] when +using: :header+
-  #   is supplied without a +:vendor+.
-  #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:63
-  def version(*args, using: T.unsafe(nil), cascade: T.unsafe(nil), parameter: T.unsafe(nil), strict: T.unsafe(nil), vendor: T.unsafe(nil), &block); end
-
-  # @return array of defined versions
-  #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:274
-  def versions; end
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:119
+  def segment(space = T.unsafe(nil), requirements: T.unsafe(nil), **, &block); end
 
   private
-
-  # A mounted Grape API is stored as the throwaway instance +mount+ built
-  # for it, never as the class that was written, so endpoints are matched on
-  # the base API both of them share.
-  #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:320
-  def drop_endpoints_mounted_for(mounts); end
-
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:359
-  def evaluate_as_instance_with_configuration(block, lazy: T.unsafe(nil)); end
 
   # Execute first the provided block, then each of the
   # block passed in. Allows for simple 'before' setups
   # of settings stack pushes.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:350
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:189
   def nest(*blocks, &block); end
-
-  # A bare app mounts at the root. The test is +Hash+ rather than
-  # +respond_to?(:each_pair)+ because a Struct or an OpenStruct answers that
-  # too, and neither can express an app => path mapping — their keys are
-  # member names. Reading one as a mapping would silently mount nonsense
-  # instead of mounting the app itself.
-  #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:331
-  def normalize_mounts(mounts); end
 
   # Compose a route's params: the declared params (+params do … end+) deep-merged
   # with any documented alongside +desc ..., params:+ (+description_params+).
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:291
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:160
   def prepare_params(description_params); end
 
-  # Re-mount +mounts+, replacing any endpoint already mounted for the same
-  # base API rather than adding a second one. Called by
-  # {Grape::API.refresh_mount_step} when a class-level method runs after the
-  # API was mounted.
+  # The route's description (+desc+) less its +params+, with any custom
+  # +route_options+ deep-merged over it.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:312
-  def refresh_mounted_api(mounts, opts = T.unsafe(nil)); end
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:169
+  def prepare_route_options(description, route_options); end
 
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:304
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:182
   def reset_endpoints!; end
 
   # Remove all defined routes.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:299
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:177
   def reset_routes!; end
-
-  # Two mounts refer to the same app when they share the same base Grape
-  # API. +mount+ turns every mounted Grape API into a throwaway
-  # +mount_instance+ (a fresh +Class.new+ per mount), so object identity
-  # never holds across mounts; comparing the base is the real signal.
-  # Plain Rack apps have no base and are mounted as-is, so they fall back
-  # to object identity.
-  #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:341
-  def same_mounted_app?(mounted, app); end
 
   # Requirements are keyed by param name and merged across namespaces, so
   # anything else has nothing to attach to. Rejected here rather than at
   # the merge, which runs on the first request that builds the routes.
   #
-  # pkg:gem/grape#lib/grape/dsl/routing.rb:283
+  # pkg:gem/grape#lib/grape/dsl/routing.rb:152
   def validate_requirements!(requirements); end
 end
 
@@ -1568,7 +1595,7 @@ module Grape::DSL::Settings
   def get_or_set(setting, key, value); end
 
   # Execute the block within a context where our inheritable settings are forked
-  # to a new copy (see #namespace_start).
+  # to a new child scope.
   #
   # pkg:gem/grape#lib/grape/dsl/settings.rb:51
   def within_namespace; end
@@ -1619,9 +1646,9 @@ module Grape::DSL::Validations
 end
 
 # Immutable value object holding the resolved options from
-# +Grape::DSL::Routing#version+. Stored on the inheritable settings as
+# +Grape::DSL::Versioning#version+. Stored on the inheritable settings as
 # +Grape::Util::InheritableSetting#version_options+ and read by internal call
-# sites (`Path`, `Endpoint`, `API::Instance#cascade?`,
+# sites (`Path`, `Endpoint`, `API::Instance`,
 # `Middleware::Versioner::Base`) via accessors.
 #
 # Defaults are duplicated on +#initialize+ here and on +#version+'s
@@ -1666,6 +1693,73 @@ class Grape::DSL::VersionOptions < ::Data
   end
 end
 
+# pkg:gem/grape#lib/grape/dsl/versioning.rb:5
+module Grape::DSL::Versioning
+  # Called without a value, answers whether the API cascades: the value
+  # given here, else the +cascade:+ of +version+, else true. The compiled
+  # API reads it here too; this reader used to skip +version+, and so
+  # answered true for an API that did not cascade.
+  #
+  # pkg:gem/grape#lib/grape/dsl/versioning.rb:10
+  def cascade(value = T.unsafe(nil)); end
+
+  # Specify an API version.
+  #
+  # Called without arguments, returns the most recently declared version
+  # (or +nil+). Called with one or more version strings, registers them
+  # and stores a {Grape::DSL::VersionOptions} value object on the
+  # inheritable settings; when given a block, the registration applies
+  # within a nested namespace.
+  #
+  # @example API with legacy support.
+  #   class MyAPI < Grape::API
+  #     version 'v2'
+  #
+  #     get '/main' do
+  #       {some: 'data'}
+  #     end
+  #
+  #     version 'v1' do
+  #       get '/main' do
+  #         {legacy: 'data'}
+  #       end
+  #     end
+  #   end
+  #
+  # @param args [Array<String, Symbol>] one or more version identifiers.
+  # @param using [Symbol] versioning strategy — one of +:path+ (default),
+  #   +:header+, +:param+, or +:accept_version_header+.
+  # @param cascade [Boolean] forward to subsequent routes via the
+  #   +X-Cascade+ header on version mismatch. Defaults to +true+.
+  # @param parameter [String] name of the query/body parameter that
+  #   carries the version when +using: :param+. Defaults to +'apiver'+.
+  # @param strict [Boolean] reject requests that don't supply a usable
+  #   version (header strategies). Defaults to +false+.
+  # @param vendor [String, nil] vendor segment for the +:header+
+  #   strategy (+application/vnd.<vendor>-<version>+); required when
+  #   +using: :header+.
+  # @yield optional block to scope routes under this version.
+  # @return [String, nil] the most recently declared version.
+  # @raise [Grape::Exceptions::MissingVendorOption] when +using: :header+
+  #   is supplied without a +:vendor+.
+  #
+  # pkg:gem/grape#lib/grape/dsl/versioning.rb:59
+  def version(*args, using: T.unsafe(nil), cascade: T.unsafe(nil), parameter: T.unsafe(nil), strict: T.unsafe(nil), vendor: T.unsafe(nil), &block); end
+
+  # @return array of defined versions
+  #
+  # pkg:gem/grape#lib/grape/dsl/versioning.rb:80
+  def versions; end
+
+  private
+
+  # pkg:gem/grape#lib/grape/dsl/versioning.rb:92
+  def apply_version(versions, options); end
+
+  # pkg:gem/grape#lib/grape/dsl/versioning.rb:86
+  def build_version_options(using:, vendor:, **); end
+end
+
 # pkg:gem/grape#lib/grape/declared_params_handler.rb:4
 class Grape::DeclaredParamsHandler
   # pkg:gem/grape#lib/grape/declared_params_handler.rb:5
@@ -1676,30 +1770,54 @@ class Grape::DeclaredParamsHandler
 
   private
 
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:90
+  # The lookup key is the param's whole path, built fresh -- two Arrays and a
+  # String per declared param -- and only an API using +as:+ has anything to
+  # find with it, so the common empty table is not asked.
+  #
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:107
   def build_memo_key(params_nested_path, declared_param, renamed_params); end
 
   # The declared param has no children. Find its value or set it to nil.
   #
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:79
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:93
   def declare_leaf(passed_params, declared_param:, params_nested_path:, memo:, renamed_params:, route_params:); end
 
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:60
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:69
   def declare_nested(passed_params, parent:, children:, params_nested_path:, memo:, renamed_params:, route_params:); end
 
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:37
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:46
   def declared_hash(passed_params, declared_params:, params_nested_path:, renamed_params:, route_params:); end
 
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:52
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:61
   def declared_hash_attr(passed_params, declared_param:, params_nested_path:, memo:, renamed_params:, route_params:); end
 
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:100
+  # The empty value a param of +type+ declares when it was not passed, or
+  # nil when +type+ has none. A fresh one every time: the caller may fill it.
+  #
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:131
+  def empty_value_for(type, key, route_params); end
+
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:117
   def handle_passed_param(params_nested_path, route_params:, has_passed_children: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:96
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:113
   def nested_path_for(parent_path, key); end
 
-  # pkg:gem/grape#lib/grape/declared_params_handler.rb:23
+  # The prefix is built once by the caller: interpolated inside the block, it
+  # was a new String for every param on the route.
+  #
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:140
+  def no_child_params?(route_params, prefix); end
+
+  # An element of an Array scope that is not a Hash has no keys to filter,
+  # so it is returned as it came in, the way a leaf value is. Validation
+  # lets one through wherever nothing in the scope is required of it: an
+  # optional scope passes over blank elements, and a scope whose params are
+  # all optional checks nothing on an element that is not a Hash. Filtering
+  # it anyway meant building an empty copy of it, which raised for +nil+,
+  # +false+ and numbers and indexed a String with a Symbol.
+  #
+  # pkg:gem/grape#lib/grape/declared_params_handler.rb:30
   def recursive_declared(passed_params, declared_params:, route_params:, renamed_params:, params_nested_path: T.unsafe(nil)); end
 end
 
@@ -1773,31 +1891,31 @@ class Grape::Endpoint
   # endpoint does not know if it will be mounted under a different endpoint.
   # @yield a block defining what your API should do when this endpoint is hit
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:69
+  # pkg:gem/grape#lib/grape/endpoint.rb:103
   def initialize(new_settings, http_methods:, path:, api:, app: T.unsafe(nil), params: T.unsafe(nil), requirements: T.unsafe(nil), anchor: T.unsafe(nil), **options, &block); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:135
+  # pkg:gem/grape#lib/grape/endpoint.rb:161
   def ==(other); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:21
+  # pkg:gem/grape#lib/grape/endpoint.rb:48
   def api(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:125
+  # pkg:gem/grape#lib/grape/endpoint.rb:151
   def call(env); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:129
+  # pkg:gem/grape#lib/grape/endpoint.rb:155
   def call!(env); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:17
+  # pkg:gem/grape#lib/grape/endpoint.rb:44
   def cookies(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:14
+  # pkg:gem/grape#lib/grape/endpoint.rb:20
   def endpoints; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:14
+  # pkg:gem/grape#lib/grape/endpoint.rb:20
   def env; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:140
+  # pkg:gem/grape#lib/grape/endpoint.rb:166
   def eql?(other); end
 
   # Mirrors #==. The class stays out: #== admits a subclass instance
@@ -1805,159 +1923,193 @@ class Grape::Endpoint
   # not part of either, matching the long-standing duplicate-route check in
   # DSL::Routing#route.
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:146
+  # pkg:gem/grape#lib/grape/endpoint.rb:172
   def hash; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:17
+  # pkg:gem/grape#lib/grape/endpoint.rb:44
   def headers(*, **, &); end
 
   # Update our settings from a given parent settings instance. Used when
   # the endpoint's API is mounted under another one.
   # @param settings [Grape::Util::InheritableSetting]
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:90
+  # pkg:gem/grape#lib/grape/endpoint.rb:121
   def inherit_settings(settings); end
+
+  # Written out rather than delegated: the request path reads them, and a
+  # +def_delegator+ method checks +defined?+ on every call.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:24
+  def inheritable_setting; end
 
   # The purpose of this override is solely for stripping internals when an error occurs while calling
   # an endpoint through an api. See https://github.com/ruby-grape/grape/issues/2398
   # Otherwise, it calls super.
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:153
+  # pkg:gem/grape#lib/grape/endpoint.rb:179
   def inspect; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:26
+  # pkg:gem/grape#lib/grape/endpoint.rb:53
   def logger(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:105
+  # pkg:gem/grape#lib/grape/endpoint.rb:136
   def mount_in(router); end
 
   # The Rack app or Grape API mounted at this endpoint, or +nil+ for a plain
   # block endpoint. Prefer this over +options[:app]+, which is retained only
   # for backwards compatibility.
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:31
+  # pkg:gem/grape#lib/grape/endpoint.rb:58
   def mounted_app; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:121
+  # pkg:gem/grape#lib/grape/endpoint.rb:147
   def namespace; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:14
+  # pkg:gem/grape#lib/grape/endpoint.rb:28
   def options; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:15
+  # pkg:gem/grape#lib/grape/endpoint.rb:36
   def options_route_enabled; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:15
-  def options_route_enabled=(_arg0); end
+  # pkg:gem/grape#lib/grape/endpoint.rb:40
+  def options_route_enabled=(enabled); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:17
+  # pkg:gem/grape#lib/grape/endpoint.rb:44
   def params(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:14
+  # The paths this endpoint was declared at, relative to its {#namespace},
+  # as an Array: the paths given to +route+, or for a mount the path
+  # {#mounted_app} was mounted at.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:65
+  def path; end
+
+  # pkg:gem/grape#lib/grape/endpoint.rb:20
   def request; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:99
+  # pkg:gem/grape#lib/grape/endpoint.rb:130
   def reset_routes!; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:18
+  # pkg:gem/grape#lib/grape/endpoint.rb:45
   def response_cookies(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:95
+  # pkg:gem/grape#lib/grape/endpoint.rb:126
   def routes; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:161
+  # Serve the request the endpoint's Rack stack was entered with: its
+  # +before+ filters, its validations, the route block, its +after+ and
+  # +finally+ filters, answered as a Rack triplet. The innermost app of that
+  # stack calls it, so it expects #call! to have put the env in place first.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:189
   def run; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:14
+  # pkg:gem/grape#lib/grape/endpoint.rb:32
   def source; end
 
   protected
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:233
-  def after_validations; end
+  # Makes an +allocate+d endpoint the prototype #build_prototype answers:
+  # +state+, and the ivars a request sets, in place so that every copy
+  # starts with the same shape.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:260
+  def become_prototype(state); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:233
-  def afters; end
-
-  # pkg:gem/grape#lib/grape/endpoint.rb:233
-  def before_validations; end
-
-  # pkg:gem/grape#lib/grape/endpoint.rb:233
-  def befores; end
-
-  # pkg:gem/grape#lib/grape/endpoint.rb:233
+  # pkg:gem/grape#lib/grape/endpoint.rb:249
   def config; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:197
+  # pkg:gem/grape#lib/grape/endpoint.rb:209
   def execute; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:233
-  def finallies; end
-
-  # pkg:gem/grape#lib/grape/endpoint.rb:235
+  # pkg:gem/grape#lib/grape/endpoint.rb:253
   def options?; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:225
-  def run_filters(filters, type = T.unsafe(nil)); end
+  # An endpoint with filters still has none in most of its five phases, so
+  # an empty phase returns before it is instrumented.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:240
+  def run_filters(callbacks, type); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:205
+  # pkg:gem/grape#lib/grape/endpoint.rb:218
   def run_validators(request:); end
 
   private
+
+  # The answer of a greedy route, which the router hands a request for a
+  # method its path has no route for: the Allow header, with a 204 to an
+  # auto-OPTIONS and a 405 to anything else.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:276
+  def answer_allowed_methods; end
+
+  # Each route, and after a GET route the HEAD route it also answers unless
+  # the API declared +do_not_route_head!+.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:389
+  def append_routes_to(router); end
 
   # True when a bare Rack app (anything that isn't a Grape app) is mounted at
   # this endpoint. Such an app is called directly and matched by path prefix
   # rather than an anchored route.
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:356
+  # pkg:gem/grape#lib/grape/endpoint.rb:440
   def bare_rack_app?; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:241
+  # pkg:gem/grape#lib/grape/endpoint.rb:271
   def before_filter_passed; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:424
+  # pkg:gem/grape#lib/grape/endpoint.rb:520
   def build_helpers; end
 
-  # The object each request is copied from.
+  # The object each request is copied from: this endpoint's State, and none
+  # of the route-building state (+@prototype+, +@endpoints+, +@namespace+,
+  # +@routes+) the request path never reads.
+  #
+  # Ruby sizes a new object by the most instance variables any object of its
+  # class has held. A copy holds the State and the seven ivars a request
+  # sets, which fits an 80-byte slot until a route block or a helper sets one
+  # of its own; carrying the route-building state as well, it took 320. The
+  # endpoint itself counts too when there are no helpers, both being a
+  # Grape::Endpoint, and it holds at most five.
   #
   # Helpers reach an endpoint by module inclusion, and +Object#dup+ does not
   # carry a singleton class over — so including them on the per-request copy
   # meant giving every request a brand-new singleton class, whose method
   # cache then started cold for the helpers, the route block and every DSL
   # method the endpoint answers. Include them once into a subclass owned by
-  # this endpoint instead, and copy this endpoint's state onto an instance of
-  # it: the per-request copy already answers to the helpers, against a class
-  # that has been warm since boot. It also keeps request handling free of
-  # class mutation.
+  # this endpoint instead, and hand its State to an instance of it: the
+  # per-request copy already answers to the helpers, against a class that
+  # has been warm since boot. It also keeps request handling free of class
+  # mutation.
   #
-  # Endpoints with no helpers are their own prototype, exactly as before.
+  # +allocate+ rather than +new+ because the constructor builds an endpoint
+  # from the DSL's arguments — a fresh settings copy, a fresh +config+,
+  # another +block_to_unbound_method+ — and would still not hold what
+  # +compile!+ has just computed, while the State already holds all of it.
   #
-  # +allocate+ rather than +new+ because the constructor rebuilds state from
-  # the DSL's arguments — a fresh settings copy, a fresh +@config+, another
-  # +block_to_unbound_method+ — and would still not hold what +compile!+ has
-  # just computed. What is wanted is what +dup+ itself does (allocate, then
-  # copy the ivars over) across a class boundary, which neither +dup+ nor
-  # +initialize_copy+ will do: both insist on the receiver's own class. So
-  # the copy is written out here. Taking all of them is safe because
-  # everything set past this point (+routes+, +namespace+) is route-building
-  # memoization the request path never reads.
-  #
-  # pkg:gem/grape#lib/grape/endpoint.rb:308
-  def build_prototype; end
+  # pkg:gem/grape#lib/grape/endpoint.rb:372
+  def build_prototype(helpers); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:444
+  # pkg:gem/grape#lib/grape/endpoint.rb:540
   def build_response_cookies; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:372
+  # pkg:gem/grape#lib/grape/endpoint.rb:458
   def build_stack; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:271
+  # pkg:gem/grape#lib/grape/endpoint.rb:333
   def compile!; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:405
+  # pkg:gem/grape#lib/grape/endpoint.rb:501
   def error_middleware_options(format, content_types); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:253
+  # pkg:gem/grape#lib/grape/endpoint.rb:490
+  def formatter_middleware_options(format, content_types); end
+
+  # pkg:gem/grape#lib/grape/endpoint.rb:376
+  def helpers_class(helpers); end
+
+  # pkg:gem/grape#lib/grape/endpoint.rb:315
   def instrument_render(&); end
 
   # Instrument helpers. Each guards on +listening?+ so that with no subscriber
@@ -1965,26 +2117,52 @@ class Grape::Endpoint
   # directly (no added allocations); the block is forwarded anonymously so
   # nothing is allocated unless a subscriber is present.
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:247
+  # pkg:gem/grape#lib/grape/endpoint.rb:309
   def instrument_run(&); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:265
+  # pkg:gem/grape#lib/grape/endpoint.rb:327
   def instrument_run_filters(filters, type, &); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:259
+  # pkg:gem/grape#lib/grape/endpoint.rb:321
   def instrument_run_validators(validators, request, &); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:453
-  def lint?; end
+  # pkg:gem/grape#lib/grape/endpoint.rb:444
+  def prepare_routes_requirements; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:360
-  def prepare_routes_requirements(route_options_requirements); end
+  # pkg:gem/grape#lib/grape/endpoint.rb:451
+  def prepare_version; end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:366
-  def prepare_version(namespace_inheritable_version); end
+  # The response #run answers with, its body +route_value+ unless the
+  # endpoint set a body or a stream itself.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:295
+  def rack_triplet(route_value); end
 
-  # pkg:gem/grape#lib/grape/endpoint.rb:326
+  # What every route of the endpoint is built with besides its method,
+  # pattern and options, read once for all of them.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:432
+  def route_attributes; end
+
+  # The pattern of each of the endpoint's paths, shared by the routes of
+  # every method it answers, as a HEAD route shares its GET route's.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:410
+  def route_patterns; end
+
+  # pkg:gem/grape#lib/grape/endpoint.rb:398
   def to_routes; end
+
+  # The versioner for the strategy +version+ declared, when it declared one.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:477
+  def use_versioner(stack); end
+
+  # The route block's value, run once the params are validated between the
+  # +before_validation+ and +after_validation+ filters.
+  #
+  # pkg:gem/grape#lib/grape/endpoint.rb:286
+  def validate_and_execute(callbacks); end
 
   # A bare Rack app mounted with +mount+ is called directly (see +compile!+):
   # it does not go through +build_stack+, so the API's authentication
@@ -1992,11 +2170,11 @@ class Grape::Endpoint
   # Grape APIs are unaffected because they rebuild their own stack from the
   # inherited settings. Warn so this bypass isn't silent.
   #
-  # pkg:gem/grape#lib/grape/endpoint.rb:436
+  # pkg:gem/grape#lib/grape/endpoint.rb:532
   def warn_unauthenticated_mounted_app; end
 
   class << self
-    # pkg:gem/grape#lib/grape/endpoint.rb:36
+    # pkg:gem/grape#lib/grape/endpoint.rb:70
     def block_to_unbound_method(block); end
   end
 end
@@ -2046,6 +2224,62 @@ class Grape::Endpoint::Options < ::Data
     def members; end
 
     # pkg:gem/grape#lib/grape/endpoint/options.rb:9
+    def new(*_arg0); end
+  end
+end
+
+# The innermost app of every endpoint's Rack stack. The endpoint to run
+# comes out of the env, so the lambda holds no state and one of them serves
+# every stack, rather than one being allocated per endpoint.
+#
+# pkg:gem/grape#lib/grape/endpoint.rb:17
+Grape::Endpoint::RUN_ENDPOINT = T.let(T.unsafe(nil), Proc)
+
+# Everything an endpoint's requests read from it and none of them changes.
+# Each request's copy of the endpoint holds this and its own state, and
+# nothing else of the endpoint. +app+, +callbacks+ and +build_params_with+
+# are filled in by Endpoint#compile!.
+#
+# pkg:gem/grape#lib/grape/endpoint/state.rb:9
+class Grape::Endpoint::State < ::Data
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:10
+  def initialize(inheritable_setting:, options:, config:, source:, options_route_enabled: T.unsafe(nil), app: T.unsafe(nil), callbacks: T.unsafe(nil), build_params_with: T.unsafe(nil)); end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def app; end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def build_params_with; end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def callbacks; end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def config; end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def inheritable_setting; end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def options; end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def options_route_enabled; end
+
+  # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+  def source; end
+
+  class << self
+    # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+    def [](*_arg0); end
+
+    # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+    def inspect; end
+
+    # pkg:gem/grape#lib/grape/endpoint/state.rb:9
+    def members; end
+
+    # pkg:gem/grape#lib/grape/endpoint/state.rb:9
     def new(*_arg0); end
   end
 end
@@ -2136,19 +2370,39 @@ class Grape::ErrorFormatter::Base
     # pkg:gem/grape#lib/grape/error_formatter/base.rb:14
     def call(error:, env: T.unsafe(nil), include_backtrace: T.unsafe(nil), include_original_exception: T.unsafe(nil)); end
 
-    # pkg:gem/grape#lib/grape/error_formatter/base.rb:61
+    # pkg:gem/grape#lib/grape/error_formatter/base.rb:49
     def format_structured_message(_structured_message); end
 
     # pkg:gem/grape#lib/grape/error_formatter/base.rb:24
     def present(message, env); end
 
-    # pkg:gem/grape#lib/grape/error_formatter/base.rb:55
+    # pkg:gem/grape#lib/grape/error_formatter/base.rb:43
     def wrap_message(message); end
 
     private
 
-    # pkg:gem/grape#lib/grape/error_formatter/base.rb:67
+    # The entity the route's failure codes name for the status being
+    # answered: those entities document a structured error body.
+    #
+    # A String message has no attributes for one to expose -- presenting
+    # it raised, and the failsafe answered 500 in place of the status
+    # +error!+ asked for -- so it is left for #wrap_message. And a route's
+    # failure presenters are written for the errors the endpoint itself
+    # raises: one raised by middleware before the endpoint ran -- it has
+    # no request yet -- keeps the shape that middleware gave it rather than
+    # being fit to an entity it was not written for.
+    #
+    # pkg:gem/grape#lib/grape/error_formatter/base.rb:65
+    def failure_presenter(payload, env); end
+
+    # pkg:gem/grape#lib/grape/error_formatter/base.rb:82
     def inherited(klass); end
+
+    # The entity +failure+ names for +status+, among the +[code, message,
+    # entity]+ entries a route's failure codes are.
+    #
+    # pkg:gem/grape#lib/grape/error_formatter/base.rb:77
+    def presenter_for_status(failure, status); end
   end
 end
 
@@ -2160,11 +2414,25 @@ class Grape::ErrorFormatter::Json < ::Grape::ErrorFormatter::Base
 
     private
 
-    # pkg:gem/grape#lib/grape/error_formatter/json.rb:26
+    # Re-encoding a String that already is valid UTF-8 only copies it, for
+    # about 260 ns on every error response.
+    #
+    # pkg:gem/grape#lib/grape/error_formatter/json.rb:28
     def ensure_utf8(message); end
 
     # pkg:gem/grape#lib/grape/error_formatter/json.rb:13
     def wrap_message(message); end
+  end
+end
+
+# An error renders as the JSON error formatter renders it, ended by a
+# newline, so the body is a JSON Lines document of one line.
+#
+# pkg:gem/grape#lib/grape/error_formatter/jsonl.rb:7
+class Grape::ErrorFormatter::Jsonl < ::Grape::ErrorFormatter::Json
+  class << self
+    # pkg:gem/grape#lib/grape/error_formatter/jsonl.rb:9
+    def format_structured_message(structured_message); end
   end
 end
 
@@ -2182,12 +2450,15 @@ end
 # pkg:gem/grape#lib/grape/error_formatter/xml.rb:5
 class Grape::ErrorFormatter::Xml < ::Grape::ErrorFormatter::Base
   class << self
-    # pkg:gem/grape#lib/grape/error_formatter/xml.rb:6
+    # Base#wrap_message always hands over a Hash, which ActiveSupport's
+    # conversions (required by grape.rb) give +to_xml+.
+    #
+    # pkg:gem/grape#lib/grape/error_formatter/xml.rb:8
     def format_structured_message(structured_message); end
   end
 end
 
-# pkg:gem/grape#lib/grape.rb:113
+# pkg:gem/grape#lib/grape.rb:116
 module Grape::Exceptions; end
 
 # pkg:gem/grape#lib/grape/exceptions/base.rb:5
@@ -2218,54 +2489,98 @@ end
 # pkg:gem/grape#lib/grape/exceptions/base.rb:8
 Grape::Exceptions::Base::MESSAGE_STEPS = T.let(T.unsafe(nil), Hash)
 
-# Value object representing the payload thrown via `throw :error, ...`
-# and consumed by `Middleware::Error#error_response`. Replaces the
-# implicit-schema Hash that previously circulated between throw sites
-# and the error middleware.
+# The frozen payload thrown via `throw :error, ...` (or raised by `error!`
+# inside a `Grape::Exceptions::Halt`) and consumed by
+# `Middleware::Error#error_response`. Replaces the implicit-schema Hash
+# that previously circulated between throw sites and the error middleware.
 #
-# pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
-class Grape::Exceptions::ErrorResponse < ::Data
-  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:10
+# A plain frozen class rather than a +Data+: every error response builds
+# at least two (the payload, then the one +error_response+ fills the
+# defaults into), and +Data+'s constructor takes its keywords as a Hash it
+# then validates, about 450 ns apiece. A Ruby method keeps keyword
+# arguments on the stack. It answers only what is read off it: its
+# readers.
+#
+# pkg:gem/grape#lib/grape/exceptions/error_response.rb:16
+class Grape::Exceptions::ErrorResponse
+  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:21
   def initialize(status: T.unsafe(nil), message: T.unsafe(nil), headers: T.unsafe(nil), backtrace: T.unsafe(nil), original_exception: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
+  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:19
   def backtrace; end
 
-  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
+  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:19
   def headers; end
 
-  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
+  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:19
   def message; end
 
-  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
+  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:19
   def original_exception; end
 
-  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
+  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:19
   def status; end
 
-  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:14
+  # pkg:gem/grape#lib/grape/exceptions/error_response.rb:30
   def to_s; end
 
   class << self
-    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
-    def [](*_arg0); end
-
-    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:34
+    # Normalize heterogeneous inputs into an ErrorResponse. Preserves the
+    # public contract that users can still `throw :error, hash` from their
+    # own middleware or `rescue_from` handlers.
+    #
+    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:50
     def coerce(input); end
 
-    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:22
+    # The backtrace is deliberately left unset: +Exception#backtrace+ builds
+    # the whole Array of location strings, and the response only renders one
+    # when the API asked for it. The exception travels along, so
+    # +Middleware::Error#error_response+ can still materialize it there.
+    #
+    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:38
     def from_exception(exception); end
-
-    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
-    def inspect; end
-
-    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
-    def members; end
-
-    # pkg:gem/grape#lib/grape/exceptions/error_response.rb:9
-    def new(*_arg0); end
   end
 end
+
+# pkg:gem/grape#lib/grape/exceptions/error_response.rb:17
+Grape::Exceptions::ErrorResponse::MEMBERS = T.let(T.unsafe(nil), Array)
+
+# Raised by +error!+ to end the request with an error response. It carries
+# the ErrorResponse a +throw :error+ carries, and +Middleware::Error+
+# renders it the same way: as it is, without consulting +rescue_from+.
+#
+# It is raised rather than thrown so that it leaves a block the way an
+# exception does. Active Record rolls a transaction back only when an
+# exception leaves its block, and commits it on a +throw+. A +throw+ cannot
+# leave the fiber or thread it was thrown in either, while +Async::Task#wait+
+# and +Thread#value+ re-raise an exception in the request's own.
+#
+# A StandardError on purpose: async treats any other exception leaving a
+# task as fatal and stops its reactor. It is not a Grape::Exceptions::Base,
+# so a +rescue+ of those around +error!+ still lets it through.
+#
+# pkg:gem/grape#lib/grape/exceptions/halt.rb:18
+class Grape::Exceptions::Halt < ::StandardError
+  extend ::Forwardable
+
+  # Keywords spelled out rather than forwarded with **, which would gather
+  # them into a Hash on every error! only to spread it again.
+  #
+  # pkg:gem/grape#lib/grape/exceptions/halt.rb:29
+  def initialize(status: T.unsafe(nil), message: T.unsafe(nil), headers: T.unsafe(nil), backtrace: T.unsafe(nil), original_exception: T.unsafe(nil)); end
+
+  # pkg:gem/grape#lib/grape/exceptions/halt.rb:25
+  def headers(*, **, &); end
+
+  # pkg:gem/grape#lib/grape/exceptions/halt.rb:23
+  def response; end
+
+  # pkg:gem/grape#lib/grape/exceptions/halt.rb:25
+  def status(*, **, &); end
+end
+
+# pkg:gem/grape#lib/grape/exceptions/halt.rb:21
+Grape::Exceptions::Halt::EMPTY_BACKTRACE = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/grape#lib/grape/exceptions/incompatible_option_values.rb:5
 class Grape::Exceptions::IncompatibleOptionValues < ::Grape::Exceptions::Base
@@ -2445,7 +2760,14 @@ class Grape::Exceptions::ValidationErrors < ::Grape::Exceptions::Base
   # pkg:gem/grape#lib/grape/exceptions/validation_errors.rb:6
   def errors; end
 
-  # pkg:gem/grape#lib/grape/exceptions/validation_errors.rb:26
+  # Translated once, when the error is built for its #message, and handed
+  # out as a copy from then on. Every lookup here is an I18n call of a few
+  # microseconds, and the README's recipe for answering with the list,
+  # +error!({ messages: e.full_messages }, 400)+, asked for all of them a
+  # second time. It also keeps the list the same as #message, which was
+  # already fixed at that point, if the locale changes in between.
+  #
+  # pkg:gem/grape#lib/grape/exceptions/validation_errors.rb:32
   def full_messages; end
 
   # pkg:gem/grape#lib/grape/exceptions/validation_errors.rb:22
@@ -2453,8 +2775,11 @@ class Grape::Exceptions::ValidationErrors < ::Grape::Exceptions::Base
 
   private
 
-  # pkg:gem/grape#lib/grape/exceptions/validation_errors.rb:44
+  # pkg:gem/grape#lib/grape/exceptions/validation_errors.rb:54
   def translate_attributes(keys); end
+
+  # pkg:gem/grape#lib/grape/exceptions/validation_errors.rb:38
+  def translate_full_messages; end
 end
 
 # pkg:gem/grape#lib/grape/formatter.rb:4
@@ -2494,6 +2819,50 @@ class Grape::Formatter::Json < ::Grape::Formatter::Base
   end
 end
 
+# Renders JSON Lines (https://jsonlines.org): one JSON value per line, each
+# line ended by a newline. An Array renders one line per element, and any
+# other object one line. A String is served as it is, taken to be JSON
+# Lines already.
+#
+# An Enumerator renders as it is read rather than up front, so the server
+# streams each line as the enumerator yields its element:
+#
+#   get :export do
+#     User.find_each # without a block, an Enumerator
+#   end
+#
+# pkg:gem/grape#lib/grape/formatter/jsonl.rb:16
+class Grape::Formatter::Jsonl < ::Grape::Formatter::Base
+  class << self
+    # pkg:gem/grape#lib/grape/formatter/jsonl.rb:18
+    def call(object, env); end
+
+    private
+
+    # pkg:gem/grape#lib/grape/formatter/jsonl.rb:28
+    def line(object, env); end
+  end
+end
+
+# pkg:gem/grape#lib/grape/formatter/markdown.rb:5
+class Grape::Formatter::Markdown < ::Grape::Formatter::Base
+  class << self
+    # Md inherits this, so the format named in the error comes from the class
+    # name, the way Grape::Util::Registry derives the name each class is
+    # registered under.
+    #
+    # pkg:gem/grape#lib/grape/formatter/markdown.rb:9
+    def call(object, _env); end
+  end
+end
+
+# Registers Markdown's rendering under +md+ too, for an API that declares
+# +content_type :md+ rather than +:markdown+ (see
+# Grape::ContentTypes::FORMAT_SYNONYMS).
+#
+# pkg:gem/grape#lib/grape/formatter/md.rb:8
+class Grape::Formatter::Md < ::Grape::Formatter::Markdown; end
+
 # pkg:gem/grape#lib/grape/formatter/serializable_hash.rb:5
 class Grape::Formatter::SerializableHash < ::Grape::Formatter::Base
   class << self
@@ -2529,7 +2898,7 @@ class Grape::Formatter::Xml < ::Grape::Formatter::Base
   end
 end
 
-# pkg:gem/grape#lib/grape.rb:69
+# pkg:gem/grape#lib/grape.rb:72
 Grape::HTTP_SUPPORTED_METHODS = T.let(T.unsafe(nil), Array)
 
 # Since multi_json 1.21.0, MultiJSON.dump is deprecated in favor of
@@ -2543,10 +2912,10 @@ Grape::HTTP_SUPPORTED_METHODS = T.let(T.unsafe(nil), Array)
 # pkg:gem/grape#lib/grape/json.rb:43
 Grape::Json = JSON
 
-# pkg:gem/grape#lib/grape.rb:113
+# pkg:gem/grape#lib/grape.rb:116
 module Grape::Middleware; end
 
-# pkg:gem/grape#lib/grape/api/instance.rb:19
+# pkg:gem/grape#lib/grape/api/instance.rb:21
 module Grape::Middleware::Auth; end
 
 # pkg:gem/grape#lib/grape/middleware/auth/base.rb:6
@@ -2554,8 +2923,22 @@ class Grape::Middleware::Auth::Base < ::Grape::Middleware::Base
   # pkg:gem/grape#lib/grape/middleware/auth/base.rb:7
   def initialize(app, **options); end
 
-  # pkg:gem/grape#lib/grape/middleware/auth/base.rb:15
+  # Base#call copies the middleware per request so #call! can keep the
+  # env in an ivar, and all that reads it is the strategy's block, to find
+  # the endpoint that checks the credentials. The block takes the
+  # endpoint from the env it was built for instead, so the request is
+  # answered by the one instance the stack built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/auth/base.rb:20
+  def call(env); end
+
+  # pkg:gem/grape#lib/grape/middleware/auth/base.rb:24
   def call!(env); end
+
+  private
+
+  # pkg:gem/grape#lib/grape/middleware/auth/base.rb:31
+  def authenticate(env); end
 end
 
 # pkg:gem/grape#lib/grape/middleware/auth/dsl.rb:6
@@ -2606,7 +2989,7 @@ class Grape::Middleware::Auth::StrategyInfo < ::Struct
   def auth_class=(_); end
 
   # pkg:gem/grape#lib/grape/middleware/auth/strategy_info.rb:7
-  def create(app, options, &block); end
+  def create(app, options, &); end
 
   # pkg:gem/grape#lib/grape/middleware/auth/strategy_info.rb:6
   def settings_fetcher; end
@@ -2649,9 +3032,9 @@ class Grape::Middleware::Base
 
   # @abstract
   # Called after the application is called in the middleware lifecycle.
-  # @return [Response, nil] a Rack SPEC response or nil to call the application afterwards.
+  # @return [Response, nil] a Rack SPEC response, or nil to keep the application's.
   #
-  # pkg:gem/grape#lib/grape/middleware/base.rb:58
+  # pkg:gem/grape#lib/grape/middleware/base.rb:53
   def after; end
 
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
@@ -2660,7 +3043,7 @@ class Grape::Middleware::Base
   # @abstract
   # Called before the application is called in the middleware lifecycle.
   #
-  # pkg:gem/grape#lib/grape/middleware/base.rb:53
+  # pkg:gem/grape#lib/grape/middleware/base.rb:48
   def before; end
 
   # pkg:gem/grape#lib/grape/middleware/base.rb:28
@@ -2672,7 +3055,7 @@ class Grape::Middleware::Base
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
   def config; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:64
+  # pkg:gem/grape#lib/grape/middleware/base.rb:59
   def context; end
 
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
@@ -2681,26 +3064,29 @@ class Grape::Middleware::Base
   # pkg:gem/grape#lib/grape/middleware/base.rb:8
   def options; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:74
+  # pkg:gem/grape#lib/grape/middleware/base.rb:69
   def query_params; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:60
+  # pkg:gem/grape#lib/grape/middleware/base.rb:55
   def rack_request; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:68
+  # pkg:gem/grape#lib/grape/middleware/base.rb:63
   def response; end
 
   private
 
   # Same idea as {#options_data_class} for the legacy DEFAULT_OPTIONS Hash.
   #
-  # pkg:gem/grape#lib/grape/middleware/base.rb:108
+  # pkg:gem/grape#lib/grape/middleware/base.rb:114
   def default_options_constant; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:91
+  # pkg:gem/grape#lib/grape/middleware/base.rb:97
   def merge_default_options(options); end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:82
+  # +response+ is a Rack triplet, unless +after+ or the app handed back a
+  # Rack::Response.
+  #
+  # pkg:gem/grape#lib/grape/middleware/base.rb:90
   def merge_headers(response); end
 
   # self.class::Options honours middleware inheritance (e.g. Versioner::Path
@@ -2708,79 +3094,185 @@ class Grape::Middleware::Base
   # top-level ::Options on Object. Absent an own/inherited Options class,
   # the lookup raises NameError and we fall back to the legacy path.
   #
-  # pkg:gem/grape#lib/grape/middleware/base.rb:101
+  # pkg:gem/grape#lib/grape/middleware/base.rb:107
   def options_data_class; end
 
-  # pkg:gem/grape#lib/grape/middleware/base.rb:114
+  # Runs what the middleware does once the app has answered. An error it
+  # raises is reported before it goes on: a +rescue_from :all+ handler
+  # turns it into a 500 without logging it, so this may be the only trace
+  # of it.
+  #
+  # pkg:gem/grape#lib/grape/middleware/base.rb:81
+  def reporting_after_errors; end
+
+  # pkg:gem/grape#lib/grape/middleware/base.rb:120
   def try_scrub(obj); end
 end
 
 # pkg:gem/grape#lib/grape/middleware/error.rb:5
 class Grape::Middleware::Error < ::Grape::Middleware::Base
   include ::Grape::Middleware::PrecomputedContentTypes
-  extend ::Forwardable
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def all_rescue_handler(*, **, &); end
+  # pkg:gem/grape#lib/grape/middleware/error.rb:56
+  def initialize(app, **options); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def base_only_rescue_handlers(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def all_rescue_handler; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:60
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def base_only_rescue_handlers; end
+
+  # Base#call copies the middleware for every request so that #call! can
+  # keep the env in an ivar, but only rendering an error reads it there. A
+  # request that goes through without one is answered by the one instance
+  # the stack built, and a copy is taken once there is an error to render.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:66
+  def call(env); end
+
+  # pkg:gem/grape#lib/grape/middleware/error.rb:70
   def call!(env); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def default_error_formatter(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def default_error_formatter; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def default_message(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def default_message; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def default_status(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def default_status; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def error_formatters(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def error_formatters; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def format(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def format; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def grape_exceptions_rescue_handler(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def grape_exceptions_rescue_handler; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:50
-  def include_backtrace(*, **, &); end
+  # +:backtrace+ / +:original_exception+ on the rescue options become
+  # +#include_backtrace+ / +#include_original_exception+ on the middleware,
+  # which is what the formatter call site reads.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:47
+  def include_backtrace; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:51
-  def include_original_exception(*, **, &); end
+  # +:backtrace+ / +:original_exception+ on the rescue options become
+  # +#include_backtrace+ / +#include_original_exception+ on the middleware,
+  # which is what the formatter call site reads.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:47
+  def include_original_exception; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def internal_grape_exceptions_rescue_handler(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def internal_grape_exceptions_rescue_handler; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def rescue_all(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def rescue_all; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def rescue_grape_exceptions(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def rescue_grape_exceptions; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def rescue_handlers(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def rescue_handlers; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:41
-  def rescue_options(*, **, &); end
+  # Read off ivars rather than delegated into +config+: rendering an error
+  # asks for most of them, and each delegator cost a Forwardable frame plus
+  # a Data reader for a value that was fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:39
+  def rescue_options; end
+
+  protected
+
+  # pkg:gem/grape#lib/grape/middleware/error.rb:84
+  def render_raised(env, exception); end
+
+  # What #respond hands a thrown error or a raised exception to: a copy of
+  # the middleware, holding the request's env for the rendering below.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:79
+  def render_thrown(env, error); end
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:195
+  # A +rescue_from+ block runs as the endpoint. A Method (the middleware's
+  # own handlers, or the endpoint's for a +with:+ Symbol) is already bound
+  # to a receiver that instance_exec cannot change, so it is called as it
+  # is rather than turned into a Proc first.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:370
+  def call_rescue_handler(callable, error, endpoint); end
+
+  # No +backtrace:+: #resolved_backtrace reads it off +original_exception+
+  # when the API asked for one, and only then, since building it is the
+  # dearest part of rendering the error.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:276
   def default_rescue_handler(exception); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:324
+  # pkg:gem/grape#lib/grape/middleware/error.rb:422
   def error!(message, status = T.unsafe(nil), headers = T.unsafe(nil), backtrace = T.unsafe(nil), original_exception = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:333
+  # pkg:gem/grape#lib/grape/middleware/error.rb:431
   def error?(response); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:109
+  # pkg:gem/grape#lib/grape/middleware/error.rb:180
   def error_response(error = T.unsafe(nil)); end
+
+  # The content type the error renders as, under any +headers+ it carries.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:194
+  def error_response_headers(headers); end
 
   # Publish an exception Grape swallowed, on both keys. +grape.exception+ is
   # Grape's own and has been set on these paths all along; +rack.exception+ is
@@ -2789,13 +3281,13 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # env['sinatra.error']+ — so a tracker mounted above Grape keeps reporting
   # these with no application change.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:180
+  # pkg:gem/grape#lib/grape/middleware/error.rb:258
   def expose_exception(error); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:185
+  # pkg:gem/grape#lib/grape/middleware/error.rb:263
   def failsafe_payload(headers); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:99
+  # pkg:gem/grape#lib/grape/middleware/error.rb:170
   def find_handler(klass); end
 
   # The registry answers nil for a format nothing is registered for, and
@@ -2803,14 +3295,14 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # API set another — takes it from there, so this always has something
   # callable. The +throw :error, 406+ that used to stand in for a missing
   # formatter could not work anyway: nothing catches +:error+ around this
-  # call (+#call!+ has left its +catch+ by the time +error_response+ runs),
+  # call (+#respond+ has left its +catch+ by the time +error_response+ runs),
   # so it raised +UncaughtThrowError+ and the request answered with the
   # failsafe 500 rather than the 406 it named.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:93
+  # pkg:gem/grape#lib/grape/middleware/error.rb:164
   def format_message(error); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:320
+  # pkg:gem/grape#lib/grape/middleware/error.rb:418
   def framework_default(endpoint); end
 
   # +rescue_from :grape_exceptions+ is an opt-in to keep Grape's own errors
@@ -2831,7 +3323,7 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # InvalidVersionHeader is left alone: it must keep reaching Rack so the
   # next versioned route is tried.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:242
+  # pkg:gem/grape#lib/grape/middleware/error.rb:322
   def grape_exceptions_precedence_handler(klass, registered_entry); end
 
   # Escaping must key off the media type only, case-insensitively. Comparing
@@ -2842,11 +3334,26 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # places (a registered content type, or a custom Content-Type passed to
   # error!/rescue_from), but they all render here.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:81
+  # pkg:gem/grape#lib/grape/middleware/error.rb:152
   def html_content_type?(content_type); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:69
+  # +headers+ is handed over as it is: Rack::Response copies it into a
+  # Headers of its own on every supported Rack (Rack 2.2 through
+  # +HeaderHash[]+, which only adopts a Hash that already is one), and every
+  # caller builds it fresh for this response.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:140
   def rack_response(status, headers, message); end
+
+  # What an error response is rendered with.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:103
+  def read_rendering_config(config); end
+
+  # What #find_handler looks a rescue handler up in.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:92
+  def read_rescue_config(config); end
 
   # The exception is published on the rack env (see {#expose_exception}) and
   # written to +rack.errors+ so it reaches the log with no tracker installed.
@@ -2854,7 +3361,7 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # deferring the logging to the application is not an option when the
   # application's own error rendering is what broke.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:156
+  # pkg:gem/grape#lib/grape/middleware/error.rb:234
   def record_rendering_failure(error); end
 
   # Route an exception raised inside a +rescue_from+ block.
@@ -2870,17 +3377,17 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   #   in via +rescue_from :internal_grape_exceptions+ or, failing
   #   that, applies the framework default.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:294
+  # pkg:gem/grape#lib/grape/middleware/error.rb:392
   def redispatch(error, endpoint, already_redispatched); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:205
+  # pkg:gem/grape#lib/grape/middleware/error.rb:285
   def registered_rescue_handler(klass); end
 
   # The matched entry rather than just its handler, so callers can tell
   # *which* class matched — see {#grape_exceptions_precedence_handler}.
   # @return [Array(Class, #call), nil]
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:212
+  # pkg:gem/grape#lib/grape/middleware/error.rb:292
   def registered_rescue_handler_entry(klass); end
 
   # First retry the API's own format with the framework's InternalServerError,
@@ -2890,28 +3397,28 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # {#format_message} directly rather than re-entering {#error_response}, so
   # this path cannot recurse.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:167
+  # pkg:gem/grape#lib/grape/middleware/error.rb:245
   def render_failsafe_response; end
 
-  # Rendering runs inside #call!'s own rescue clause, so it is not covered by
-  # that rescue: an error formatter that raises on the payload it was handed
-  # takes the exception out through every middleware above Grape. By this
-  # point Grape has committed to answering with an error, so it answers with
-  # one that does not depend on the payload rather than dropping the request.
+  # An error formatter that raises on its payload would take the exception
+  # out through every middleware above Grape: rendering from a rescue
+  # handler runs in #respond's rescue clause, which nothing covers. Grape has
+  # committed to an error by now, so it answers with one that does not
+  # depend on the payload.
   #
   # +Grape.config.raise_rendering_errors+ opts back out, for an application
   # that would rather have the exception propagate as it did before.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:142
+  # pkg:gem/grape#lib/grape/middleware/error.rb:220
   def render_response(payload); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:217
+  # pkg:gem/grape#lib/grape/middleware/error.rb:297
   def rescue_handler_entry_from(handlers); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:261
+  # pkg:gem/grape#lib/grape/middleware/error.rb:341
   def rescue_handler_for_any_class(klass); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:253
+  # pkg:gem/grape#lib/grape/middleware/error.rb:333
   def rescue_handler_for_grape_exception(klass); end
 
   # The backtrace an error formatter is handed. Assembled only when the API
@@ -2920,10 +3427,22 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # of location strings — and every built-in formatter drops it otherwise.
   # A formatter that wants one regardless still has +original_exception+.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:128
+  # pkg:gem/grape#lib/grape/middleware/error.rb:206
   def resolved_backtrace(raw); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:268
+  # Whether the app answered is recorded rather than returned from inside
+  # the +catch+ block: a +return+ there leaves the method through Kernel#catch,
+  # which unwinds like a throw and allocates for it, on every request that
+  # did not fail.
+  #
+  # +error!+ raises a Halt carrying what a +throw :error+ carries. It is
+  # taken inside the +catch+, so it is rendered where a thrown error is and
+  # never reaches a +rescue_from+ handler, the +:all+ one included.
+  #
+  # pkg:gem/grape#lib/grape/middleware/error.rb:122
+  def respond(env); end
+
+  # pkg:gem/grape#lib/grape/middleware/error.rb:348
   def run_rescue_handler(handler, error, endpoint, redispatched: T.unsafe(nil)); end
 
   # The unrecognised-error path. Exposes the original exception on
@@ -2935,81 +3454,81 @@ class Grape::Middleware::Error < ::Grape::Middleware::Base
   # message. The framework deliberately does no logging of its own
   # here; that's the application's call.
   #
-  # pkg:gem/grape#lib/grape/middleware/error.rb:313
+  # pkg:gem/grape#lib/grape/middleware/error.rb:411
   def safe_default(error, endpoint); end
 end
 
-# pkg:gem/grape#lib/grape/middleware/error.rb:58
+# pkg:gem/grape#lib/grape/middleware/error.rb:54
 Grape::Middleware::Error::FAILSAFE_CONTENT_TYPE = T.let(T.unsafe(nil), String)
 
-# pkg:gem/grape#lib/grape/middleware/error.rb:57
+# pkg:gem/grape#lib/grape/middleware/error.rb:53
 Grape::Middleware::Error::FAILSAFE_MESSAGE = T.let(T.unsafe(nil), String)
 
 # Emitted by {#render_failsafe_response} once even the framework's own message
 # could not be rendered. Deliberately built without a formatter, an i18n
 # lookup or anything else that could be the thing that is broken.
 #
-# pkg:gem/grape#lib/grape/middleware/error.rb:56
+# pkg:gem/grape#lib/grape/middleware/error.rb:52
 Grape::Middleware::Error::FAILSAFE_STATUS = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/grape#lib/grape/middleware/error.rb:9
+# pkg:gem/grape#lib/grape/middleware/error.rb:8
 class Grape::Middleware::Error::Options < ::Data
-  # pkg:gem/grape#lib/grape/middleware/error.rb:16
+  # pkg:gem/grape#lib/grape/middleware/error.rb:15
   def initialize(all_rescue_handler: T.unsafe(nil), base_only_rescue_handlers: T.unsafe(nil), content_types: T.unsafe(nil), default_error_formatter: T.unsafe(nil), default_message: T.unsafe(nil), default_status: T.unsafe(nil), error_formatters: T.unsafe(nil), format: T.unsafe(nil), grape_exceptions_rescue_handler: T.unsafe(nil), internal_grape_exceptions_rescue_handler: T.unsafe(nil), rescue_all: T.unsafe(nil), rescue_grape_exceptions: T.unsafe(nil), rescue_handlers: T.unsafe(nil), rescue_options: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def all_rescue_handler; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def base_only_rescue_handlers; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def content_types; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def default_error_formatter; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def default_message; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def default_status; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def error_formatters; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def format; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def grape_exceptions_rescue_handler; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def internal_grape_exceptions_rescue_handler; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def rescue_all; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def rescue_grape_exceptions; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def rescue_handlers; end
 
-  # pkg:gem/grape#lib/grape/middleware/error.rb:9
+  # pkg:gem/grape#lib/grape/middleware/error.rb:8
   def rescue_options; end
 
   class << self
-    # pkg:gem/grape#lib/grape/middleware/error.rb:9
+    # pkg:gem/grape#lib/grape/middleware/error.rb:8
     def [](*_arg0); end
 
-    # pkg:gem/grape#lib/grape/middleware/error.rb:9
+    # pkg:gem/grape#lib/grape/middleware/error.rb:8
     def inspect; end
 
-    # pkg:gem/grape#lib/grape/middleware/error.rb:9
+    # pkg:gem/grape#lib/grape/middleware/error.rb:8
     def members; end
 
-    # pkg:gem/grape#lib/grape/middleware/error.rb:9
+    # pkg:gem/grape#lib/grape/middleware/error.rb:8
     def new(*_arg0); end
   end
 end
@@ -3036,14 +3555,19 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # back to a format, so it warms +mime_types+ itself rather than making
   # every content-type-aware middleware build a table none of them read.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:32
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:80
   def initialize(app, **options); end
 
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:46
-  def after; end
+  # Base#call copies the middleware per request so #before and #after can
+  # keep the env and the app's response in ivars. The formatter keeps
+  # neither: it passes the env along and answers from the one instance the
+  # stack built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:95
+  def call(env); end
 
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:41
-  def before; end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:99
+  def call!(env); end
 
   # Read off ivars rather than delegated into +config+ on every request:
   # +negotiate_content_type+ asks for +format+ and +default_format+ per
@@ -3051,7 +3575,7 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # a Forwardable frame plus a Data reader for a value that was frozen when
   # the middleware was built.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:27
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:75
   def default_format; end
 
   # Read off ivars rather than delegated into +config+ on every request:
@@ -3060,7 +3584,7 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # a Forwardable frame plus a Data reader for a value that was frozen when
   # the middleware was built.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:27
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:75
   def format; end
 
   # Read off ivars rather than delegated into +config+ on every request:
@@ -3069,7 +3593,7 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # a Forwardable frame plus a Data reader for a value that was frozen when
   # the middleware was built.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:27
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:75
   def formatters; end
 
   # Read off ivars rather than delegated into +config+ on every request:
@@ -3078,13 +3602,37 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # a Forwardable frame plus a Data reader for a value that was frozen when
   # the middleware was built.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:27
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:75
   def parsers; end
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:58
-  def build_formatted_response(status, headers, bodies); end
+  # The format a body of +media_type+ is read as, thrown as an error
+  # response when it cannot be read at all.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:266
+  def body_format(env, media_type); end
+
+  # Whether the request carries a body at all, read off the env alone. Every
+  # request asks, and the ones answered no -- the GET, HEAD and OPTIONS
+  # majority, and a POST or DELETE with nothing in it -- are answered before
+  # CONTENT_TYPE is parsed or a Rack::Request is built. The env key is
+  # spelled out: on Rack 3, +Rack::CONTENT_LENGTH+ names the response header.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:296
+  def body_given?(env); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:124
+  def build_formatted_response(env, status, headers, bodies, negotiated); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:110
+  def context; end
+
+  # The name the API declared +fmt+ under when the request used another
+  # one for it (see Grape::ContentTypes::FORMAT_SYNONYMS), or nil.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:332
+  def declared_synonym(fmt); end
 
   # Set the content type header for the API format if it is not already present.
   #
@@ -3092,14 +3640,40 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # this runs on every response, and copying the hash costs an allocation
   # per request for a header the caller is about to send anyway.
   #
+  # A format with no media type at all (see #media_type_for) leaves the
+  # header out: Rack forbids a nil header value.
+  #
   # @param headers [Hash] the response headers, mutated in place
   # @return [void]
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:105
-  def ensure_content_type!(headers); end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:211
+  def ensure_content_type!(env, headers); end
 
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:92
-  def fetch_formatter(headers); end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:110
+  def env; end
+
+  # A format the client negotiated -- by its Accept header, the path's
+  # extension or +?format=+ -- that cannot render the body answers in the
+  # default format rather than 500. On an API that pins no format, a
+  # browser's Accept header and axios's both negotiate XML, which cannot
+  # render a String. The fallback applies only while the format is the
+  # client's alone: when the API pins one, or the endpoint set a
+  # Content-Type or another format itself, a body that does not fit is the
+  # endpoint's error and still answers 500.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:170
+  def falls_back?(env, negotiated, content_type_given); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:195
+  def fetch_formatter(env, headers); end
+
+  # Nil when the default format cannot render the body either.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:175
+  def format_as_default(env, status, headers, bodies); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:148
+  def format_bodies(env, headers, bodies); end
 
   # Only the extension is scrubbed, and only once the path turns out to have
   # one: +String#rindex+ takes a byte offset and never raises on an invalid
@@ -3107,32 +3681,46 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # sits at the same place before and after scrubbing. The overwhelming
   # majority of paths carry no extension and now skip the scrub entirely.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:192
-  def format_from_extension; end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:317
+  def format_from_extension(env); end
 
-  # Media types are case-insensitive (RFC 9110 §8.3.1) but the registered
-  # ones are spelled in lower case and Rack matches them literally, so an
-  # `Accept: TEXT/PLAIN` found nothing and fell through to the default
-  # format — the client quietly got something other than what it asked for.
+  # The keys are registered media types -- valid strings, which scrubbing
+  # leaves alone -- so only a miss needs the header scrubbed.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:228
-  def format_from_header; end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:372
+  def format_from_header(env); end
 
   # +?format=+ can only be there when there is a query string at all, so
   # the common query-less request skips parsing one.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:217
-  def format_from_query; end
+  # And a query string that spells neither +format+ nor a percent-escape
+  # cannot hold that key either: Rack splits the string on +&+ and +=+ and
+  # then unescapes each key, and unescaping only ever rewrites +%XX+ (or a
+  # +++, which becomes a space). So the parse -- the most expensive thing
+  # a request with a query string does, and one the endpoint may never ask
+  # for -- is left to whoever reads the params.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:360
+  def format_from_query(env); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:114
+  def format_response(env, response, negotiated); end
 
   # Guards on +listening?+ so that with no subscriber the payload Hash and
   # notification machinery are skipped and the block runs directly (no added
   # allocations); the block is forwarded anonymously.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:86
-  def instrument_format_response(formatter, &); end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:189
+  def instrument_format_response(env, formatter, &); end
 
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:180
-  def negotiate_content_type; end
+  # A body parsed into a Hash joins the form params Rack::Request reads,
+  # as a form body Rack parsed itself would.
+  #
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:255
+  def merge_form_hash(env, parsed); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:302
+  def negotiate_content_type(env); end
 
   # The extension is the tail of the request path, so PATH_INFO answers it
   # on its own whenever there is one: a dot in SCRIPT_NAME is followed by
@@ -3142,36 +3730,88 @@ class Grape::Middleware::Formatter < ::Grape::Middleware::Base
   # than +blank?+: the path is not scrubbed yet, and a regexp match on an
   # invalid byte sequence raises.
   #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:208
-  def path_for_extension; end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:344
+  def path_for_extension(env); end
 
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:111
-  def read_body_input; end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:110
+  def query_params; end
 
-  # this middleware will not try to format the following content-types since Rack already handles them
-  # when calling Rack's `params` function
-  # - application/x-www-form-urlencoded
-  # - multipart/form-data
-  # - multipart/related
-  # - multipart/mixed
-  #
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:168
-  def read_body_input?; end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:110
+  def rack_request; end
 
-  # pkg:gem/grape#lib/grape/middleware/formatter.rb:128
-  def read_rack_input(body); end
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:218
+  def read_body_input(env); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:239
+  def read_rack_input(env, body, media_type); end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:110
+  def response; end
+
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:156
+  def stream_response(status, headers, bodies); end
+
+  class << self
+    # @api private
+    # The format an Accept header asks for out of +mime_types+, or nil.
+    # Callers scrub the header first.
+    #
+    # Media types are case-insensitive (RFC 9110 §8.3.1) but the registered
+    # ones are spelled in lower case and Rack matches them literally, so an
+    # `Accept: TEXT/PLAIN` found nothing and fell through to the default
+    # format — the client quietly got something other than what it asked for.
+    #
+    # pkg:gem/grape#lib/grape/middleware/formatter.rb:27
+    def format_for_accept(accept_header, mime_types); end
+  end
 end
 
 # pkg:gem/grape#lib/grape/middleware/formatter.rb:14
 Grape::Middleware::Formatter::ALL_MEDIA_TYPES = T.let(T.unsafe(nil), String)
 
 # The request methods that can carry a body worth parsing. See
-# {#read_body_input?}, which tests the env against this before anything
-# asks for a Rack::Request. QUERY is here because its content *is* the
-# query (RFC 10008, Section 2), not an optional payload.
+# {#body_given?}, which tests the env against this before anything asks
+# for a Rack::Request. QUERY is here because its content *is* the query
+# (RFC 10008, Section 2), not an optional payload.
 #
-# pkg:gem/grape#lib/grape/middleware/formatter.rb:20
+# pkg:gem/grape#lib/grape/middleware/formatter.rb:57
 Grape::Middleware::Formatter::BODY_CARRYING_METHODS = T.let(T.unsafe(nil), Array)
+
+# The query param that names the format. See #format_from_query.
+#
+# pkg:gem/grape#lib/grape/middleware/formatter.rb:17
+Grape::Middleware::Formatter::FORMAT_PARAM = T.let(T.unsafe(nil), String)
+
+# What a parser raises that is not a Grape error, and so is answered as a
+# 400 here. A Grape error goes on to the error middleware as it is. It
+# used to be rescued just to be raised again, and re-raising at request
+# depth cost about 25 µs -- paid by every malformed body, since the
+# built-in parsers report one as InvalidMessageBody.
+#
+# pkg:gem/grape#lib/grape/middleware/formatter.rb:284
+module Grape::Middleware::Formatter::ForeignParserError
+  class << self
+    # pkg:gem/grape#lib/grape/middleware/formatter.rb:285
+    def ===(exception); end
+  end
+end
+
+# +format_for_accept+ answers from the header and +mime_types+ alone. A
+# client that names the format it wants sends one of those media types as
+# it is registered (+application/json+), and most others send +*/*+ or
+# nothing, so those answers are worked out once instead of re-running
+# Rack's q-value match on every request. Any other header misses and is
+# negotiated as before; only registered media types are keys, so a client
+# cannot grow a table.
+#
+# Shared per +mime_types+, which Grape::ContentTypes already shares per
+# content-type registry: every endpoint builds its own formatter.
+#
+# pkg:gem/grape#lib/grape/middleware/formatter.rb:44
+class Grape::Middleware::Formatter::FormatForAcceptCache < ::Grape::Util::Cache
+  # pkg:gem/grape#lib/grape/middleware/formatter.rb:45
+  def initialize; end
+end
 
 # pkg:gem/grape#lib/grape/middleware/formatter.rb:8
 class Grape::Middleware::Formatter::Options < ::Data
@@ -3208,9 +3848,22 @@ class Grape::Middleware::Formatter::Options < ::Data
   end
 end
 
+# The media types whose bodies Rack parses itself once the params are
+# asked for, so the formatter leaves them alone.
+#
+# Tested against the media type the formatter parses anyway, rather than
+# through Rack's +form_data?+ and +parseable_data?+, which parse
+# CONTENT_TYPE again each. It is the same answer: +form_data?+ also holds
+# for a POST with no media type, but Rack only finds none when
+# CONTENT_TYPE is missing or empty, and a body like that was never left
+# to Rack.
+#
+# pkg:gem/grape#lib/grape/middleware/formatter.rb:68
+Grape::Middleware::Formatter::RACK_PARSED_MEDIA_TYPES = T.let(T.unsafe(nil), Array)
+
 # Include in a middleware subclass that needs content-type negotiation.
 # Provides +content_types+ / +mime_types+ / +content_type_for+ /
-# +content_type+ resolved from +config.content_types+ and
+# +media_type_for+ / +content_type+ resolved from +config.content_types+ and
 # +config.format+ — so the consuming middleware's +Options+ Data class
 # must declare both fields. Warms those caches on the parent instance
 # at initialization so per-request +dup+s inherit them rather than
@@ -3227,26 +3880,40 @@ end
 #
 # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:21
 module Grape::Middleware::PrecomputedContentTypes
-  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:22
+  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:25
   def initialize(app, **options); end
 
-  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:40
+  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:52
   def content_type; end
 
-  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:36
+  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:39
   def content_type_for(format); end
 
-  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:28
+  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:31
   def content_types; end
 
-  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:32
+  # The media type to label a response rendered in +format+ with: the one
+  # this API declares for it, or else Grape's own -- +api_format :txt+ in
+  # a +format :json+ API renders text/plain. #content_type_for stays nil
+  # for a format the API does not declare, since negotiation asks it
+  # whether the API supports the format at all.
+  #
+  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:48
+  def media_type_for(format); end
+
+  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:35
   def mime_types; end
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:46
+  # pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:58
   def content_types_lookup; end
 end
+
+# Grape's own media type for each built-in format, under both spellings.
+#
+# pkg:gem/grape#lib/grape/middleware/precomputed_content_types.rb:23
+Grape::Middleware::PrecomputedContentTypes::DEFAULT_CONTENT_TYPES = T.let(T.unsafe(nil), Hash)
 
 # Class to handle the stack of middlewares based on ActionDispatch::MiddlewareStack
 # It allows to insert and insert after
@@ -3264,13 +3931,13 @@ class Grape::Middleware::Stack
 
   # @return [Rack::Builder] the builder object with our middlewares applied
   #
-  # pkg:gem/grape#lib/grape/middleware/stack.rb:95
+  # pkg:gem/grape#lib/grape/middleware/stack.rb:94
   def build; end
 
   # @description Add middlewares with :use operation to the stack. Store others with :insert_* operation for later
-  # @param [Array] other_specs An array of middleware specifications (e.g. [[:use, klass], [:insert_before, *args]])
+  # @param [Array] other_specs An array of middleware specifications (e.g. [[:use, klass, nil], [:insert_before, *args, block]])
   #
-  # pkg:gem/grape#lib/grape/middleware/stack.rb:104
+  # pkg:gem/grape#lib/grape/middleware/stack.rb:103
   def concat(other_specs); end
 
   # pkg:gem/grape#lib/grape/middleware/stack.rb:59
@@ -3288,7 +3955,12 @@ class Grape::Middleware::Stack
   # pkg:gem/grape#lib/grape/middleware/stack.rb:59
   def last(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/middleware/stack.rb:83
+  # Each spec ends in the block its operation was given, +nil+ when there
+  # was none. Telling the block apart by its class would take a Proc passed
+  # as the last argument, such as a callable the middleware is configured
+  # with, for the block.
+  #
+  # pkg:gem/grape#lib/grape/middleware/stack.rb:87
   def merge_with(middleware_specs); end
 
   # pkg:gem/grape#lib/grape/middleware/stack.rb:57
@@ -3311,7 +3983,7 @@ class Grape::Middleware::Stack
 
   protected
 
-  # pkg:gem/grape#lib/grape/middleware/stack.rb:112
+  # pkg:gem/grape#lib/grape/middleware/stack.rb:111
   def assert_index(index, where); end
 end
 
@@ -3405,40 +4077,60 @@ class Grape::Middleware::Versioner::Base < ::Grape::Middleware::Base
   include ::Grape::Middleware::PrecomputedContentTypes
   extend ::Forwardable
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:33
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:38
   def initialize(app, **options); end
 
   # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:28
   def available_media_types; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:31
-  def cascade(*, **, &); end
+  # Read off ivars rather than delegated through +version_options+ into
+  # +config+: the versioners ask for +vendor+, +strict+ or +parameter+ on
+  # every request, and each read went two Forwardable frames and two Data
+  # readers deep for a value fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:34
+  def cascade; end
 
   # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:28
   def error_headers; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:30
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:36
   def mount_path(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:31
-  def parameter(*, **, &); end
+  # Read off ivars rather than delegated through +version_options+ into
+  # +config+: the versioners ask for +vendor+, +strict+ or +parameter+ on
+  # every request, and each read went two Forwardable frames and two Data
+  # readers deep for a value fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:34
+  def parameter; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:40
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:52
   def potential_version_match?(potential_version); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:30
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:36
   def prefix(*, **, &); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:31
-  def strict(*, **, &); end
+  # Read off ivars rather than delegated through +version_options+ into
+  # +config+: the versioners ask for +vendor+, +strict+ or +parameter+ on
+  # every request, and each read went two Forwardable frames and two Data
+  # readers deep for a value fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:34
+  def strict; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:31
-  def vendor(*, **, &); end
+  # Read off ivars rather than delegated through +version_options+ into
+  # +config+: the versioners ask for +vendor+, +strict+ or +parameter+ on
+  # every request, and each read went two Forwardable frames and two Data
+  # readers deep for a value fixed when the middleware was built.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:34
+  def vendor; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:44
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:56
   def version_not_found!; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:30
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:36
   def version_options(*, **, &); end
 
   # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:28
@@ -3446,7 +4138,12 @@ class Grape::Middleware::Versioner::Base < ::Grape::Middleware::Base
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:50
+  # +base+ with each content type's extension, then +base+ alone.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:75
+  def append_media_types(media_types, base); end
+
+  # pkg:gem/grape#lib/grape/middleware/versioner/base.rb:62
   def build_available_media_types; end
 
   class << self
@@ -3517,46 +4214,92 @@ end
 #
 # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:24
 class Grape::Middleware::Versioner::Header < ::Grape::Middleware::Versioner::Base
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:25
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:55
+  def initialize(app, **options); end
+
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:74
   def before; end
+
+  # Base#call copies the middleware per request so #before can keep the
+  # env and the Accept header it scrubs in ivars. A request whose Accept
+  # header the table answers (see MediaTypeForAcceptCache) needs neither
+  # unless the API is strict, whose checks read the header itself: its
+  # media type is recorded and the app called from the one instance the
+  # stack built. Any other request goes through #before.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:66
+  def call(env); end
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:49
+  # Scrubbed of any bytes its encoding does not allow: +blank?+,
+  # +downcase+ and Rack's q-value parsing all raise on one.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:104
   def accept_header; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:60
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:115
   def accept_header_check!; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:88
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:143
   def fail!; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:80
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:135
   def invalid_accept_header!(message); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:84
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:139
   def invalid_version_header!(message); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:39
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:90
   def match_best_quality_media_type!; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:72
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:127
   def q_values_mime_types; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:53
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:80
+  def record_media_type(env, media_type); end
+
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:108
   def strict_header_checks!; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:95
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:150
   def vendor_not_found!(media_types); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:76
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:131
   def version_and_vendor?; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:66
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:121
   def version_and_vendor_check!; end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:101
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:156
   def version_not_found!(media_types); end
+end
+
+# Accept headers answered up front besides the declared media types:
+# +*/*+, what curl, Net::HTTP and most HTTP libraries send unless told
+# otherwise, and no Accept header at all.
+#
+# pkg:gem/grape#lib/grape/middleware/versioner/header.rb:28
+Grape::Middleware::Versioner::Header::COMMON_ACCEPT_HEADERS = T.let(T.unsafe(nil), Array)
+
+# +MediaType.best_quality+ answers from the header and
+# +available_media_types+ alone, and the latter is fixed once the
+# middleware is built. Most requests send one of a handful of headers --
+# a declared media type spelled as declared (+application/vnd.acme-v1+json+)
+# or one of COMMON_ACCEPT_HEADERS -- so their answers are worked out
+# once instead of re-running Rack's q-value match and a parse on every
+# request. Any other header (a q-value list, another casing) is not a
+# key and takes the full path, so a client cannot grow a table.
+#
+# Shared per vendor and list: every endpoint builds its own versioner,
+# and all of an API's declare the same media types. The list in the
+# key is a frozen copy, as the middleware's own list stays reachable
+# through +available_media_types+.
+#
+# pkg:gem/grape#lib/grape/middleware/versioner/header.rb:43
+class Grape::Middleware::Versioner::Header::MediaTypeForAcceptCache < ::Grape::Util::Cache
+  # pkg:gem/grape#lib/grape/middleware/versioner/header.rb:44
+  def initialize; end
 end
 
 # This middleware sets various version related rack environment variables
@@ -3564,47 +4307,54 @@ end
 # request parameters for subsequent middleware and API.
 # If the version substring does not match any potential initialized
 # versions, a 404 error is thrown.
-# If the version substring is not passed the version (highest mounted)
-# version will be used.
+# If no version is passed, none is set and the first matching route answers.
 #
 # Example: For a uri path
 #   /resource?apiver=v1
 #
-# The following rack env variables are set and path is rewritten to
-# '/resource':
+# The following rack env variable is set:
 #
 #   env['api.version'] => 'v1'
 #
-# pkg:gem/grape#lib/grape/middleware/versioner/param.rb:21
+# pkg:gem/grape#lib/grape/middleware/versioner/param.rb:19
 class Grape::Middleware::Versioner::Param < ::Grape::Middleware::Versioner::Base
-  # pkg:gem/grape#lib/grape/middleware/versioner/param.rb:22
+  # pkg:gem/grape#lib/grape/middleware/versioner/param.rb:20
   def before; end
 end
 
 # This middleware sets various version related rack environment variables
-# based on the uri path and removes the version substring from the uri
-# path. If the version substring does not match any potential initialized
-# versions, a 404 error is thrown.
+# based on the uri path, which it leaves unchanged. If the version
+# substring does not match any potential initialized versions, a 404
+# error is thrown.
 #
 # Example: For a uri path
 #   /v1/resource
 #
-# The following rack env variables are set and path is rewritten to
-# '/resource':
+# The following rack env variable is set:
 #
 #   env['api.version'] => 'v1'
 #
-# pkg:gem/grape#lib/grape/middleware/versioner/path.rb:19
+# pkg:gem/grape#lib/grape/middleware/versioner/path.rb:18
 class Grape::Middleware::Versioner::Path < ::Grape::Middleware::Versioner::Base
-  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:20
+  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:19
   def initialize(app, **options); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:25
+  # Reached only when #call found no routed version.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:37
   def before; end
+
+  # A request the router matched carries its version already (see
+  # #routed_version), so all there is to do is record it -- without the
+  # per-request copy of this middleware that Base#call makes to run
+  # #before and #after, neither of which has anything left to do.
+  #
+  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:28
+  def call(env); end
 
   private
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:81
+  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:90
   def declared_version?(candidate); end
 
   # Under path versioning every route pattern carries the version as a
@@ -3621,10 +4371,10 @@ class Grape::Middleware::Versioner::Path < ::Grape::Middleware::Versioner::Base
   # it matched rather than the single segment recorded here, so that too
   # is left to the path parse.
   #
-  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:59
-  def routed_version; end
+  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:68
+  def routed_version(env); end
 
-  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:64
+  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:73
   def version_from_first_segment(path_info, slash_position); end
 
   # The path is a single segment (e.g. `GET /v1` — the root route of a
@@ -3633,7 +4383,7 @@ class Grape::Middleware::Versioner::Path < ::Grape::Middleware::Versioner::Base
   # only recorded on an exact match against the declared versions, and an
   # unmatched segment is left for the router to resolve — never a 404.
   #
-  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:75
+  # pkg:gem/grape#lib/grape/middleware/versioner/path.rb:84
   def version_from_only_segment(path_info); end
 end
 
@@ -3644,17 +4394,15 @@ end
 # rather than duck-typing on an incidental internal method such as
 # `inheritable_setting`.
 #
-# `Grape::API` and `Grape::API::Instance` are not related by inheritance and
-# do not even respond to the same methods (the former to `mount_instance`,
-# the latter to `inheritable_setting`/`endpoints`), so there is no common
-# ancestor to key an `is_a?` check on without this marker.
+# `Grape::API` and `Grape::API::Instance` are not related by inheritance, so
+# there is no common ancestor to key an `is_a?` check on without this marker.
 #
 # It answers identity only ("is this a Grape app?"). Capability checks that
 # go on to call a stage-specific method — e.g. `respond_to?(:endpoints)`
 # before reading `endpoints` — must stay as they are, since a `Mountable`
 # does not necessarily respond to every such method.
 #
-# pkg:gem/grape#lib/grape/mountable.rb:20
+# pkg:gem/grape#lib/grape/mountable.rb:18
 module Grape::Mountable; end
 
 # A container for endpoints or other namespaces, which allows for both
@@ -3664,21 +4412,20 @@ module Grape::Mountable; end
 # pkg:gem/grape#lib/grape/namespace.rb:7
 class Grape::Namespace
   # @param space [String] the name of this namespace
+  # @param requirements [Hash] param-regex pairs a request's path must meet
+  #   for this namespace's endpoints to match
   # @param options [Hash] options hash
-  # @option options :requirements [Hash] param-regex pairs, all of which must
-  #   be met by a request's params for all endpoints in this namespace, or
-  #   validation will fail and return a 422.
   #
-  # pkg:gem/grape#lib/grape/namespace.rb:15
+  # pkg:gem/grape#lib/grape/namespace.rb:14
   def initialize(space, requirements: T.unsafe(nil), **options); end
 
-  # pkg:gem/grape#lib/grape/namespace.rb:26
+  # pkg:gem/grape#lib/grape/namespace.rb:25
   def ==(other); end
 
-  # pkg:gem/grape#lib/grape/namespace.rb:32
+  # pkg:gem/grape#lib/grape/namespace.rb:31
   def eql?(other); end
 
-  # pkg:gem/grape#lib/grape/namespace.rb:34
+  # pkg:gem/grape#lib/grape/namespace.rb:33
   def hash; end
 
   # pkg:gem/grape#lib/grape/namespace.rb:8
@@ -3693,21 +4440,21 @@ class Grape::Namespace
   class << self
     # (see ::joined_space_path)
     #
-    # pkg:gem/grape#lib/grape/namespace.rb:22
+    # pkg:gem/grape#lib/grape/namespace.rb:21
     def joined_space(settings); end
 
     # Join the namespaces from a list of Namespace objects to create a path
     # prefix.
     # @param settings [Array] list of Grape::Namespace objects.
     #
-    # pkg:gem/grape#lib/grape/namespace.rb:41
+    # pkg:gem/grape#lib/grape/namespace.rb:40
     def joined_space_path(settings); end
   end
 end
 
-# pkg:gem/grape#lib/grape/namespace.rb:45
+# pkg:gem/grape#lib/grape/namespace.rb:44
 class Grape::Namespace::JoinedSpaceCache < ::Grape::Util::Cache
-  # pkg:gem/grape#lib/grape/namespace.rb:46
+  # pkg:gem/grape#lib/grape/namespace.rb:45
   def initialize; end
 end
 
@@ -3797,6 +4544,21 @@ class Grape::Parser::Json < ::Grape::Parser::Base
   end
 end
 
+# Parses a JSON Lines body into an Array of its values. Like a JSON body
+# that is an Array, it is left in +env['api.request.body']+ rather than
+# merged into +params+, which only takes a Hash.
+#
+# Blank lines are skipped, so a body may end with a newline or not, and
+# its lines may end in CRLF.
+#
+# pkg:gem/grape#lib/grape/parser/jsonl.rb:11
+class Grape::Parser::Jsonl < ::Grape::Parser::Base
+  class << self
+    # pkg:gem/grape#lib/grape/parser/jsonl.rb:12
+    def call(object, _env); end
+  end
+end
+
 # pkg:gem/grape#lib/grape/parser/xml.rb:5
 class Grape::Parser::Xml < ::Grape::Parser::Base
   class << self
@@ -3857,7 +4619,7 @@ class Grape::PrecompiledJson
   def to_s; end
 end
 
-# pkg:gem/grape#lib/grape.rb:113
+# pkg:gem/grape#lib/grape.rb:116
 module Grape::Presenters; end
 
 # pkg:gem/grape#lib/grape/presenters/presenter.rb:5
@@ -3871,7 +4633,7 @@ end
 # The HTTP QUERY method (RFC 10008): a safe, idempotent request whose content
 # carries the query. Rack has no constant for it yet, hence the literal.
 #
-# pkg:gem/grape#lib/grape.rb:67
+# pkg:gem/grape#lib/grape.rb:70
 Grape::QUERY = T.let(T.unsafe(nil), String)
 
 # Rack errors that should be rescued and wrapped as Grape::Exceptions::RequestError.
@@ -3879,15 +4641,15 @@ Grape::QUERY = T.let(T.unsafe(nil), String)
 # exception classes, allowing a single rescue entry to cover them all.
 # Before, these errors are raised as individual exception classes.
 #
-# pkg:gem/grape#lib/grape.rb:84
+# pkg:gem/grape#lib/grape.rb:87
 Grape::RACK_ERRORS = T.let(T.unsafe(nil), Array)
 
 # pkg:gem/grape#lib/grape/request.rb:4
 class Grape::Request < ::Rack::Request
-  # pkg:gem/grape#lib/grape/request.rb:142
+  # pkg:gem/grape#lib/grape/request.rb:146
   def initialize(env, build_params_with: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/request.rb:155
+  # pkg:gem/grape#lib/grape/request.rb:159
   def cookies; end
 
   # True once the cookie jar has been materialized (a cookie was read or
@@ -3895,19 +4657,19 @@ class Grape::Request < ::Rack::Request
   # and the Grape::Cookies allocation it triggers, when no cookie was
   # touched on the request.
   #
-  # pkg:gem/grape#lib/grape/request.rb:163
+  # pkg:gem/grape#lib/grape/request.rb:167
   def cookies?; end
 
-  # pkg:gem/grape#lib/grape/request.rb:151
+  # pkg:gem/grape#lib/grape/request.rb:155
   def headers; end
 
-  # pkg:gem/grape#lib/grape/request.rb:147
+  # pkg:gem/grape#lib/grape/request.rb:151
   def params; end
 
-  # pkg:gem/grape#lib/grape/request.rb:140
+  # pkg:gem/grape#lib/grape/request.rb:144
   def rack_cookies; end
 
-  # pkg:gem/grape#lib/grape/request.rb:139
+  # pkg:gem/grape#lib/grape/request.rb:143
   def rack_params; end
 
   private
@@ -3917,25 +4679,39 @@ class Grape::Request < ::Rack::Request
   # `k, v` pair would be boxed into a throwaway Array on every header. A
   # two-arg block receives `k`/`v` directly and allocates nothing extra.
   #
-  # pkg:gem/grape#lib/grape/request.rb:216
+  # pkg:gem/grape#lib/grape/request.rb:254
   def build_headers; end
+
+  # +self.GET+ is the query hash Rack memoized in the env, not the copy the
+  # merge in Rack::Request#params used to hand over. Every builder Grape
+  # ships constructs a new object, so there is nothing to copy; one that
+  # returns its argument would otherwise let the writes that follow --
+  # routing args, coercions, defaults -- reach the env.
+  #
+  # pkg:gem/grape#lib/grape/request.rb:201
+  def build_params; end
+
+  # Whether the request can have form params at all. Rack::Request#params is
+  # the query params merged with the form params, and a request that carries
+  # no body has none to merge -- but finding that out costs Rack a
+  # CONTENT_TYPE parse and an empty Hash written back into the env, on every
+  # request that reads params without sending a body. The env answers it
+  # first: form params already read, by Rack or by the formatter's parsers,
+  # are memoized under Rack's own key, and without them only a body could
+  # hold any. The method is deliberately not part of the test -- Rack reads
+  # a form body whatever the method says.
+  #
+  # pkg:gem/grape#lib/grape/request.rb:190
+  def form_params?; end
 
   # A route reports a +version+ only when the API declared one, which is the
   # case where the captured segment is Grape's rather than the application's.
   #
-  # pkg:gem/grape#lib/grape/request.rb:205
+  # pkg:gem/grape#lib/grape/request.rb:243
   def grape_owns_version?(routing_args); end
 
-  # pkg:gem/grape#lib/grape/request.rb:177
+  # pkg:gem/grape#lib/grape/request.rb:209
   def make_params; end
-
-  # Resolved on first use rather than in the constructor: a request that never
-  # reads +params+ -- an endpoint with no validations whose block does not ask
-  # for them -- pays neither the registry lookup nor the global config read,
-  # and every request builds a Grape::Request.
-  #
-  # pkg:gem/grape#lib/grape/request.rb:173
-  def params_builder; end
 
   # The routing args carry two things that are not request params:
   # +:route_info+, which is always Grape's own, and +:version+, which is only
@@ -3947,9 +4723,28 @@ class Grape::Request < ::Rack::Request
   # the application. Dropping it unconditionally left `params[:version]` nil
   # on a route that had matched, losing the segment silently.
   #
-  # pkg:gem/grape#lib/grape/request.rb:196
-  def routing_args_as_params(routing_args); end
+  # The rest are written into +params+ one by one rather than deep-merged
+  # from an +except+ copy, which was a Hash built per request only to be
+  # merged away. A capture is a String or an Array of them, never a Hash,
+  # so +deep_merge!+ had nothing to merge into: it replaced the value, as
+  # assigning it does.
+  #
+  # pkg:gem/grape#lib/grape/request.rb:232
+  def merge_routing_args!(params, routing_args); end
+
+  # Resolved on first use rather than in the constructor: a request that never
+  # reads +params+ -- an endpoint with no validations whose block does not ask
+  # for them -- pays neither the registry lookup nor the global config read,
+  # and every request builds a Grape::Request.
+  #
+  # pkg:gem/grape#lib/grape/request.rb:177
+  def params_builder; end
 end
+
+# Routing-args keys that are Grape's own, not request params.
+#
+# pkg:gem/grape#lib/grape/request.rb:140
+Grape::Request::GRAPE_OWNED_ROUTING_ARGS = T.let(T.unsafe(nil), Array)
 
 # Based on rack 3 KNOWN_HEADERS
 # https://github.com/rack/rack/blob/4f15e7b814922af79605be4b02c5b7c3044ba206/lib/rack/headers.rb#L10
@@ -3957,49 +4752,90 @@ end
 # pkg:gem/grape#lib/grape/request.rb:8
 Grape::Request::KNOWN_HEADERS = T.let(T.unsafe(nil), Hash)
 
+# pkg:gem/grape#lib/grape/request.rb:141
+Grape::Request::ROUTE_INFO_ONLY = T.let(T.unsafe(nil), Array)
+
 # pkg:gem/grape#lib/grape/router.rb:4
 class Grape::Router
   # pkg:gem/grape#lib/grape/router.rb:5
   def initialize; end
 
-  # pkg:gem/grape#lib/grape/router.rb:36
+  # pkg:gem/grape#lib/grape/router.rb:35
   def append(route); end
 
-  # pkg:gem/grape#lib/grape/router.rb:40
+  # pkg:gem/grape#lib/grape/router.rb:39
   def associate_routes(greedy_route); end
 
-  # pkg:gem/grape#lib/grape/router.rb:45
+  # pkg:gem/grape#lib/grape/router.rb:44
   def call(env); end
 
-  # pkg:gem/grape#lib/grape/router.rb:15
+  # pkg:gem/grape#lib/grape/router.rb:18
   def compile!; end
 
-  # pkg:gem/grape#lib/grape/router.rb:55
+  # pkg:gem/grape#lib/grape/router.rb:61
   def recognize_path(input); end
 
   private
 
-  # pkg:gem/grape#lib/grape/router.rb:197
+  # #transaction for a path a bucket narrowed the routes for. A bucket
+  # numbers its groups its own way, so it hands over the captures numbered
+  # for its own union along with the match.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:120
+  def bucket_transaction(bucket, input, method, env); end
+
+  # pkg:gem/grape#lib/grape/router.rb:427
   def cascade?(response); end
 
   # Releases a response the router has decided not to return. Rack requires
   # every body it hands out to be closed, and a cascading candidate is
   # discarded as soon as a later one answers.
   #
-  # pkg:gem/grape#lib/grape/router.rb:146
+  # pkg:gem/grape#lib/grape/router.rb:225
   def close_body(response); end
 
-  # pkg:gem/grape#lib/grape/router.rb:180
+  # After a miss, #neighbours looks for a greedy route to answer 405 with.
+  # Walking the whole of @union for it would cost a 404 a second walk over
+  # every path, and most of that walk cannot succeed: a greedy route shares
+  # its pattern with the routes it was collected from (see
+  # API::Instance#collect_route_config_per_pattern), so once the union for
+  # +method+ has missed a path, the greedy route of every path +method+ has a
+  # route on has missed it too. What is left to try is the paths +method+ has
+  # no route on -- in an API where every path answers GET, none at all for a
+  # GET.
+  #
+  # Built from the same members as @union, in the same order, so a path
+  # resolves to the same greedy route either way. Methods that leave the same
+  # paths uncovered -- PUT and DELETE on a member, say -- share one union.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:404
+  def compile_neighbour_map; end
+
+  # Compiled from the routes actually registered rather than from
+  # Grape::HTTP_SUPPORTED_METHODS. A route declared with any other verb
+  # (`route :purge, '/cache'`) is accepted at definition time and is
+  # already collected into the resource's Allow header, so skipping it here
+  # left it in @map but out of @optimized_map — the only map #match? reads.
+  # The resource then advertised a method that could never be matched and
+  # answered every request for it with 405.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:369
+  def compile_optimized_map; end
+
+  # The 404 answered when nothing matched. The Rack::Head the API wraps
+  # around the router strips its body from a HEAD request.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:326
   def default_response; end
 
-  # pkg:gem/grape#lib/grape/router.rb:193
+  # pkg:gem/grape#lib/grape/router.rb:340
   def greedy_match?(input); end
 
   # Returns true if `response` should be returned as-is from the enclosing
   # transaction. Closes the body as a side effect when the response is
   # cascading so callers can safely try the next match.
   #
-  # pkg:gem/grape#lib/grape/router.rb:135
+  # pkg:gem/grape#lib/grape/router.rb:214
   def halt?(response); end
 
   # Which alternative of the union matched is answered by scanning one group
@@ -4008,15 +4844,68 @@ class Grape::Router
   # name sends MatchData through the pattern's name table on every lookup,
   # a number indexes the match region directly.
   #
-  # pkg:gem/grape#lib/grape/router.rb:189
+  # pkg:gem/grape#lib/grape/router.rb:335
   def match?(input, method); end
+
+  # The route of +routes+ whose alternative of their union produced +match+,
+  # found as #match? finds it.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:346
+  def matched_route(routes, match); end
+
+  # The greedy route for +input+ once the routes for +method+ have all missed
+  # it, from the ones #compile_neighbour_map left to try. A method with no
+  # routes of its own covers no path, so it still walks the whole of @union.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:353
+  def neighbour_match?(input, method); end
+
+  # The union of the greedy routes at +indices+ of @neutral_map, those
+  # routes, and the group each of them occupies in the union: a subset of
+  # @union numbers its groups differently, so the ones
+  # #resolve_capture_groups recorded do not apply. Routes and groups are
+  # parallel Arrays for #neighbour_match? to walk with Array#index, as
+  # Enumerable#find over a Hash allocates on every call.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:419
+  def neighbour_union(indices); end
+
+  # The ANY ('*') routes and the greedy neighbour, tried once the routes for
+  # +method+ have declined. +cascaded+ says whether any of them matched: the
+  # auto-OPTIONS and 405 answers are only right when none did.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:164
+  def neighbours(input, method, env, response, cascaded); end
+
+  # The union of +routes+, paired with the routes it was built from, so a
+  # request reads everything it can be matched with through a single
+  # lookup: the buckets that narrow those routes by a path segment (nil
+  # when no segment splits them well), and the table of the paths they
+  # spell out in full -- nil when none does, so a request for their method
+  # goes straight to the union rather than missing a lookup first.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:384
+  def optimized_routes(routes, bucket_unions); end
 
   # Routing args are rebuilt for every attempt: when a route cascades
   # (X-Cascade pass), the next candidate must not observe the previous
   # attempt's +route_info+ or path captures.
   #
-  # pkg:gem/grape#lib/grape/router.rb:154
-  def process_route(route, input, env, include_allow_header: T.unsafe(nil)); end
+  # pkg:gem/grape#lib/grape/router.rb:233
+  def process_route(route, input, env, match = T.unsafe(nil), captures = T.unsafe(nil), include_allow_header: T.unsafe(nil)); end
+
+  # The ANY route's answer, superseding +response+. A cascading one has its
+  # body closed, as #halt? closes it, and is still what #neighbours returns.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:187
+  def process_star_route(star_route, input, env, response); end
+
+  # {#process_route} for an entry of {#static_routes_for}. Its captures were
+  # read when the table was built; each request gets its own copy of each,
+  # the way it gets fresh strings out of a match.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:248
+  def process_static_route(route, captures, env); end
 
   # Tells each route the number of the group it ended up as in +union+. The
   # numbering is a property of the union rather than of the route's own
@@ -4024,7 +4913,7 @@ class Grape::Router
   # pattern declares -- so it can only be resolved once the union is built.
   # Returns the union, so a caller can assign it in one expression.
   #
-  # pkg:gem/grape#lib/grape/router.rb:169
+  # pkg:gem/grape#lib/grape/router.rb:313
   def resolve_capture_groups(union, routes); end
 
   # The routes registered for +method+ other than +exact_route+, tried in
@@ -4032,25 +4921,87 @@ class Grape::Router
   # response processed — a cascading one when every sibling declined, so the
   # caller can hand it back — or nil when no sibling matched.
   #
-  # pkg:gem/grape#lib/grape/router.rb:119
+  # pkg:gem/grape#lib/grape/router.rb:198
   def rotation(input, method, env, exact_route); end
+
+  # What #transaction answers once +exact_route+ answered with +response+:
+  # that response, unless it cascades. A route that declined (+response+
+  # cascades), or none matching (+response+ is nil), leaves the rest to try.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:144
+  def settle(input, method, env, response, exact_route); end
+
+  # The request paths +route+ spells out in full: its origin, with each
+  # version it declares filled in under path versioning. A path still
+  # holding pattern syntax or a '%', or one the normalizer would rewrite, is
+  # left out, since no request routes on it spelled that way. This only
+  # picks the paths worth resolving; what answers them is up to the union.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:301
+  def static_paths(route); end
+
+  # The route a request for +path+ resolves to and the captures it hands
+  # over, frozen for every such request to share; nil when a capture is not
+  # a String.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:281
+  def static_route_entry(union, routes, path); end
+
+  # A request for a path a route spells out in full -- no param in it, its
+  # version filled in -- is answered from this table rather than by the
+  # union. The union tries its alternatives one after another, and finding
+  # which one matched scans every route ahead of it, so a request costs more
+  # the later its route was registered; a Hash lookup does not.
+  #
+  # Each path is resolved here the way a request for it is, through the
+  # union and the scan, so an entry holds whichever route answers it -- an
+  # earlier route with a param where the path has a segment included -- and
+  # the captures it hands over. Only paths worked out from the routes are
+  # keys, so a client cannot grow the table, and a path that is not in it,
+  # or whose captures are not all plain Strings, is matched as before.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:267
+  def static_routes_for(union, routes); end
 
   # Resolve +input+ against the compiled routes, in priority order:
   #
   # 1. the routes registered for +method+ — the compiled-union match first,
   #    then, when that route cascades, its siblings (see #rotation);
   # 2. the ANY (+'*'+) routes;
-  # 3. the greedy neighbour, which answers auto-OPTIONS and 405.
+  # 3. the greedy neighbour, which answers 405 — and auto-OPTIONS, ahead of
+  #    the ANY routes.
   #
   # Returns nil when nothing answered, leaving the caller to 404. A response
   # that cascades is never final: it is returned only once every later
   # candidate has declined too, so the caller (or a mounting app upstream)
   # can keep looking.
   #
-  # pkg:gem/grape#lib/grape/router.rb:78
+  # pkg:gem/grape#lib/grape/router.rb:105
   def transaction(input, method, env); end
 
-  # pkg:gem/grape#lib/grape/router.rb:175
+  # #transaction for a path matched against all the routes for +method+.
+  # Matched here rather than through #match? so the MatchData survives: the
+  # route's path captures are groups of it (see Route#params_for).
+  #
+  # pkg:gem/grape#lib/grape/router.rb:132
+  def union_transaction(union, routes, input, method, env); end
+
+  # +path+ tagged UTF-8 when its bytes are UTF-8, or nil when they are not.
+  #
+  # Rack hands PATH_INFO over binary, and a binary string holding non-ASCII
+  # bytes raises Encoding::CompatibilityError when matched against a UTF-8
+  # regexp -- so once one route held a non-ASCII literal (`/café/:id`),
+  # every path carrying raw non-ASCII bytes raised, whichever route it was
+  # meant for. Tagged UTF-8, such a path routes the way its percent-encoded
+  # spelling does. Bytes that are not UTF-8 cannot be matched against these
+  # routes at all, so the router answers them as a path nothing matched.
+  #
+  # A copy, so PATH_INFO itself stays binary as Rack requires.
+  #
+  # pkg:gem/grape#lib/grape/router.rb:88
+  def utf8_path(path); end
+
+  # pkg:gem/grape#lib/grape/router.rb:319
   def with_optimization; end
 end
 
@@ -4167,7 +5118,7 @@ class Grape::Router::BaseRoute
   # @api private
   # @see #regexp_capture_group
   #
-  # pkg:gem/grape#lib/grape/router/base_route.rb:71
+  # pkg:gem/grape#lib/grape/router/base_route.rb:90
   def resolve_capture_group!(union_named_captures); end
 
   # pkg:gem/grape#lib/grape/router/base_route.rb:15
@@ -4194,25 +5145,49 @@ class Grape::Router::BaseRoute
   # pkg:gem/grape#lib/grape/router/base_route.rb:64
   def to_regexp(index); end
 
+  # This route's named captures mapped to their group numbers in the router's
+  # union, or nil when a union match would not reproduce what Mustermann
+  # returns (see Route#params_for). Assigned in {#resolve_capture_group!},
+  # never at request time -- instances are shared across threads.
+  #
+  # pkg:gem/grape#lib/grape/router/base_route.rb:73
+  def union_captures; end
+
+  # {#union_captures} renumbered for a union in which this route's own
+  # group is +group+ -- one of a bucket's, say. Every capture sits at a
+  # fixed offset from the route's own group, so the whole map shifts by
+  # the same number. Nil when the route has no reusable captures.
+  #
+  # pkg:gem/grape#lib/grape/router/base_route.rb:79
+  def union_captures_at(group); end
+
   # pkg:gem/grape#lib/grape/router/base_route.rb:14
   def version(*, **, &); end
 
   private
 
+  # +to_regexp+'s wrapper is the group just before the pattern's own, and
+  # +Regexp.union+ shifts numbering only by the groups preceding a branch --
+  # what +regexp_capture_group+ counts. So the capture at position +n+ of the
+  # route's regexp is group +regexp_capture_group + n+ of the union.
+  #
+  # pkg:gem/grape#lib/grape/router/base_route.rb:110
+  def resolve_union_captures; end
+
   # pkg:gem/grape#lib/grape/router/base_route.rb:8
   def respond_to_missing?(name, include_private = T.unsafe(nil)); end
 end
 
-# pkg:gem/grape#lib/grape/router/base_route.rb:75
+# pkg:gem/grape#lib/grape/router/base_route.rb:95
 class Grape::Router::BaseRoute::CaptureIndexCache < ::Grape::Util::Cache
-  # pkg:gem/grape#lib/grape/router/base_route.rb:76
+  # pkg:gem/grape#lib/grape/router/base_route.rb:96
   def initialize; end
 end
 
-# pkg:gem/grape#lib/grape/router.rb:63
+# pkg:gem/grape#lib/grape/router.rb:73
 Grape::Router::DEFAULT_RESPONSE_BODY = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/grape#lib/grape/router.rb:62
+# pkg:gem/grape#lib/grape/router.rb:72
 Grape::Router::DEFAULT_RESPONSE_HEADERS = T.let(T.unsafe(nil), Rack::Headers)
 
 # pkg:gem/grape#lib/grape/router/greedy_route.rb:8
@@ -4233,7 +5208,7 @@ class Grape::Router::GreedyRoute < ::Grape::Router::BaseRoute
   def params; end
 
   # pkg:gem/grape#lib/grape/router/greedy_route.rb:25
-  def params_for(_input); end
+  def params_for(_input, _match = T.unsafe(nil), _captures = T.unsafe(nil)); end
 end
 
 # Grape-style path patterns for Mustermann: `:param`, `*splat`, `{name}` /
@@ -4275,10 +5250,10 @@ class Grape::Router::Pattern
   # that (+named_captures+ builds a Hash, and scanning the source for
   # <tt>(?<</tt> would count lookbehinds, which name nothing).
   #
-  # pkg:gem/grape#lib/grape/router/pattern.rb:45
+  # pkg:gem/grape#lib/grape/router/pattern.rb:51
   def captures?; end
 
-  # pkg:gem/grape#lib/grape/router/pattern.rb:49
+  # pkg:gem/grape#lib/grape/router/pattern.rb:55
   def captures_default; end
 
   # pkg:gem/grape#lib/grape/router/pattern.rb:14
@@ -4307,7 +5282,7 @@ class Grape::Router::Pattern
 
   private
 
-  # pkg:gem/grape#lib/grape/router/pattern.rb:91
+  # pkg:gem/grape#lib/grape/router/pattern.rb:97
   def build_path_from_pattern(pattern, anchor); end
 
   # The declared versions constrain the +:version+ capture. They are handed
@@ -4339,12 +5314,12 @@ class Grape::Router::Pattern
   # +Regexp.escape+, which does accept a Symbol -- but a second raises
   # TypeError.
   #
-  # pkg:gem/grape#lib/grape/router/pattern.rb:85
+  # pkg:gem/grape#lib/grape/router/pattern.rb:91
   def extract_capture(version, requirements); end
 
   class << self
-    # Build a Pattern from a raw path, namespace and the API's inheritable
-    # settings. {Path} owns the settings-aware assembly of +origin+/+suffix+;
+    # Build a Pattern from a raw path, namespace and a PathSettings snapshot.
+    # {Path} owns the settings-aware assembly of +origin+/+suffix+;
     # the Pattern itself stays value-based (see {#initialize}).
     #
     # pkg:gem/grape#lib/grape/router/pattern.rb:19
@@ -4415,37 +5390,44 @@ end
 # pkg:gem/grape#lib/grape/router/pattern/path.rb:15
 Grape::Router::Pattern::Path::VERSION_SEGMENT = T.let(T.unsafe(nil), String)
 
-# pkg:gem/grape#lib/grape/router/pattern.rb:99
+# pkg:gem/grape#lib/grape/router/pattern.rb:105
 class Grape::Router::Pattern::PatternCache < ::Grape::Util::Cache
-  # pkg:gem/grape#lib/grape/router/pattern.rb:100
+  # pkg:gem/grape#lib/grape/router/pattern.rb:106
   def initialize; end
 end
 
 # pkg:gem/grape#lib/grape/router/route.rb:5
 class Grape::Router::Route < ::Grape::Router::BaseRoute
-  # pkg:gem/grape#lib/grape/router/route.rb:15
+  # pkg:gem/grape#lib/grape/router/route.rb:11
   def initialize(endpoint, method, pattern, options, forward_match:, params: T.unsafe(nil), **route_attributes); end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:11
+  # pkg:gem/grape#lib/grape/router/route.rb:9
   def app; end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:29
+  # pkg:gem/grape#lib/grape/router/route.rb:25
   def apply(app); end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:13
-  def call(*, **, &); end
+  # Written out rather than delegated: the router calls it on every
+  # request, and a Forwardable delegator checks its target with +defined?+
+  # and forwards through +...+ each time.
+  #
+  # pkg:gem/grape#lib/grape/router/route.rb:33
+  def call(env); end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:11
+  # pkg:gem/grape#lib/grape/router/route.rb:9
   def index; end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:34
+  # The router hands over a normalized path, which always opens with a
+  # slash, so there is no whitespace-only one to treat as blank.
+  #
+  # pkg:gem/grape#lib/grape/router/route.rb:39
   def match?(input); end
 
   # The route's declared params keyed by name — path captures plus any
   # declared body/query params, as their definitions. Used for documentation
   # (e.g. grape-swagger), not for extracting request values.
   #
-  # pkg:gem/grape#lib/grape/router/route.rb:43
+  # pkg:gem/grape#lib/grape/router/route.rb:48
   def params; end
 
   # Extract param values from a matched request path. Used by the router.
@@ -4455,21 +5437,39 @@ class Grape::Router::Route < ::Grape::Router::BaseRoute
   # does, and what the router already coerces into the Hash it builds
   # routing args in.
   #
-  # pkg:gem/grape#lib/grape/router/route.rb:53
-  def params_for(input); end
+  # +match+, when given, is the union MatchData the router matched this route
+  # with; its groups already hold the substrings a second match would produce
+  # (see {BaseRoute#union_captures}). +captures+ names those groups, since a
+  # route sits at one number in the router's union and at another in each
+  # bucket that holds it (see {BaseRoute#union_captures_at}); nil there means
+  # the match cannot stand in for Mustermann. Mustermann percent-decodes a
+  # captured value containing '%', and none can unless the path does -- so a
+  # '%'-free path reads the groups, anything else the full match below.
+  #
+  # pkg:gem/grape#lib/grape/router/route.rb:67
+  def params_for(input, match = T.unsafe(nil), captures = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:11
+  # pkg:gem/grape#lib/grape/router/route.rb:9
   def request_method; end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:23
+  # pkg:gem/grape#lib/grape/router/route.rb:19
   def to_head; end
 
   protected
 
-  # pkg:gem/grape#lib/grape/router/route.rb:66
+  # pkg:gem/grape#lib/grape/router/route.rb:77
   def convert_to_head_request!; end
 
   private
+
+  # pkg:gem/grape#lib/grape/router/route.rb:94
+  def params_from_pattern(input); end
+
+  # MatchData yields fresh, unfrozen Strings, as Mustermann's Hash does, so
+  # +tag_utf8!+ stays safe in place.
+  #
+  # pkg:gem/grape#lib/grape/router/route.rb:85
+  def params_from_union(captures, match); end
 
   # Mustermann decodes path captures out of +PATH_INFO+, which Rack hands us
   # tagged ASCII-8BIT, so path params came back binary while Rack tags query
@@ -4493,20 +5493,206 @@ class Grape::Router::Route < ::Grape::Router::BaseRoute
   # its own Match cache, so the mutation cannot escape this request — which
   # is also what lets the Array branch re-tag its elements with +each+.
   #
-  # pkg:gem/grape#lib/grape/router/route.rb:93
+  # pkg:gem/grape#lib/grape/router/route.rb:124
   def tag_utf8!(value); end
 
-  # pkg:gem/grape#lib/grape/router/route.rb:104
+  # pkg:gem/grape#lib/grape/router/route.rb:135
   def upcase_method(method); end
 end
 
-# pkg:gem/grape#lib/grape/router/route.rb:8
+# pkg:gem/grape#lib/grape/router/route.rb:6
 Grape::Router::Route::FORWARD_MATCH_METHOD = T.let(T.unsafe(nil), Proc)
 
-# pkg:gem/grape#lib/grape/router/route.rb:9
+# pkg:gem/grape#lib/grape/router/route.rb:7
 Grape::Router::Route::NON_FORWARD_MATCH_METHOD = T.let(T.unsafe(nil), Proc)
 
-# pkg:gem/grape#lib/grape.rb:113
+# Narrows the routes a request is matched against to the ones that can
+# match its path, by one literal path segment.
+#
+# A route that spells out a literal at segment +k+ of its path -- with
+# every segment ahead of it a literal or a lone +:param+ that cannot span
+# a '/', and no '/' after it that its pattern makes optional -- matches
+# only paths whose segment +k+ is that literal. Grouping
+# the routes by it, and keeping every route that cannot be grouped in each
+# group, gives each group the routes that could match a path with that
+# segment, still in registration order, so the first of them to match is
+# the route the full union would have picked.
+#
+# Mustermann lets a literal character match its percent-encoding, and a
+# route's pattern ends in \Z, which also matches before a trailing
+# newline, so a path holding either is left to the full union.
+#
+# For example, a method with these routes, in registration order:
+#
+#   /users  /users/:id  /users/:id/posts  /posts  /posts/:id
+#   /comments/:id  /tags/:name  /:slug
+#
+# is split by segment 1, which names every route but +/:slug+:
+#
+#   "users"    => /users, /users/:id, /users/:id/posts, /:slug
+#   "posts"    => /posts, /posts/:id, /:slug
+#   "comments" => /comments/:id, /:slug
+#   "tags"     => /tags/:name, /:slug
+#   fallback   => /:slug
+#
+# A request for +/users/42+ is matched against the four routes under
+# "users" instead of all eight, +/about+ names no bucket and is matched
+# against the fallback, and +/users%2F42+ goes to the full union.
+#
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:37
+class Grape::Router::RouteBuckets
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:170
+  def initialize(position, routes, regexps, keys, unions); end
+
+  # The bucket for +input+, or nil when it has to go through the full union.
+  # With the class example's buckets:
+  #
+  #   /users/42, /users.json, /users/42.json  => "users"
+  #   /about, /                                => the fallback
+  #   /users%2F42, "/users\n"                  => nil
+  #
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:187
+  def bucket_for(input); end
+
+  private
+
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:210
+  def bucket(routes, regexps, indices, unions); end
+
+  # The union of +alternatives+ and the group each of +members+ has in it.
+  # Each alternative names its group after its route's position, so equal
+  # alternatives spell out the same union with the same groups, whichever
+  # method's routes they came from.
+  #
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:224
+  def compile_union(alternatives, members); end
+
+  # Segment +@position+ of +input+, cut at its first '.'.
+  #
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:231
+  def segment_key(input); end
+
+  # The indices of the routes no key names, and the indices each key does
+  # name, in one pass over +keys+ -- +keys[n]+ being the key of the route
+  # at +n+, or nil when no segment tells that route apart.
+  #
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:199
+  def split_indices(keys); end
+
+  class << self
+    # Buckets for +routes+ (with +regexps+, their union alternatives), or
+    # nil when no segment splits them well enough to be worth the unions.
+    # +unions+ is shared by a router's methods, so a bucket whose
+    # alternatives another method already compiled -- the HEAD routes
+    # mirroring GET's -- reuses that union.
+    #
+    # Every segment position is tried, and the one leaving the fewest
+    # routes to match wins. For the routes in the class example:
+    #
+    #   position 1: users x3, posts x2, comments, tags, nil  cost 1 + 3 = 4
+    #   position 2: nil for all eight                        cost 8
+    #   position 3: posts for /users/:id/posts, nil for 7    cost 7 + 1 = 8
+    #
+    # Position 1 wins, and a cost of 4 is within half of the 8 routes, so
+    # the buckets are built; at 5 they would not be.
+    #
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:91
+    def build(routes, regexps, unions); end
+
+    private
+
+    # The segment position leaving the fewest +routes+ to match, and the
+    # key of each route at it; nil when no route has a segment past the
+    # first.
+    #
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:105
+    def cheapest_position(routes); end
+
+    # The most routes one request can still be matched against.
+    #
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:165
+    def cost(keys); end
+
+    # Writes into +keys_by_position+, at +index+, the literal +route+
+    # requires at each segment position, leaving nil where that segment
+    # cannot tell it apart. One walk over +segments+: a segment that does
+    # not span exactly one path segment ends it, as no position past that
+    # segment can tell the route apart either.
+    #
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:125
+    def fill_keys(keys_by_position, index, route, segments); end
+
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:138
+    def key?(segment); end
+
+    # The key of each of +routes+ at every segment position, as far as
+    # the deepest of them goes (see #fill_keys).
+    #
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:113
+    def route_keys_by_position(routes); end
+
+    # The position of the segment a path can run on from without a '/', or
+    # nil. Pattern#build_path_from_pattern makes the '/' ahead of a
+    # trailing +*path+ optional, and follows an unanchored route's last
+    # segment with '/?*path', so either segment can be the start of a
+    # longer one in the path.
+    #
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:147
+    def run_on_position(route, last); end
+
+    # pkg:gem/grape#lib/grape/router/route_buckets.rb:153
+    def single_segment?(route, segment); end
+  end
+end
+
+# The routes one segment value can reach, with the number each one's
+# group has in +union+: a route sits in several buckets, at a different
+# position in each, so the numbers cannot be kept on the route.
+#
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:41
+class Grape::Router::RouteBuckets::Bucket
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:42
+  def initialize(union, routes, groups, captures); end
+
+  # Yields the route +input+ matched, the match, and that route's
+  # captures numbered for this union -- nil when a match cannot stand in
+  # for what Mustermann returns. Yields nothing when no route here
+  # matches.
+  #
+  # pkg:gem/grape#lib/grape/router/route_buckets.rb:54
+  def match(input); end
+end
+
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:66
+Grape::Router::RouteBuckets::CAPTURE_SEGMENT = T.let(T.unsafe(nil), Regexp)
+
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:63
+Grape::Router::RouteBuckets::FULL_UNION_INPUT = T.let(T.unsafe(nil), Regexp)
+
+# The key itself is compared with a slice of the path cut at the first
+# '.', so it holds no '.', and nothing a path could spell differently.
+#
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:69
+Grape::Router::RouteBuckets::KEY_SEGMENT = T.let(T.unsafe(nil), Regexp)
+
+# A segment ahead of the key: plain characters, or one +:param+.
+#
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:65
+Grape::Router::RouteBuckets::LITERAL_SEGMENT = T.let(T.unsafe(nil), Regexp)
+
+# Below this many routes the full union is already cheap to walk, and
+# the extra unions would only lengthen boot.
+#
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:72
+Grape::Router::RouteBuckets::MINIMUM_ROUTES = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/grape#lib/grape/router/route_buckets.rb:62
+Grape::Router::RouteBuckets::NONE = T.let(T.unsafe(nil), Grape::Router::RouteBuckets::Bucket)
+
+# pkg:gem/grape#lib/grape/router.rb:293
+Grape::Router::STATIC_PATH_EXCLUDED = T.let(T.unsafe(nil), Regexp)
+
+# pkg:gem/grape#lib/grape.rb:116
 module Grape::ServeStream; end
 
 # pkg:gem/grape#lib/grape/serve_stream/file_body.rb:5
@@ -4610,7 +5796,7 @@ module Grape::Testing::RunBeforeEach
   def run; end
 end
 
-# pkg:gem/grape#lib/grape/content_types.rb:65
+# pkg:gem/grape#lib/grape/content_types.rb:82
 module Grape::Util; end
 
 # pkg:gem/grape#lib/grape/util/api_description.rb:5
@@ -4772,8 +5958,15 @@ module Grape::Util::DeepFreeze
   end
 end
 
-# pkg:gem/grape#lib/grape/util/endpoint_configuration.rb:5
-class Grape::Util::EndpointConfiguration < ::Grape::Util::Lazy::ValueHash; end
+# The +with:+ Hash a mount supplies, read as a {Grape::Util::Lazy::Value} so
+# that reads taken before the mount happened can be replayed against it
+# afterwards. Keys are indifferent at every depth.
+#
+# pkg:gem/grape#lib/grape/util/endpoint_configuration.rb:8
+class Grape::Util::EndpointConfiguration < ::Grape::Util::Lazy::Value
+  # pkg:gem/grape#lib/grape/util/endpoint_configuration.rb:9
+  def initialize(config); end
+end
 
 # Extend into a class whose instances are shared across requests:
 # +new+ returns a frozen instance, so any later ivar write — e.g.
@@ -4816,10 +6009,10 @@ class Grape::Util::InheritableSetting
   # instance can then be set to inherit from an existing instance (see
   # #inherit_from).
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:61
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:84
   def initialize; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:215
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:238
   def ==(other); end
 
   # Meta-selector registrations from +rescue_from :all+,
@@ -4829,101 +6022,89 @@ class Grape::Util::InheritableSetting
   # through #rescue_all? / #rescue_grape_exceptions?; the backing store
   # is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:336
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:354
   def add_all_rescue_handler(handler); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:313
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:331
   def add_callback(callback_name, block); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:402
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:420
   def add_content_type(format, content_type); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:520
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:538
   def add_contract_key_map(key_map); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:268
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:286
   def add_declared_params(params); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:426
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:444
   def add_error_formatter(format, formatter); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:410
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:428
   def add_formatter(content_type, formatter); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:341
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:359
   def add_grape_exceptions_rescue_handler(handler); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:463
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:481
   def add_helper(mod); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:347
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:365
   def add_internal_grape_exceptions_rescue_handler(handler); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:452
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:470
   def add_middleware(operation_with_arguments); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:500
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:518
   def add_mount_path(mount_path); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:300
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:318
   def add_named_params(named_params); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:476
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:494
   def add_namespace(namespace); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:281
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:299
   def add_params_documentation(documented_attrs); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:418
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:436
   def add_parser(content_type, parser); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:439
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:457
   def add_representation(model_class, entity_class); end
 
   # An exception class registered twice in the same scope keeps its first
   # handler, and keeps the position it was first registered at.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:384
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:402
   def add_rescue_handlers(mapping, subclasses:); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:326
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:344
   def add_rescue_options(options); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:160
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:183
   def add_route_renamed_param(path, new_name); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:257
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:275
   def add_validation(validator); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:359
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:377
   def all_rescue_handler; end
 
-  # The authentication configuration Hash recorded by the +auth+ DSL
-  # (see Middleware::Auth::DSL): {type:, proc:, **options}. Nearest-wins
-  # scalar; nil when no authenticator is declared — Endpoint uses that
-  # to warn about unauthenticated bare Rack mounts; the backing store is
-  # an internal detail.
-  #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:668
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def auth; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:672
-  def auth=(auth_options); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def auth=(value); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:378
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:396
   def base_only_rescue_handlers; end
 
-  # The params-builder strategy set by +build_with+ (both the
-  # API-level DSL::Routing#build_with and the params-block
-  # DSL::Parameters#build_with write it), consumed when the endpoint
-  # builds its Grape::Request. Nearest-wins scalar; nil when never set;
-  # the backing store is an internal detail.
-  #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:655
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def build_params_with; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:659
-  def build_params_with=(strategy); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def build_params_with=(value); end
 
   # Filter blocks registered by the callbacks DSL (see DSL::Callbacks),
   # as a callback-name => blocks Array Hash keyed by the DSL method names
@@ -4931,22 +6112,16 @@ class Grape::Util::InheritableSetting
   # +:finally+), outermost scope first. Record them with #add_callback;
   # the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:309
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:327
   def callbacks; end
 
-  # Cascade flag assigned by the +cascade+ DSL. An explicit nil is
-  # meaningful and distinct from never-set (the backing store is
-  # key-presence based), so #cascade_defined? reports whether any scope
-  # assigned it — Grape::API::Instance#cascade? falls back to the
-  # version options' cascade, then to true, when it was never assigned.
-  #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:601
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def cascade; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:605
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
   def cascade=(value); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:609
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:578
   def cascade_defined?; end
 
   # Content negotiation registries recorded by the request/response DSL
@@ -4957,7 +6132,7 @@ class Grape::Util::InheritableSetting
   # nothing is registered. Record entries with the corresponding +add_*+
   # writer; the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:398
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:416
   def content_types; end
 
   # Dry::Schema key maps registered by +contract+ blocks (see
@@ -4966,90 +6141,73 @@ class Grape::Util::InheritableSetting
   # declared keys. Record them with #add_contract_key_map; the backing
   # store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:516
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:534
   def contract_key_maps; end
 
   # Declared-params entries registered by +params+ blocks, one Array per
   # scope, outermost scope first. Record them with #add_declared_params;
   # the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:264
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:282
   def declared_params; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:550
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def default_error_formatter; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:554
-  def default_error_formatter=(formatter); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def default_error_formatter=(value); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:558
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def default_error_status; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:562
-  def default_error_status=(status); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def default_error_status=(value); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:542
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def default_format; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:546
-  def default_format=(default_format); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def default_format=(value); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:634
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:75
   def do_not_document!; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:638
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:76
   def do_not_document?; end
 
-  # Scope flags flipped by the routing DSL's bang methods (see
-  # DSL::Routing#do_not_route_head! and friends; Validations::OneofCollector
-  # also flips +do_not_document!+): once set in a scope they apply to it
-  # and everything nested under it. Readers return false when never set;
-  # the backing store is an internal detail.
-  #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:618
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:75
   def do_not_route_head!; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:622
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:76
   def do_not_route_head?; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:626
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:75
   def do_not_route_options!; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:630
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:76
   def do_not_route_options?; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:238
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:256
   def eql?(other); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:422
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:440
   def error_formatters; end
 
-  # Serialization and error-response defaults recorded by the
-  # request/response DSL's get-or-set methods (see DSL::RequestResponse):
-  # +format+ is the enforced API format, +default_format+ the fallback
-  # used when a request doesn't specify one, and
-  # +default_error_formatter+ / +default_error_status+ shape error
-  # responses. Nearest-wins scalars — a nested scope's assignment
-  # overrides an inherited one, hence plain +=+ writers rather than the
-  # +add_*+ writers used for stackable registrations. Readers return nil
-  # when never set (Endpoint applies the request-serving fallbacks); the
-  # backing store is an internal detail.
-  #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:534
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def format; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:538
-  def format=(format); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def format=(value); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:406
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:424
   def formatters; end
 
   # Return the class-level global properties.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:82
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:105
   def global; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:363
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:381
   def grape_exceptions_rescue_handler; end
 
   # Keyed on the fully resolved state, because #== accepts two instances
@@ -5059,14 +6217,14 @@ class Grape::Util::InheritableSetting
   # is the cold path: nothing in Grape uses a setting as a Hash key or in
   # a Set, and #== keeps avoiding #to_hash wherever it can.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:246
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:264
   def hash; end
 
   # Helper modules registered by +helpers+ blocks and modules (see
   # DSL::Helpers), outermost scope first. Record them with #add_helper;
   # the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:459
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:477
   def helpers; end
 
   # Inherit from the given parent: its values resolve behind ours from now
@@ -5074,7 +6232,7 @@ class Grape::Util::InheritableSetting
   # instances which were forked from us.
   # @param parent [InheritableSetting]
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:90
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:113
   def inherit_from(parent); end
 
   # Fold a mounting parent scope's accumulated validations and declared
@@ -5082,40 +6240,51 @@ class Grape::Util::InheritableSetting
   # Endpoint#inherit_settings). Both are appended, so the parent's entries
   # follow the ones already seeded from the surrounding scopes.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:194
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:217
   def inherit_route_params(parent); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:367
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:385
   def internal_grape_exceptions_rescue_handler; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:642
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:75
   def lint!; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:646
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:76
   def lint?; end
+
+  # The logger assigned by the +logger+ DSL (see DSL::Logger), written to
+  # an API's top-level settings so that it reaches the APIs mounted under
+  # it. Nearest-wins scalar; nil when never set, where DSL::Logger falls
+  # back to its default; the backing store is an internal detail.
+  #
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:586
+  def logger; end
+
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:590
+  def logger=(logger); end
 
   # Middleware specs recorded by the middleware DSL (+use+, +insert+,
   # +insert_before+, +insert_after+; see DSL::Middleware), one
-  # [operation, *arguments] Array per registration, outermost scope
-  # first. Record them with #add_middleware; the backing store is an
-  # internal detail.
+  # [operation, *arguments, block] Array per registration, the block +nil+
+  # when none was given, outermost scope first. Record them with
+  # #add_middleware; the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:448
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:466
   def middleware; end
 
   # The path a Grape API is mounted under, recorded on the mounted API's
-  # top-level settings by +mount+ (see DSL::Routing). Reading returns the
+  # top-level settings by +mount+ (see DSL::Mounting). Reading returns the
   # outermost mount path — nil when the API is not mounted; the backing
   # store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:496
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:514
   def mount_path; end
 
   # The full mount-path stack — one entry per mount level, outermost
   # first; what Router::Pattern::Path joins into a route's origin (see
   # #path_settings).
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:507
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:525
   def mount_paths; end
 
   # Reusable +params :name do ... end+ blocks defined in helpers, as one
@@ -5123,7 +6292,7 @@ class Grape::Util::InheritableSetting
   # defined. Consumed by +use+. Record entries with #add_named_params;
   # the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:296
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:314
   def named_params; end
 
   # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:35
@@ -5132,13 +6301,13 @@ class Grape::Util::InheritableSetting
   # The normalized path prefix formed by joining every registered
   # namespace's space (see Grape::Namespace.joined_space_path).
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:482
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:500
   def namespace_path; end
 
   # The param requirements declared by registered namespaces, outermost
   # scope first.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:488
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:506
   def namespace_requirements; end
 
   # A StackableValues view of this scope's registrations, rebuilt on each
@@ -5156,7 +6325,7 @@ class Grape::Util::InheritableSetting
   # store. Record them with #add_namespace; the backing store is an
   # internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:472
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:490
   def namespaces; end
 
   # Param documentation recorded by +params+ blocks (see
@@ -5165,13 +6334,13 @@ class Grape::Util::InheritableSetting
   # Record entries with #add_params_documentation; the backing store is
   # an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:277
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:295
   def params_documentation; end
 
   # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:35
   def parent; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:414
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:432
   def parsers; end
 
   # Builds a PathSettings snapshot for Router::Pattern::Path (see
@@ -5181,15 +6350,15 @@ class Grape::Util::InheritableSetting
   # stack, because Path counts registrations rather than distinct
   # formats. Unset members are nil.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:690
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:608
   def path_settings; end
 
   # Create a point-in-time copy of this settings instance, with clones of
   # all our values. Note that, should this instance's parent be set or
-  # changed via #inherit_from, it will copy that inheritence to any copies
+  # changed via #inherit_from, it will copy that inheritance to any copies
   # which were made.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:104
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:127
   def point_in_time_copy; end
 
   # Fork a point-in-time copy prepared for a freshly-built endpoint: the
@@ -5198,7 +6367,7 @@ class Grape::Util::InheritableSetting
   # namespace stacks are wiped between routes (see #reset_validations!),
   # and request-serving defaults are applied.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:117
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:140
   def point_in_time_copy_for_endpoint; end
 
   # Model-class => entity-class registrations from +represent+ (see
@@ -5207,20 +6376,20 @@ class Grape::Util::InheritableSetting
   # none are registered. Record them with #add_representation; the
   # backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:435
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:453
   def representations; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:351
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:369
   def rescue_all?; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:355
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:373
   def rescue_grape_exceptions?; end
 
   # Rescue-handler maps registered by +rescue_from+, keyed by exception
   # class and merged so a nested scope's handler wins. Record them with
   # #add_rescue_handlers; the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:374
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:392
   def rescue_handlers; end
 
   # Response-shaping options recorded by +rescue_from+ (see
@@ -5229,65 +6398,65 @@ class Grape::Util::InheritableSetting
   # +rescue_from+ was never called. Record them with #add_rescue_options;
   # the backing store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:322
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:340
   def rescue_options; end
 
   # Drops this scope's own validations, declared params and params
   # documentation once an endpoint has consumed them (see
   # +reset_validations!+ in DSL::Validations). Inherited entries are kept.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:288
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:306
   def reset_validations!; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:588
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def root_prefix; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:592
-  def root_prefix=(prefix); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def root_prefix=(value); end
 
   # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:35
   def route; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:145
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:168
   def route_declared_params; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:149
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:172
   def route_declared_params=(declared_params); end
 
   # Endpoint description recorded by +desc+ (see DSL::Desc), consumed by
   # +route+. An empty Hash when +desc+ was never called.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:166
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:189
   def route_description; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:170
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:193
   def route_description=(description); end
 
   # Resets the instance store of per-route settings.
   # @api private
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:127
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:150
   def route_end; end
 
   # Path => renamed-name map recorded by +as:+ (see ParamsScope), consumed
   # by #declared. Record entries with #add_route_renamed_param; an empty
   # Hash when nothing was renamed.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:156
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:179
   def route_renamed_params; end
 
   # Read (when +value+ is nil) or write an arbitrary route-scoped setting.
   # This is the open store behind the +route_setting+ DSL; the known keys
   # have the dedicated accessors above.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:184
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:207
   def route_setting(key, value = T.unsafe(nil)); end
 
   # The route-scope settings handed to each Grape::Router::Route: every
-  # +route_setting+ registration plus the description, minus the internal
-  # param snapshots (#route_validations / #route_declared_params).
+  # +route_setting+ registration, the description and renamed params,
+  # minus #route_validations / #route_declared_params.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:177
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:200
   def route_settings; end
 
   # Validator instances and declared-params entries for the route currently
@@ -5297,49 +6466,42 @@ class Grape::Util::InheritableSetting
   # up from mounting parents (see Endpoint#inherit_settings), and read back
   # by run_validators / #declared.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:137
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:160
   def route_validations; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:141
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:164
   def route_validations=(validations); end
 
   # Return a serializable hash of our values.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:203
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:226
   def to_hash; end
 
   # Validator instances registered by +params+ and +contract+ blocks,
   # outermost scope first. Record them with #add_validation; the backing
   # store is an internal detail.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:253
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:271
   def validations; end
 
-  # Versioning state recorded by the routing DSL (see DSL::Routing):
-  # +version+ holds the Array of version strings registered by the
-  # +version+ DSL method, +version_options+ its DSL::VersionOptions
-  # value object, and +root_prefix+ the path prefix set by +prefix+.
-  # Nearest-wins scalars with plain += writers; readers return nil when
-  # never set; the backing store is an internal detail.
-  #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:572
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def version; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:576
-  def version=(versions); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def version=(value); end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:580
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:65
   def version_options; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:584
-  def version_options=(options); end
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:66
+  def version_options=(value); end
 
   protected
 
   # Used by +point_in_time_copy+ to populate a freshly-built instance
   # with cloned state from another instance of the same class.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:779
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:693
   def copy_state_from(source); end
 
   # The nearest scope's value for +key+: this scope's own override when it
@@ -5347,60 +6509,56 @@ class Grape::Util::InheritableSetting
   # truthiness, so a scope can deliberately override an inherited value
   # with nil (see #cascade).
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:711
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:629
   def inheritable(key); end
 
   # Whether any scope along the chain assigned +key+ — including one that
   # assigned nil, which #inheritable cannot distinguish from never-set.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:719
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:637
   def inheritable?(key); end
 
   # Every inheritable value along the chain resolved into one Hash, nearest
-  # scope winning. Like #stacked it hands back the backing Hash when only
-  # one scope in the chain has values, so callers must treat the result as
-  # read-only.
+  # scope winning. May be the root scope's own Hash: treat it as read-only.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:729
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:645
   def inheritable_values; end
 
   # Nearest scope's handlers first: Middleware::Error scans with +find+,
   # so a nested scope's registrations must precede inherited ones even
   # when an outer scope registered a more specific class.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:769
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:683
   def merged_rescue_handlers(key); end
 
   # This scope's own inheritable overrides, before inheritance; nil when
-  # the scope overrode nothing. Peer access for #copy_state_from.
+  # the scope overrode nothing. Peer access for #copy_state_from and #==.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:705
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:623
   def namespace_inheritable; end
 
   # This scope's own +rescue_from+ registrations, before inheritance:
   # {rescue_handlers: {klass => handler}, base_only_rescue_handlers: {...}}.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:739
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:655
   def rescue_handler_maps; end
 
   # This scope's own stackable registrations, before inheritance; nil when
-  # the scope registered nothing. Peer access for #copy_state_from.
+  # the scope registered nothing. Peer access for #copy_state_from and #==.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:743
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:659
   def stackable_values; end
 
-  # Every registration for +key+ along the chain, outermost scope first.
-  # Returns the frozen EMPTY_STACK when nothing is registered anywhere, and
-  # — like the store it replaced — the backing Array itself when only this
-  # scope registered anything, so callers must treat the result as
-  # read-only.
+  # Every registration for +key+ along the chain, outermost scope first;
+  # the frozen EMPTY_STACK when there is none. May be the root scope's own
+  # Array: treat it as read-only.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:750
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:664
   def stacked(key); end
 
   # Every key registered along the chain, outermost scope's keys first.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:759
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:673
   def stacked_keys; end
 
   private
@@ -5408,21 +6566,25 @@ class Grape::Util::InheritableSetting
   # Deep-merges a stackable key's registrations into one Hash, nearest
   # scope winning; nil when nothing is registered.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:830
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:749
   def namespace_stackable_with_hash(key); end
 
-  # Compares two lazily-allocated own-registration stores (see #stack and
-  # #add_rescue_handlers): nil and an emptied Hash both mean "this scope
-  # registered nothing", so #== must not tell them apart.
+  # #== between two scopes hanging off the same parent.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:822
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:734
+  def same_own_state?(other); end
+
+  # Compares two lazily-allocated own stackable stores (see #stack): nil and
+  # an emptied Hash both mean "registered nothing".
+  #
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:741
   def same_own_store?(mine, theirs); end
 
   # Overrides +key+ for this scope, leaving the enclosing scopes' value
   # untouched. The store is allocated on first use. Returns the assigned
   # value, since the writers built on it are +=+ methods.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:798
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:712
   def set_inheritable(key, value); end
 
   # Appends one registration for +key+ to this scope, leaving inherited
@@ -5430,13 +6592,13 @@ class Grape::Util::InheritableSetting
   # registered value, since this replaced an assignment expression and the
   # +add_*+ writers built on it inherited that return value.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:806
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:720
   def stack(key, value); end
 
   # Drops this scope's own registrations for +keys+; inherited ones are
   # kept, since they belong to the enclosing scopes.
   #
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:813
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:727
   def unstack(*keys); end
 
   class << self
@@ -5451,6 +6613,24 @@ class Grape::Util::InheritableSetting
     #
     # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:54
     def reset_global!; end
+
+    private
+
+    # Declares a scope flag per key: a bang method setting it, after which it
+    # applies to the scope and everything nested under it, and a predicate,
+    # false when never set. The backing store is an internal detail.
+    #
+    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:73
+    def inheritable_flag(*keys); end
+
+    # Declares a nearest-wins scalar per key: a nested scope's assignment
+    # overrides an inherited one, hence a plain +=+ writer rather than the
+    # +add_*+ writers of the stackable registrations, and a reader that
+    # resolves the key along the chain, nil when never set. The backing
+    # store is an internal detail.
+    #
+    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:63
+    def inheritable_property(*keys); end
   end
 end
 
@@ -5473,42 +6653,42 @@ Grape::Util::InheritableSetting::EMPTY_STACK = T.let(T.unsafe(nil), Array)
 # production caller, so it stays a plain Data with no keyword
 # defaults.
 #
-# pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+# pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
 class Grape::Util::InheritableSetting::PathSettings < ::Data
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
   def content_types; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
   def format; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
   def mount_path; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
   def root_prefix; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
   def version; end
 
-  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+  # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
   def version_options; end
 
   class << self
-    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
     def [](*_arg0); end
 
-    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
     def inspect; end
 
-    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
     def members; end
 
-    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:682
+    # pkg:gem/grape#lib/grape/util/inheritable_setting.rb:600
     def new(*_arg0); end
   end
 end
 
-# pkg:gem/grape#lib/grape/util/endpoint_configuration.rb:5
+# pkg:gem/grape#lib/grape/util/endpoint_configuration.rb:8
 module Grape::Util::Lazy; end
 
 # Abstract parent for lazy wrappers used by the remount/configuration
@@ -5533,69 +6713,89 @@ class Grape::Util::Lazy::Block < ::Grape::Util::Lazy::Base
   def evaluate_from(configuration); end
 end
 
-# pkg:gem/grape#lib/grape/util/lazy/value.rb:6
+# A read of a mount-time configuration, taken before there is one to read.
+#
+# A remountable API reads its configuration while its own class body runs,
+# long before anybody mounts it and supplies one:
+#
+#   class Votes < Grape::API
+#     get configuration[:path] do
+#       configuration[:response]
+#     end
+#   end
+#
+#   Root.mount Votes, with: { path: 'votes', response: '10 votes' }
+#
+# +configuration[:path]+ cannot answer 'votes' yet, so it answers with a
+# Value instead: the configuration it was read from, plus the path of keys
+# taken to reach it. Grape records the +get+ step unevaluated and replays
+# it once per mount, where {#evaluate_from} walks that same path through
+# the configuration that mount supplied.
+#
+# Reads chain, so +configuration[:db][:host]+ and
+# +configuration[:hosts][0]+ are Values holding a two-key path.
+#
+# pkg:gem/grape#lib/grape/util/lazy/value.rb:27
 class Grape::Util::Lazy::Value < ::Grape::Util::Lazy::Base
-  # pkg:gem/grape#lib/grape/util/lazy/value.rb:9
-  def initialize(value, access_keys = T.unsafe(nil)); end
+  # pkg:gem/grape#lib/grape/util/lazy/value.rb:30
+  def initialize(config, path = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/util/lazy/value.rb:7
-  def access_keys; end
-
-  # pkg:gem/grape#lib/grape/util/lazy/value.rb:20
-  def evaluate; end
-
-  # pkg:gem/grape#lib/grape/util/lazy/value.rb:15
-  def evaluate_from(configuration); end
-
-  # pkg:gem/grape#lib/grape/util/lazy/value.rb:24
-  def reached_by(parent_access_keys, access_key); end
-end
-
-# pkg:gem/grape#lib/grape/util/lazy/value_array.rb:6
-class Grape::Util::Lazy::ValueArray < ::Grape::Util::Lazy::ValueEnumerable
-  # pkg:gem/grape#lib/grape/util/lazy/value_array.rb:7
-  def initialize(array); end
-
-  # pkg:gem/grape#lib/grape/util/lazy/value_array.rb:15
-  def evaluate; end
-end
-
-# pkg:gem/grape#lib/grape/util/lazy/value_enumerable.rb:6
-class Grape::Util::Lazy::ValueEnumerable < ::Grape::Util::Lazy::Value
-  # pkg:gem/grape#lib/grape/util/lazy/value_enumerable.rb:7
+  # @return [Value] the same read, one key deeper.
+  #
+  # pkg:gem/grape#lib/grape/util/lazy/value.rb:37
   def [](key); end
 
-  # pkg:gem/grape#lib/grape/util/lazy/value_enumerable.rb:17
+  # Writes back to the configuration this was read from, backing
+  # <tt>API.configure { |config| config[:key] = value }</tt>.
+  #
+  # pkg:gem/grape#lib/grape/util/lazy/value.rb:43
   def []=(key, value); end
 
-  # pkg:gem/grape#lib/grape/util/lazy/value_enumerable.rb:13
-  def fetch(access_keys); end
-end
-
-# pkg:gem/grape#lib/grape/util/lazy/value_hash.rb:6
-class Grape::Util::Lazy::ValueHash < ::Grape::Util::Lazy::ValueEnumerable
-  # pkg:gem/grape#lib/grape/util/lazy/value_hash.rb:7
-  def initialize(hash); end
-
-  # pkg:gem/grape#lib/grape/util/lazy/value_hash.rb:15
+  # @return [Object] what this path holds in the configuration it was read
+  #   from, or +nil+ where the path leads nowhere - which is every path on
+  #   a base instance, whose configuration stays empty until it is mounted.
+  #
+  # pkg:gem/grape#lib/grape/util/lazy/value.rb:50
   def evaluate; end
+
+  # @return [Object] what this path holds in +configuration+, the
+  #   configuration of the instance being mounted right now.
+  #
+  # pkg:gem/grape#lib/grape/util/lazy/value.rb:56
+  def evaluate_from(configuration); end
+
+  # pkg:gem/grape#lib/grape/util/lazy/value.rb:28
+  def path; end
+
+  protected
+
+  # pkg:gem/grape#lib/grape/util/lazy/value.rb:62
+  def at(keys); end
 end
 
 # pkg:gem/grape#lib/grape/util/media_type.rb:5
 class Grape::Util::MediaType
-  # pkg:gem/grape#lib/grape/util/media_type.rb:16
-  def initialize(type:, subtype:); end
+  # Immutable, strings included: the header versioner shares one instance
+  # per declared media type across every request that sends it, and these
+  # strings are what it writes into the env. The arguments are copied
+  # rather than frozen, as they are the caller's.
+  #
+  # A +subtype+ naming a vendor other than +vendor+ is parsed as it would
+  # be without one.
+  #
+  # pkg:gem/grape#lib/grape/util/media_type.rb:39
+  def initialize(type:, subtype:, vendor: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/util/media_type.rb:26
+  # pkg:gem/grape#lib/grape/util/media_type.rb:52
   def ==(other); end
 
-  # pkg:gem/grape#lib/grape/util/media_type.rb:34
+  # pkg:gem/grape#lib/grape/util/media_type.rb:60
   def eql?(other); end
 
   # pkg:gem/grape#lib/grape/util/media_type.rb:6
   def format; end
 
-  # pkg:gem/grape#lib/grape/util/media_type.rb:36
+  # pkg:gem/grape#lib/grape/util/media_type.rb:62
   def hash; end
 
   # pkg:gem/grape#lib/grape/util/media_type.rb:6
@@ -5611,14 +6811,14 @@ class Grape::Util::MediaType
   def version; end
 
   class << self
-    # pkg:gem/grape#lib/grape/util/media_type.rb:41
-    def best_quality(header, available_media_types); end
+    # pkg:gem/grape#lib/grape/util/media_type.rb:67
+    def best_quality(header, available_media_types, vendor: T.unsafe(nil)); end
 
-    # pkg:gem/grape#lib/grape/util/media_type.rb:54
+    # pkg:gem/grape#lib/grape/util/media_type.rb:80
     def match?(media_type); end
 
-    # pkg:gem/grape#lib/grape/util/media_type.rb:45
-    def parse(media_type); end
+    # pkg:gem/grape#lib/grape/util/media_type.rb:71
+    def parse(media_type, vendor: T.unsafe(nil)); end
 
     private
 
@@ -5626,7 +6826,7 @@ class Grape::Util::MediaType
     # literally, so the header has to be down-cased to be compared against
     # them at all.
     #
-    # pkg:gem/grape#lib/grape/util/media_type.rb:66
+    # pkg:gem/grape#lib/grape/util/media_type.rb:89
     def best_quality_media_type(header, available_media_types); end
   end
 end
@@ -5641,6 +6841,20 @@ end
 # pkg:gem/grape#lib/grape/util/media_type.rb:14
 Grape::Util::MediaType::VENDOR_VERSION_HEADER_REGEX = T.let(T.unsafe(nil), Regexp)
 
+# The pattern above cannot tell where a vendor ends and a version begins
+# when either holds a hyphen, so it keeps hyphens out of the version: a
+# dated version such as +2024-06-20+ read as vendor +acme-2024-06+ and
+# version +20+. Given the vendor it is parsed for, the vendor is spelled
+# out and everything after it up to the format is the version.
+#
+# Keyed by the vendors APIs declare, never by what a client sends.
+#
+# pkg:gem/grape#lib/grape/util/media_type.rb:23
+class Grape::Util::MediaType::VendorVersionHeaderRegexCache < ::Grape::Util::Cache
+  # pkg:gem/grape#lib/grape/util/media_type.rb:24
+  def initialize; end
+end
+
 # pkg:gem/grape#lib/grape/util/path_normalizer.rb:5
 module Grape::Util::PathNormalizer
   class << self
@@ -5654,6 +6868,14 @@ module Grape::Util::PathNormalizer
     #
     # pkg:gem/grape#lib/grape/util/path_normalizer.rb:13
     def call(path); end
+
+    private
+
+    # The slow path. The bangs are safe because +normalized+ is a fresh String
+    # built here, never the one the caller passed in.
+    #
+    # pkg:gem/grape#lib/grape/util/path_normalizer.rb:27
+    def normalize(path); end
   end
 end
 
@@ -5678,8 +6900,43 @@ module Grape::Util::Registry
   # +register+ derives the short name as a String, so the Symbol is the
   # alias.
   #
-  # pkg:gem/grape#lib/grape/util/registry.rb:32
+  # Registration replaces the Hash instead of writing into it, and freezes
+  # the replacement: a registry is written when a formatter, parser,
+  # params builder, validator or versioner class is defined, and from then
+  # on it is only ever looked up -- on the request path, at that. Nothing
+  # holding a registry can find it changed underneath, and nothing can
+  # write to one without going through +register+.
+  #
+  # pkg:gem/grape#lib/grape/util/registry.rb:39
   def registry; end
+end
+
+# Outside input -- a param, a header, a query value, a body a route sets
+# -- can hold bytes its encoding does not allow: a query string
+# percent-encoding half a character, say. Much of String raises on such a
+# value (+blank?+'s whitespace regexp, +match?+, +downcase+), so it is
+# scrubbed, or asked about through {.blank?}, before anything else reads
+# it.
+#
+# Called on the module rather than included: an included +blank?+ that
+# takes an argument would shadow +Object#blank?+, which +present?+ calls.
+#
+# pkg:gem/grape#lib/grape/util/scrub.rb:14
+module Grape::Util::Scrub
+  class << self
+    # +value.blank?+, answered without the copy +scrub(value).blank?+ would
+    # build: a String holding an invalid byte is never blank, since an
+    # invalid byte is not whitespace.
+    #
+    # pkg:gem/grape#lib/grape/util/scrub.rb:26
+    def blank?(value); end
+
+    # +value+ with each invalid byte replaced, or +value+ itself when it
+    # holds none or is not a String.
+    #
+    # pkg:gem/grape#lib/grape/util/scrub.rb:17
+    def scrub(value); end
+  end
 end
 
 # Diagnostics for +rescue_from+ registrations that can never run.
@@ -5803,7 +7060,7 @@ module Grape::Util::Translation
   # Callers must not pass unintended keyword arguments — any extra keyword
   # will silently become an I18n interpolation variable.
   #
-  # pkg:gem/grape#lib/grape/util/translation.rb:21
+  # pkg:gem/grape#lib/grape/util/translation.rb:19
   def translate(key, default: T.unsafe(nil), scope: T.unsafe(nil), locale: T.unsafe(nil), **); end
 end
 
@@ -5811,11 +7068,9 @@ end
 Grape::Util::Translation::FALLBACK_LOCALE = T.let(T.unsafe(nil), Symbol)
 
 # Sentinel returned by I18n when a key is missing (passed as the default:
-# value). Using a named class rather than plain Object.new makes it
-# identifiable in debug output and immune to backends that call .to_s on
-# the default before returning it.
+# value). Its +inspect+ names it in debug output.
 #
-# pkg:gem/grape#lib/grape/util/translation.rb:12
+# pkg:gem/grape#lib/grape/util/translation.rb:10
 Grape::Util::Translation::MISSING = T.let(T.unsafe(nil), T.untyped)
 
 # pkg:gem/grape#lib/grape/version.rb:4
@@ -5842,44 +7097,85 @@ module Grape::Validations
   end
 end
 
-# pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:5
+# Yields each value a scope's attributes are read from: the scope's params,
+# or each element of them when the scope sits in an Array. Walking the
+# attributes themselves is left to the validator's block.
+#
+# Each value comes with whether it is an element a request sent in the
+# scope's own Array. Otherwise it is the scope's value in an element of an
+# Array further up, where an empty one is an optional scope left out of
+# that element, or an element of an optional scope's Array whose elements
+# are all empty, which is passed over the same way.
+#
+# pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:14
 class Grape::Validations::AttributesIterator
-  # +attrs+ and +scope+ are static per validator; only +params+ varies
-  # per request, so an instance can be built once and reused (it keeps
-  # no request-derived state). Reused instances are shared across
-  # threads, so +each+ must stay free of mutable instance state.
+  # +scope+ is static per validator; only +params+ varies per request, so
+  # an instance can be built once and reused (it keeps no request-derived
+  # state). Reused instances are shared across threads, so +each+ must
+  # stay free of mutable instance state.
   #
-  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:10
-  def initialize(attrs, scope); end
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:19
+  def initialize(scope); end
 
-  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:20
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:30
   def each(params, &); end
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:35
-  def do_each(params_to_process, original_params, parent_indices = T.unsafe(nil), &block); end
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:74
+  def do_each(params_to_process, tracker, index_scope, parent_indices, sent_elements, &); end
+
+  # Primitives like Integers and Booleans don't respond to +empty?+.
+  #
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:104
+  def empty?(value); end
+
+  # Where each element's index is recorded depends on the scope and on
+  # whether its params are an Array, never on the element, so it is
+  # settled once per #each rather than per element. A lateral scope (no
+  # @element) whose params resolved to an array hands its index to the
+  # nearest element-iterating ancestor, so full_name still produces the
+  # right bracketed index.
+  #
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:68
+  def index_scope_for(iterates_elements, array_params); end
+
+  # Whether +values+, reached through +parent_indices+, are elements of the
+  # scope's own Array that were sent. An optional scope's Array whose
+  # elements are all empty is passed over, as the scope itself is when it
+  # is left out (see ParamsScope#should_validate?, which answers that for
+  # the Array at the root). Checked once per Array rather than per element.
+  #
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:99
+  def sent_elements?(values, parent_indices); end
 
   # This is a special case so that we can ignore trees where option
   # values are missing lower down. Unfortunately we can't remove this
   # at the parameter parsing stage as they are required to ensure
   # the correct indexing is maintained
   #
-  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:89
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:125
   def skip?(val); end
 
-  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:65
-  def store_indices(target_scope, index, parent_indices); end
-
-  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:81
-  def yield_attributes(_resource_params); end
+  # Each parent index belongs to the next element-iterating scope up the
+  # chain, which a Hash scope may sit below. There is always one:
+  # +parent_indices+ holds at most +array_depth - 1+ entries, and
+  # +target_scope+ has that many iterating ancestors.
+  #
+  # pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:112
+  def store_indices(tracker, target_scope, index, parent_indices); end
 end
+
+# The top-level call's parent indices; only ever read.
+#
+# pkg:gem/grape#lib/grape/validations/attributes_iterator.rb:59
+Grape::Validations::AttributesIterator::NO_PARENT_INDICES = T.let(T.unsafe(nil), Array)
 
 # Immutable value object describing how a parameter is coerced. Assembled
 # by {ValidationsSpec#coerce_options} from the parsed +type+/+coerce_with+/
 # +coerce_message+ declaration — never written by the user — and consumed
 # by {ParamsScope#check_coerce_with} / {ParamsScope#validate_coerce} and by
-# {Validators::Validators::CoerceValidator} (which receives it as its
+# {Validators::CoerceValidator} (which receives it as its
 # +options+ argument).
 #
 # All three fields may be +nil+ (e.g. a remountable API evaluated on its
@@ -5924,14 +7220,6 @@ class Grape::Validations::ContractScope
   #
   # pkg:gem/grape#lib/grape/validations/contract_scope.rb:10
   def initialize(api, contract = T.unsafe(nil), &block); end
-end
-
-# pkg:gem/grape#lib/grape/validations/multiple_attributes_iterator.rb:5
-class Grape::Validations::MultipleAttributesIterator < ::Grape::Validations::AttributesIterator
-  private
-
-  # pkg:gem/grape#lib/grape/validations/multiple_attributes_iterator.rb:8
-  def yield_attributes(resource_params); end
 end
 
 # Stand-in for the +@api+ object that {ParamsScope} normally writes to.
@@ -6029,13 +7317,24 @@ module Grape::Validations::ParamsDocumentation
 
   private
 
+  # What the declaration's own options document beyond its validations:
+  # the +length+ bounds, the description and the +documentation+ Hash.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_documentation.rb:36
+  def add_raw_details(details, raw); end
+
+  # The values the declaration accepts, rejects and defaults to.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_documentation.rb:28
+  def add_value_details(details, spec); end
+
   # pkg:gem/grape#lib/grape/validations/params_documentation.rb:19
   def extract_details(spec); end
 end
 
-# pkg:gem/grape#lib/grape/validations/params_documentation.rb:42
+# pkg:gem/grape#lib/grape/validations/params_documentation.rb:50
 class Grape::Validations::ParamsDocumentation::TypeCache < ::Grape::Util::Cache
-  # pkg:gem/grape#lib/grape/validations/params_documentation.rb:43
+  # pkg:gem/grape#lib/grape/validations/params_documentation.rb:51
   def initialize; end
 end
 
@@ -6045,7 +7344,7 @@ class Grape::Validations::ParamsScope
   include ::Grape::Validations::ParamsDocumentation
 
   # Open up a new ParamsScope, allowing parameter definitions per
-  #   Grape::DSL::Params.
+  #   Grape::DSL::Parameters.
   # @param api [API] the API endpoint to modify
   # @param element [Symbol] the element that contains this scope; for
   #   this to be relevant, parent must be set
@@ -6054,34 +7353,51 @@ class Grape::Validations::ParamsScope
   # @param parent [ParamsScope] the scope containing this scope
   # @param optional [Boolean] whether or not this scope needs to have
   #   any parameters set or not
-  # @param type [Class] a type meant to govern this scope (deprecated)
-  # @param type [Hash] group options for this scope
-  # @param dependent_on [Symbol] if present, this scope should only
-  #   validate if this param is present in the parent scope
+  # @param type [Class] a type meant to govern this scope
+  # @param group [Hash] group options for this scope
+  # @param dependent_on [Array<Symbol, Hash>] if present, this scope should
+  #   only validate if these params are present in the parent scope
   # @yield the instance context, open for parameter definitions
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:67
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:105
   def initialize(api:, element: T.unsafe(nil), element_renamed: T.unsafe(nil), parent: T.unsafe(nil), optional: T.unsafe(nil), type: T.unsafe(nil), group: T.unsafe(nil), dependent_on: T.unsafe(nil), &block); end
+
+  # Whether #should_validate? answers true for every request: this scope
+  # and each of its ancestors is required and depends on nothing, so
+  # neither the params nor the parent chain have anything to say.
+  # @return [Boolean]
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:226
+  def always_validated?; end
 
   # pkg:gem/grape#lib/grape/validations/params_scope.rb:6
   def array_depth; end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:122
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:175
   def attr_meets_dependency?(params); end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:160
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:213
   def brackets(val); end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:92
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:133
   def configuration; end
 
   # @return [String] the proper attribute name, with nesting considered.
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:144
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:197
   def full_name(name, index: T.unsafe(nil)); end
 
   # pkg:gem/grape#lib/grape/validations/params_scope.rb:6
   def full_path; end
+
+  # Whether this scope and every scope above it declare no dependency, so
+  # #should_validate? has nothing to ask but whether each of them was given
+  # params -- and +qualifying_params+, which only a +given+ scope ever
+  # stores, cannot stand in for any of them.
+  # @return [Boolean]
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:158
+  def independent?; end
 
   # Whether this scope's params resolve to one entry per element, which is
   # what makes both an element index and a nesting level meaningful.
@@ -6091,20 +7407,20 @@ class Grape::Validations::ParamsScope
   # the Array class, so an +== Array+ test quietly excluded it.
   # @return [Boolean]
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:182
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:252
   def iterates_elements?; end
 
   # A lateral scope is subordinate to its parent, but its keys are at the
   # same level as its parent and thus is not contained within an element.
   # @return [Boolean] whether or not this scope is lateral
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:189
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:259
   def lateral?; end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:109
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:162
   def meets_dependency?(params, request_params); end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:129
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:182
   def meets_hash_dependency?(params); end
 
   # pkg:gem/grape#lib/grape/validations/params_scope.rb:6
@@ -6113,34 +7429,60 @@ class Grape::Validations::ParamsScope
   # A nested scope is contained in one of its parent's elements.
   # @return [Boolean] whether or not this scope is nested
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:171
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:241
   def nested?; end
+
+  # @param params [Hash] initial hash of parameters
+  # @return hash of parameters relevant for the current scope
+  # @api private
+  # Only a +given+ scope ever stores qualifying params, and a scope on an
+  # independent chain has none above it (see #independent?), so the
+  # lookup and the +presence+ test that follows it are skipped -- both of
+  # them, at every level, on every call.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:26
+  def params(params); end
 
   # pkg:gem/grape#lib/grape/validations/params_scope.rb:6
   def parent; end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:8
+  # The elements a +given+ scope narrowed its Array params down to during
+  # this request (see #meets_dependency?). Only a scope with a dependency
+  # ever stores any, so every other scope answers without the fiber-storage
+  # and tracker lookups -- which #params pays on each nested resolution,
+  # twice per validator, on every request.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:13
   def qualifying_params; end
 
   # @return [Boolean] whether or not this scope needs to be present, or can
   #   be blank
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:195
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:265
   def required?; end
 
   # @return [Boolean] whether or not this scope is the root-level scope
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:165
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:218
   def root?; end
 
   # @return [Boolean] whether or not this entire scope needs to be
   #   validated
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:99
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:140
   def should_validate?(parameters); end
 
   # pkg:gem/grape#lib/grape/validations/params_scope.rb:6
   def type; end
+
+  # Whether #should_validate? has nothing to ask but whether this scope's
+  # own params were given: it depends on no other param, and every scope
+  # above it is always validated. A required scope like that is then
+  # always validated, an optional one whenever its params are there.
+  # @return [Boolean]
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:235
+  def validated_when_given?; end
 
   protected
 
@@ -6152,22 +7494,42 @@ class Grape::Validations::ParamsScope
   # +given+ block stays attributed to the lateral scope that declared it
   # rather than to the parent that stores it.
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:208
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:301
   def push_declared_params(attrs, as: T.unsafe(nil), declared_params_scope: T.unsafe(nil)); end
+
+  # This scope's params, once it and every scope above it has been found
+  # worth validating; NOT_VALIDATED as soon as one of them is not.
+  #
+  # Only for an independent chain (see #independent?), where every scope
+  # answers from its own params alone: each one is then resolved from the
+  # one above rather than from the root, so the walk costs one +map_params+
+  # per scope instead of one per scope per level. Nothing here has a side
+  # effect, so checking from the root down rather than from here up reaches
+  # the same answer.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:280
+  def validated_params(parameters); end
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:446
+  # Only ever asked about params that are not blank (see #should_validate?
+  # and #validated_params), and a Hash that is not blank is never all
+  # blank: what +all?+ yields for it is a [key, value] pair, an Array of
+  # two, which +blank?+ is false for. Asking anyway walked the Hash and
+  # built one of those Arrays per entry, for every optional Hash scope of
+  # every request.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:577
   def all_element_blank?(scoped_params); end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:217
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:332
   def build_full_path; end
 
   # Enforce correct usage of :coerce_with on a CoerceOptions.
   # We do not allow coercion without a type, nor with +JSON+ as a type
   # since that defines its own coercion method.
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:388
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:513
   def check_coerce_with(coerce_options); end
 
   # Translate a `oneof: [proc, proc, ...]` declaration into a list of
@@ -6180,7 +7542,7 @@ class Grape::Validations::ParamsScope
   # +validations+, which is the options Hash the +requires+/+optional+ call
   # site built.
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:424
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:549
   def collected_oneof(validations); end
 
   # Pushes declared params to parent or settings, then clears @declared_params.
@@ -6188,74 +7550,14 @@ class Grape::Validations::ParamsScope
   # one place: this method both consumes and invalidates the ivar so that
   # push_declared_params cannot be called on the frozen scope later.
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:328
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:448
   def configure_declared_params; end
 
-  # Every element-iterating scope on the chain adds one level of nesting to
-  # what {#params} returns, because +map_params+ maps over the array it
-  # resolved from the parent. Counting them tells {AttributesIterator} how
-  # deep the declaration says the params for this scope may legitimately be.
+  # Each of +fields+ as optional, with its options in +using+; one +using+
+  # does not hold is left out.
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:347
-  def find_array_depth; end
-
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:337
-  def find_nearest_array_ancestor; end
-
-  # Returns a new parameter scope, subordinate to the current one, sharing
-  # the given group options with all parameters defined within.
-  # @param group [Hash] common options to merge into each parameter in the scope
-  # @yield parameter scope
-  #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:320
-  def new_group_scope(group, &); end
-
-  # Returns a new parameter scope, not nested under any current-level param
-  # but instead at the same level as the current scope.
-  # @param dependent_on [Symbol] if given, specifies that this scope should
-  #   only validate if this parameter from the above scope is present
-  # @yield parameter scope
-  #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:305
-  def new_lateral_scope(dependent_on:, &); end
-
-  # Returns a new parameter scope, subordinate to the current one and nested
-  # under the given element.
-  # @param element [Symbol] the parameter name under which this scope is nested
-  # @param type [Class] the type governing this scope
-  # @param as [Symbol, nil] optional renamed name for the element
-  # @param optional [Boolean] whether the parameter this scope is nested under
-  #   is optional or not (and hence, whether this block's params will be).
-  # @yield parameter scope
-  #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:278
-  def new_scope(element, type:, as:, optional: T.unsafe(nil), &); end
-
-  # Add a new parameter which should be renamed when using the +#declared+
-  # method.
-  #
-  # @param path [Array<String, Symbol>] the full path of the parameter
-  #   (including the parameter name as last array element)
-  # @param new_name [String, Symbol] the new name of the parameter (the
-  #   renamed name, with the +as: ...+ semantic)
-  #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:231
-  def push_renamed_param(path, new_name); end
-
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:258
-  def require_optional_fields(context, using:, except: T.unsafe(nil)); end
-
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:235
-  def require_required_and_optional_fields(context, using:, except: T.unsafe(nil)); end
-
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:434
-  def validate(type, options, attrs, required, opts); end
-
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:402
-  def validate_coerce(spec, attrs); end
-
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:396
-  def validate_presence(spec, attrs); end
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:381
+  def declare_optional_fields(fields, using); end
 
   # +required+ is the DSL's own signal — +requires+ passes true, +optional+
   # false. It used to travel as a +:presence+ key that +requires+ wrote into
@@ -6269,44 +7571,139 @@ class Grape::Validations::ParamsScope
   # used to — deprecated rather than dropped, so nothing changes under an
   # API that relies on it until the key is ignored outright.
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:362
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:499
+  def declared_validations(validations, required); end
+
+  # Every element-iterating scope on the chain adds one level of nesting to
+  # what {#params} returns, because +map_params+ maps over the array it
+  # resolved from the parent. Counting them tells {AttributesIterator} how
+  # deep the declaration says the params for this scope may legitimately be.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:467
+  def find_array_depth; end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:457
+  def find_nearest_array_ancestor; end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:310
+  def map_params(params, element, is_array: T.unsafe(nil)); end
+
+  # What a Hash without the element maps to: EmptyOptionalValue for an
+  # optional scope's element of an Array, which the validators pass over,
+  # and an empty Hash otherwise.
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:328
+  def missing_element(is_array); end
+
+  # Returns a new parameter scope, subordinate to the current one, sharing
+  # the given group options with all parameters defined within.
+  # @param group [Hash] common options to merge into each parameter in the scope
+  # @yield parameter scope
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:440
+  def new_group_scope(group, &); end
+
+  # Returns a new parameter scope, not nested under any current-level param
+  # but instead at the same level as the current scope.
+  # @param dependent_on [Array<Symbol, Hash>] if given, this scope only
+  #   validates if these parameters from the above scope are present
+  # @yield parameter scope
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:425
+  def new_lateral_scope(dependent_on:, &); end
+
+  # Returns a new parameter scope, subordinate to the current one and nested
+  # under the given element.
+  # @param element [Symbol] the parameter name under which this scope is nested
+  # @param type [Class] the type governing this scope
+  # @param as [Symbol, nil] optional renamed name for the element
+  # @param optional [Boolean] whether the parameter this scope is nested under
+  #   is optional or not (and hence, whether this block's params will be).
+  # @yield parameter scope
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:396
+  def new_scope(element, type:, as:, optional: T.unsafe(nil), &); end
+
+  # Add a new parameter which should be renamed when using the +#declared+
+  # method.
+  #
+  # @param path [Array<String, Symbol>] the full path of the parameter
+  #   (including the parameter name as last array element)
+  # @param new_name [String, Symbol] the new name of the parameter (the
+  #   renamed name, with the +as: ...+ semantic)
+  #
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:346
+  def push_renamed_param(path, new_name); end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:370
+  def require_optional_fields(context, using:, except: T.unsafe(nil)); end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:350
+  def require_required_and_optional_fields(context, using:, except: T.unsafe(nil)); end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:559
+  def validate(type, options, attrs, required, opts); end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:527
+  def validate_coerce(spec, attrs); end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:521
+  def validate_presence(spec, attrs); end
+
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:471
   def validates(attrs, validations, required: T.unsafe(nil)); end
 end
 
-# pkg:gem/grape#lib/grape/validations/params_scope.rb:22
+# pkg:gem/grape#lib/grape/validations/params_scope.rb:60
 class Grape::Validations::ParamsScope::Attr
   # Open up a new ParamsScope::Attr
   # @param key [Hash, Symbol] key of attr
   # @param scope [Grape::Validations::ParamsScope] scope of attr
   #
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:28
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:66
   def initialize(key, scope); end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:23
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:61
   def key; end
 
-  # pkg:gem/grape#lib/grape/validations/params_scope.rb:23
+  # pkg:gem/grape#lib/grape/validations/params_scope.rb:61
   def scope; end
 
   class << self
-    # pkg:gem/grape#lib/grape/validations/params_scope.rb:40
+    # pkg:gem/grape#lib/grape/validations/params_scope.rb:78
     def attr_key(declared_param_attr); end
 
     # @return Array[Symbol, Hash[Symbol => Array]] declared_params with symbol instead of Attr
     #
-    # pkg:gem/grape#lib/grape/validations/params_scope.rb:34
+    # pkg:gem/grape#lib/grape/validations/params_scope.rb:72
     def attrs_keys(declared_params); end
   end
 end
+
+# What {#params} hands back for an element of an Array that left an
+# optional scope out, in place of that scope's params. Dropping the
+# element instead would shift the indices the errors name, so it stays,
+# and AttributesIterator and the validators pass over it.
+#
+# pkg:gem/grape#lib/grape/validations/params_scope.rb:58
+Grape::Validations::ParamsScope::EmptyOptionalValue = T.let(T.unsafe(nil), Object)
+
+# What {#validated_params} returns for a scope that should not be
+# validated. A plain +false+ would be indistinguishable from params of
+# that value, which +map_params+ can hand back for an element a request
+# set to +false+.
+#
+# pkg:gem/grape#lib/grape/validations/params_scope.rb:51
+Grape::Validations::ParamsScope::NOT_VALIDATED = T.let(T.unsafe(nil), Object)
 
 # There are a number of documentation options on entities that don't have
 # corresponding validators. Since there is nowhere that enumerates them all,
 # we maintain a list of them here and skip looking up validators for them.
 #
-# pkg:gem/grape#lib/grape/validations/params_scope.rb:18
+# pkg:gem/grape#lib/grape/validations/params_scope.rb:43
 Grape::Validations::ParamsScope::RESERVED_DOCUMENTATION_KEYWORDS = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/grape#lib/grape/validations/params_scope.rb:20
+# pkg:gem/grape#lib/grape/validations/params_scope.rb:45
 Grape::Validations::ParamsScope::SPECIAL_JSON = T.let(T.unsafe(nil), Array)
 
 # Immutable value object holding the two options every validator reads at
@@ -6344,23 +7741,6 @@ class Grape::Validations::SharedOptions < ::Data
   end
 end
 
-# pkg:gem/grape#lib/grape/validations/single_attribute_iterator.rb:5
-class Grape::Validations::SingleAttributeIterator < ::Grape::Validations::AttributesIterator
-  private
-
-  # Primitives like Integers and Booleans don't respond to +empty?+.
-  # It could be possible to use +blank?+ instead, but
-  #
-  #     false.blank?
-  #     => true
-  #
-  # pkg:gem/grape#lib/grape/validations/single_attribute_iterator.rb:23
-  def empty?(val); end
-
-  # pkg:gem/grape#lib/grape/validations/single_attribute_iterator.rb:8
-  def yield_attributes(val); end
-end
-
 # Module for code related to grape's system for
 # coercion and type validation of incoming request
 # parameters.
@@ -6368,8 +7748,8 @@ end
 # Grape uses a number of tests and assertions to
 # work out exactly how a parameter should be handled,
 # based on the +type+ and +coerce_with+ options that
-# may be supplied to {Grape::Dsl::Parameters#requires}
-# and {Grape::Dsl::Parameters#optional}. The main
+# may be supplied to {Grape::DSL::Parameters#requires}
+# and {Grape::DSL::Parameters#optional}. The main
 # entry point for this process is {Types.build_coercer}.
 #
 # pkg:gem/grape#lib/grape/validations/types.rb:15
@@ -6385,42 +7765,36 @@ module Grape::Validations::Types
   #
   # There are a few very special coercers which might be returned.
   #
-  # +Grape::Types::MultipleTypeCoercer+ is a coercer which is returned when
-  # the given type implies values in an array with different types.
-  # For example, +[Integer, String]+ allows integer and string values in
-  # an array.
+  # +MultipleTypeCoercer+ is returned for a value that may be one of
+  # several types, e.g. +types: [Integer, String]+.
   #
-  # +Grape::Types::CustomTypeCoercer+ is a coercer which is returned when
-  # a method is specified by a user with +coerce_with+ option or the user
-  # specifies a custom type which implements requirments of
-  # +Grape::Types::CustomTypeCoercer+.
+  # +CustomTypeCoercer+ is returned for a +coerce_with+ method or a type
+  # with its own +parse+ (see {#custom?}).
   #
-  # +Grape::Types::CustomTypeCollectionCoercer+ is a very similar to the
-  # previous one, but it expects an array or set of values having a custom
-  # type implemented by the user.
+  # +CustomTypeCollectionCoercer+ is returned for an array or set of such
+  # a type (see {#collection_of_custom?}).
   #
   # There is also a group of custom types implemented by Grape, check
   # +Grape::Validations::Types::SPECIAL+ to get the full list.
   #
-  # @param type [Class] the type to which input strings
-  #   should be coerced
+  # @param type [Class] the type to which input values should be coerced
   # @param method [Class,#call] the coercion method to use
+  # @param strict [Boolean] check the type rather than coerce
   # @return [Object] object to be used
   #   for coercion and type validation
   #
-  # pkg:gem/grape#lib/grape/validations/types.rb:156
+  # pkg:gem/grape#lib/grape/validations/types.rb:150
   def build_coercer(type, method: T.unsafe(nil), strict: T.unsafe(nil)); end
 
-  # Is the declared type an +Array+ or +Set+ of a {#custom?} type?
+  # Is the declared type an +Array+ or +Set+ of a {#custom?} or {#special?} type?
   #
   # @param type [Array<Class>,Class] type to check
-  # @return [Boolean] true if +type+ is a collection of a type that implements
-  #   its own +#parse+ method.
+  # @return [Boolean] true if +type+ is a one-element collection of such a type
   #
-  # pkg:gem/grape#lib/grape/validations/types.rb:120
+  # pkg:gem/grape#lib/grape/validations/types.rb:119
   def collection_of_custom?(type); end
 
-  # pkg:gem/grape#lib/grape/validations/types.rb:163
+  # pkg:gem/grape#lib/grape/validations/types.rb:157
   def create_coercer_instance(type, method, strict); end
 
   # A valid custom type must implement a class-level `parse` method, taking
@@ -6441,7 +7815,7 @@ module Grape::Validations::Types
   # pkg:gem/grape#lib/grape/validations/types.rb:97
   def group?(type); end
 
-  # pkg:gem/grape#lib/grape/validations/types.rb:124
+  # pkg:gem/grape#lib/grape/validations/types.rb:123
   def map_special(type); end
 
   # Is the declared type in fact an array of multiple allowed types?
@@ -6496,42 +7870,36 @@ module Grape::Validations::Types
     #
     # There are a few very special coercers which might be returned.
     #
-    # +Grape::Types::MultipleTypeCoercer+ is a coercer which is returned when
-    # the given type implies values in an array with different types.
-    # For example, +[Integer, String]+ allows integer and string values in
-    # an array.
+    # +MultipleTypeCoercer+ is returned for a value that may be one of
+    # several types, e.g. +types: [Integer, String]+.
     #
-    # +Grape::Types::CustomTypeCoercer+ is a coercer which is returned when
-    # a method is specified by a user with +coerce_with+ option or the user
-    # specifies a custom type which implements requirments of
-    # +Grape::Types::CustomTypeCoercer+.
+    # +CustomTypeCoercer+ is returned for a +coerce_with+ method or a type
+    # with its own +parse+ (see {#custom?}).
     #
-    # +Grape::Types::CustomTypeCollectionCoercer+ is a very similar to the
-    # previous one, but it expects an array or set of values having a custom
-    # type implemented by the user.
+    # +CustomTypeCollectionCoercer+ is returned for an array or set of such
+    # a type (see {#collection_of_custom?}).
     #
     # There is also a group of custom types implemented by Grape, check
     # +Grape::Validations::Types::SPECIAL+ to get the full list.
     #
-    # @param type [Class] the type to which input strings
-    #   should be coerced
+    # @param type [Class] the type to which input values should be coerced
     # @param method [Class,#call] the coercion method to use
+    # @param strict [Boolean] check the type rather than coerce
     # @return [Object] object to be used
     #   for coercion and type validation
     #
-    # pkg:gem/grape#lib/grape/validations/types.rb:156
+    # pkg:gem/grape#lib/grape/validations/types.rb:150
     def build_coercer(type, method: T.unsafe(nil), strict: T.unsafe(nil)); end
 
-    # Is the declared type an +Array+ or +Set+ of a {#custom?} type?
+    # Is the declared type an +Array+ or +Set+ of a {#custom?} or {#special?} type?
     #
     # @param type [Array<Class>,Class] type to check
-    # @return [Boolean] true if +type+ is a collection of a type that implements
-    #   its own +#parse+ method.
+    # @return [Boolean] true if +type+ is a one-element collection of such a type
     #
-    # pkg:gem/grape#lib/grape/validations/types.rb:120
+    # pkg:gem/grape#lib/grape/validations/types.rb:119
     def collection_of_custom?(type); end
 
-    # pkg:gem/grape#lib/grape/validations/types.rb:163
+    # pkg:gem/grape#lib/grape/validations/types.rb:157
     def create_coercer_instance(type, method, strict); end
 
     # A valid custom type must implement a class-level `parse` method, taking
@@ -6552,7 +7920,7 @@ module Grape::Validations::Types
     # pkg:gem/grape#lib/grape/validations/types.rb:97
     def group?(type); end
 
-    # pkg:gem/grape#lib/grape/validations/types.rb:124
+    # pkg:gem/grape#lib/grape/validations/types.rb:123
     def map_special(type); end
 
     # Is the declared type in fact an array of multiple allowed types?
@@ -6631,9 +7999,9 @@ class Grape::Validations::Types::ArrayCoercer < ::Grape::Validations::Types::Dry
   def reject?(val); end
 end
 
-# pkg:gem/grape#lib/grape/validations/types.rb:181
+# pkg:gem/grape#lib/grape/validations/types.rb:175
 class Grape::Validations::Types::CoercerCache < ::Grape::Util::Cache
-  # pkg:gem/grape#lib/grape/validations/types.rb:182
+  # pkg:gem/grape#lib/grape/validations/types.rb:176
   def initialize; end
 end
 
@@ -6644,7 +8012,7 @@ end
 # there are any problems parsing the string.
 #
 # Alternately an optional +method+ may be supplied (see the
-# +coerce_with+ option of {Grape::Dsl::Parameters#requires}).
+# +coerce_with+ option of {Grape::DSL::Parameters#requires}).
 # This may be any class or object implementing +parse+ or +call+,
 # with the same contract as described above.
 #
@@ -6684,19 +8052,18 @@ class Grape::Validations::Types::CustomTypeCoercer
 
   # Coerces the given value.
   #
-  # @param value [String] value to be coerced, in grape
-  #   this should always be a string.
+  # @param val [Object] value to be coerced
   # @return [Object] the coerced result
   #
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:59
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:58
   def call(val); end
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:68
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:67
   def coerced?(val); end
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:74
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:73
   def build_coercion_method(type, method); end
 
   # +dup+ before +map!+: the collection is whatever the user's coercion
@@ -6704,25 +8071,25 @@ class Grape::Validations::Types::CustomTypeCoercer
   # must not mutate it in place. +dup+ also preserves the class, keeping a
   # +Set+ a +Set+ (unlike +map+, which would return an +Array+).
   #
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:97
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:96
   def collection_symbolizer(method); end
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:114
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:113
   def enumerable_type_check(type); end
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:89
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:88
   def hash_symbolizer(method); end
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:82
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:81
   def infer_coercion_method(type, method); end
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:105
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:104
   def infer_type_check(type); end
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:118
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:117
   def recursive_type_check(type, value); end
 
-  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:101
+  # pkg:gem/grape#lib/grape/validations/types/custom_type_coercer.rb:100
   def symbolize_if_hash(item); end
 end
 
@@ -6733,7 +8100,7 @@ Grape::Validations::Types::CustomTypeCoercer::COLLECTION_TYPES = T.let(T.unsafe(
 Grape::Validations::Types::CustomTypeCoercer::TYPE_CHECK_METHODS = T.let(T.unsafe(nil), Array)
 
 # See {CustomTypeCoercer} for details on types
-# that will be supported by this by this coercer.
+# that will be supported by this coercer.
 # This coercer works in the same way as +CustomTypeCoercer+
 # except that it expects to receive an array of strings to
 # coerce and will return an array (or optionally, a set)
@@ -6783,38 +8150,52 @@ end
 class Grape::Validations::Types::DryTypeCoercer
   extend ::Grape::Util::FreezeOnNew
 
-  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:37
+  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:33
   def initialize(type, strict: T.unsafe(nil)); end
 
   # Coerces the given value to a type which was specified during
   # initialization as a type argument.
   #
+  # Given a block, dry-types reports a value it cannot coerce by calling
+  # the block instead of raising. Raising is what cost: its CoercionError
+  # is re-raised with the backtrace of the error underneath, and building
+  # that backtrace as strings at request depth took about 25 µs for every
+  # rejected value -- every `types: [Integer, String]` param given a
+  # string, every 400 for a mistyped value.
+  #
+  # Every coercion dry-types runs takes that block, so none of them
+  # raises a CoercionError here. Anything that raises something else --
+  # +Kernel#String+, which +Coercible::String+ is built from, ignores the
+  # block and raises TypeError -- is answered by
+  # +CoerceValidator#coerce_value+, which rescues StandardError with the
+  # same InvalidValue.
+  #
   # @param val [Object]
   #
-  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:47
+  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:57
   def call(val); end
 
   protected
 
-  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:57
+  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:65
   def cache_coercer; end
 
-  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:57
+  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:65
   def strict; end
 
-  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:57
+  # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:65
   def type; end
 
   class << self
     # Returns an instance of a coercer for a given type
     #
-    # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:31
+    # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:27
     def coercer_instance_for(type, strict: T.unsafe(nil)); end
 
     # Returns a collection coercer which corresponds to a given type.
     # Example:
     #
-    #    collection_coercer_for(Array)
+    #    collection_coercer_for([Integer])
     #    #=> Grape::Validations::Types::ArrayCoercer
     #
     # pkg:gem/grape#lib/grape/validations/types/dry_type_coercer.rb:19
@@ -6940,12 +8321,11 @@ class Grape::Validations::Types::MultipleTypeCoercer
 
   # Coerces the given value.
   #
-  # @param val [String] value to be coerced, in grape
-  #   this should always be a string.
+  # @param val [Object] value to be coerced
   # @return [Object,InvalidValue] the coerced result, or an instance
   #   of {InvalidValue} if the value could not be coerced.
   #
-  # pkg:gem/grape#lib/grape/validations/types/multiple_type_coercer.rb:42
+  # pkg:gem/grape#lib/grape/validations/types/multiple_type_coercer.rb:41
   def call(val); end
 end
 
@@ -6961,27 +8341,36 @@ class Grape::Validations::Types::PrimitiveCoercer < ::Grape::Validations::Types:
   # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:16
   def initialize(type, strict: T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:24
+  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:25
   def call(val); end
 
   protected
+
+  # dry-types turns a number into an Integer with Kernel#Integer, which
+  # truncates, so a JSON body's 2.99 became 2 while the same value in a
+  # query string, "2.99", was rejected. A number with a fractional part
+  # is refused instead; a whole one such as 1.0 still becomes 1. Complex
+  # numbers have no fractional part to test and are left to dry-types.
+  #
+  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:58
+  def fractional?(val); end
 
   # This method maintains logic which was defined by Virtus. For example,
   # dry-types is ok to convert an array or a hash to a string, it is supported,
   # but Virtus wouldn't accept it. So, this method only exists to not introduce
   # breaking changes.
   #
-  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:39
+  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:46
   def reject?(val); end
 
   # Dry-Types treats an empty string as invalid. However, Grape considers an empty string as
   # absence of a value and coerces it into nil. See a discussion there
   # https://github.com/ruby-grape/grape/pull/2045
   #
-  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:48
+  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:65
   def treat_as_nil?(val); end
 
-  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:33
+  # pkg:gem/grape#lib/grape/validations/types/primitive_coercer.rb:40
   def type; end
 end
 
@@ -7042,12 +8431,17 @@ class Grape::Validations::Types::VariantCollectionCoercer
 
   # Coerce the given value.
   #
-  # @param value [Array<String>] collection of values to be coerced
-  # @return [Array<Object>,Set<Object>,InvalidValue]
-  #   the coerced result, or an instance
-  #   of {InvalidValue} if the value could not be coerced.
+  # A value that is not an Array, and an Array holding a member none of
+  # the types accepts, are invalid, as they are for a collection of one
+  # type. A coercion method is handed the value whatever it is, as it is
+  # for +types:+, so it can build the collection out of a String.
   #
-  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:48
+  # @param value [Array<String>] collection of values to be coerced
+  # @return [Array<Object>,Set<Object>,InvalidValue,nil]
+  #   the coerced result, nil when the value is nil or an empty String,
+  #   or an instance of {InvalidValue} if the value could not be coerced.
+  #
+  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:53
   def call(value); end
 
   # Returns the Grape DSL notation for this coercer, e.g. "Array[Integer, String]".
@@ -7061,6 +8455,11 @@ class Grape::Validations::Types::VariantCollectionCoercer
   #
   # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:12
   def types; end
+
+  private
+
+  # pkg:gem/grape#lib/grape/validations/types/variant_collection_coercer.rb:65
+  def coerce_members(value); end
 end
 
 # Frozen value object holding everything {ParamsScope#validates} needs to
@@ -7070,9 +8469,8 @@ end
 #
 # Splits the raw entries into three logical buckets:
 #
-# * Spec-consumed keys (type/types/coerce*, presence/message,
-#   default/fail_fast, doc keys) — exposed via named accessors and never
-#   handed to validator dispatch.
+# * Spec-consumed keys (type/types/coerce*, presence/message, fail_fast,
+#   doc keys) — never handed to validator dispatch.
 # * Shared opts (allow_blank, fail_fast) — read by every validator at
 #   construction time via {#shared_opts}.
 # * Validator entries (everything else, e.g. +regexp+, +length+, +values+,
@@ -7083,59 +8481,72 @@ end
 # shared opt and a validator entry; +length+ is both a doc source and a
 # validator entry).
 #
-# pkg:gem/grape#lib/grape/validations/validations_spec.rb:24
+# pkg:gem/grape#lib/grape/validations/validations_spec.rb:23
 class Grape::Validations::ValidationsSpec
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:42
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:44
   def initialize(raw); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def allow_blank; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def coerce_message; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def coerce_method; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:67
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:65
   def coerce_options; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def coerce_type; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def default; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def except_values; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def fail_fast; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def presence_options; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def raw; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:63
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:61
   def required?; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def shared_opts; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def validator_entries; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:36
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
   def values; end
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:110
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:135
+  def all_of_type?(values, type); end
+
+  # Whether one of +defaults+ is among +values+, known now (see #fixed_values?).
+  #
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:113
+  def any_among?(defaults, values); end
+
+  # Whether one of +defaults+ is outside +values+, known now (see #fixed_values?).
+  #
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:108
+  def any_outside?(defaults, values); end
+
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:141
   def build_validator_entries(raw); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:87
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:99
   def check_incompatible_option_values(default, values, except_values); end
 
   # The type as written in the DSL. Identical to +@coerce_type+ except for
@@ -7145,19 +8556,35 @@ class Grape::Validations::ValidationsSpec
   # definition-time coherence checks need the list back, since the wrapper
   # matches nothing under +===+.
   #
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:149
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:178
   def declared_coerce_type; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:133
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:162
   def extract_value_and_message(opt); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:153
+  # A +values+ or +except_values+ list known at definition time: given,
+  # and not a Proc called on every request.
+  #
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:119
+  def fixed_values?(values); end
+
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:182
   def guess_coerce_type(coerce_type, *values_list); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:116
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:147
   def parse_coerce(raw); end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:139
+  # What every validator of the declaration reads (see #shared_opts).
+  #
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:79
+  def read_shared_opts(raw); end
+
+  # The values the declaration accepts, rejects and defaults to.
+  #
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:72
+  def read_values(raw); end
+
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:168
   def resolve_value(opt); end
 
   # Cross-field consistency checks on the parsed declaration. Run at
@@ -7170,27 +8597,30 @@ class Grape::Validations::ValidationsSpec
   # +values:+ must still coerce to +Array+ at runtime (only the elements
   # are scalar), so the real +@coerce_type+ is never overwritten by it.
   #
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:82
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:94
   def validate!; end
 
-  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:97
+  # pkg:gem/grape#lib/grape/validations/validations_spec.rb:123
   def validate_value_coercion(coerce_type, *values_list); end
 
   class << self
-    # pkg:gem/grape#lib/grape/validations/validations_spec.rb:38
+    # pkg:gem/grape#lib/grape/validations/validations_spec.rb:40
     def from(validations); end
   end
 end
+
+# pkg:gem/grape#lib/grape/validations/validations_spec.rb:35
+Grape::Validations::ValidationsSpec::BOOLEAN_VALUES = T.let(T.unsafe(nil), Array)
 
 # Keys consumed by the spec itself; must NOT be dispatched as validators
 # by the caller. Documentation-only keys are filtered through a separate
 # set so that dual-purpose keys (length, default, values, except_values)
 # aren't accidentally swallowed.
 #
-# pkg:gem/grape#lib/grape/validations/validations_spec.rb:29
+# pkg:gem/grape#lib/grape/validations/validations_spec.rb:28
 Grape::Validations::ValidationsSpec::SPEC_CONSUMED_KEYS = T.let(T.unsafe(nil), Array)
 
-# pkg:gem/grape#lib/grape.rb:113
+# pkg:gem/grape#lib/grape.rb:116
 module Grape::Validations::Validators; end
 
 # pkg:gem/grape#lib/grape/validations/validators/all_or_none_of_validator.rb:6
@@ -7210,11 +8640,10 @@ end
 
 # pkg:gem/grape#lib/grape/validations/validators/as_validator.rb:6
 class Grape::Validations::Validators::AsValidator < ::Grape::Validations::Validators::Base
-  # We use a validator for renaming parameters. This is just a marker for
-  # the parameter scope to handle the renaming. No actual validation
-  # happens here.
+  # Never dispatched: +as:+ renaming is handled by ParamsScope. No
+  # validation happens here.
   #
-  # pkg:gem/grape#lib/grape/validations/validators/as_validator.rb:10
+  # pkg:gem/grape#lib/grape/validations/validators/as_validator.rb:9
   def validate_param!(*); end
 end
 
@@ -7228,10 +8657,10 @@ end
 #
 # == Freeze contract
 # Validator instances are shared across requests and are frozen after
-# initialization (via +.new+). All inputs (+options+, +opts+, +attrs+)
-# arrive pre-frozen from the DSL boundary, so subclass ivars derived
-# from them are frozen by construction. Lazy ivar assignment
-# (e.g. +memoize+, <tt>||=</tt>) will raise +FrozenError+ at request time.
+# initialization (via +.new+). #initialize freezes +attrs+ and
+# deep-freezes +options+, so subclass ivars derived from them are frozen
+# by construction. Lazy ivar assignment (e.g. +memoize+, <tt>||=</tt>)
+# will raise +FrozenError+ at request time.
 #
 # pkg:gem/grape#lib/grape/validations/validators/base.rb:14
 class Grape::Validations::Validators::Base
@@ -7273,7 +8702,7 @@ class Grape::Validations::Validators::Base
   # @raise [Grape::Exceptions::Validation] if validation failed
   # @return [void]
   #
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:79
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:80
   def validate(request); end
 
   # Validates a given parameter hash.
@@ -7283,7 +8712,7 @@ class Grape::Validations::Validators::Base
   # @raise [Grape::Exceptions::Validation] if validation failed
   # @return [void]
   #
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:92
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:93
   def validate!(params); end
 
   protected
@@ -7294,22 +8723,33 @@ class Grape::Validations::Validators::Base
   # @raise [Grape::Exceptions::Validation] if validation failed
   # @return [void]
   #
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:116
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:109
   def validate_param!(attr_name, params); end
 
   private
 
+  # A scope's parent, optionality, dependency and type are all set
+  # before its block declares anything, so these are settled by the
+  # time a validator is built. See #validate and #validate!.
+  #
   # pkg:gem/grape#lib/grape/validations/validators/base.rb:122
+  def choose_validation_path(scope); end
+
+  # What an optional scope passes over: its params given empty in an
+  # element of an Array further up, or the placeholder +map_params+ puts
+  # where they were not given at all. The iterator drops that placeholder
+  # itself; #validate_elements! meets it when a scope above was handed an
+  # Array instead of a Hash. An empty element of the scope's own Array is
+  # passed over only when every element of that Array is empty.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:226
+  def empty_element?(element); end
+
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:115
   def exception_message; end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:137
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:237
   def hash_like?(obj); end
-
-  # The AttributesIterator subclass used to walk this validator's
-  # attributes. Built once in #initialize and reused across requests.
-  #
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:128
-  def iterator_class; end
 
   # Returns the effective message for a validation error.
   # Prefers an explicit +:message+ option, then +default_key+.
@@ -7319,31 +8759,88 @@ class Grape::Validations::Validators::Base
   #   @exception_message = message(:presence)             # symbol key or custom message
   #   @exception_message = message { build_hash_message } # computed fallback
   #
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:153
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:253
   def message(default_key = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:160
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:260
   def option_value; end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:122
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:115
   def options; end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:141
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:241
   def options_key?(key, given_options = T.unsafe(nil)); end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:122
+  # Whether #validate! leaves +val+ alone: in an optional scope, an empty
+  # value that is not an element the request sent (see AttributesIterator).
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:210
+  def passed_over?(val, element); end
+
+  # Whether #validate_elements! leaves +elements+ alone: an optional
+  # scope's Array whose elements are all empty, as the iterator does.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:216
+  def passed_over_elements?(elements); end
+
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:115
   def required; end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:124
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:117
   def required?; end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:122
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:115
   def scope; end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:164
+  # Listed among the helpers a custom validator can call (see README).
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:265
   def scrub(value); end
 
-  # pkg:gem/grape#lib/grape/validations/validators/base.rb:132
+  # #validate! on a scope that always validates and does not iterate
+  # elements, once its params resolved to a Hash: the root scope and the
+  # required Hash scopes under it, which is most validators of most
+  # endpoints. There the iterator hands back that Hash alone, and every
+  # scope on the chain is required with no dependency, so the checks
+  # around the attribute loop drop out. The machinery cost more than
+  # the validation itself.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:135
+  def validate_attributes!(params); end
+
+  # Runs #validate_param! for each attribute +element+ holds, or for every
+  # one when they are required, and returns +array_errors+ with what
+  # failed appended, allocating it on the first failure.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:199
+  def validate_element_attributes(element, array_errors); end
+
+  # #validate_attributes! for each element of an Array scope, such as
+  # +requires :items, type: Array do+ at the root, when it is the only
+  # scope on the chain that iterates elements: its params are then the
+  # request's Array as it came in, with no nesting for the iterator to
+  # descend into. It depends on no other param and every scope above it
+  # is always validated, so the iterator's per-element checks come down
+  # to the index it records for the error names and passing over the
+  # placeholder of an optional scope that was left out. An optional
+  # scope whose elements are all empty is passed over too, as the
+  # iterator does; otherwise an empty element was sent, and is validated
+  # like any other. An element that is not a Hash goes through the same
+  # +hash_like?+ test as on the iterator path, and the members of a scope
+  # that did not get an Array are left alone, as they are there: the
+  # scope's own type check reports it.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:161
+  def validate_elements!(elements); end
+
+  # #validate! on every other scope: each value the iterator yields is
+  # validated, unless the scope passes it over or depends on a param it
+  # does not meet.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:181
+  def validate_iterated!(params); end
+
+  # pkg:gem/grape#lib/grape/validations/validators/base.rb:232
   def validation_error!(attr_name_or_params, message = T.unsafe(nil)); end
 
   class << self
@@ -7377,7 +8874,7 @@ class Grape::Validations::Validators::CoerceValidator < ::Grape::Validations::Va
   # HashWithIndifferentAccess key conversion each time, for every coerced
   # attribute of every request.
   #
-  # pkg:gem/grape#lib/grape/validations/validators/coerce_validator.rb:29
+  # pkg:gem/grape#lib/grape/validations/validators/coerce_validator.rb:28
   def validate_param!(attr_name, params); end
 
   private
@@ -7385,7 +8882,7 @@ class Grape::Validations::Validators::CoerceValidator < ::Grape::Validations::Va
   # Calls the converter built at definition time.
   # Custom coercers may raise; any StandardError is treated as an invalid value.
   #
-  # pkg:gem/grape#lib/grape/validations/validators/coerce_validator.rb:55
+  # pkg:gem/grape#lib/grape/validations/validators/coerce_validator.rb:54
   def coerce_value(val); end
 end
 
@@ -7423,6 +8920,17 @@ class Grape::Validations::Validators::DefaultValidator < ::Grape::Validations::V
 
   # pkg:gem/grape#lib/grape/validations/validators/default_validator.rb:20
   def validate!(params); end
+
+  private
+
+  # Also #validate!'s whole job where Base#validate_attributes! applies:
+  # a scope that is always validated and does not iterate elements, once
+  # its params resolved to a Hash -- the root scope of every +params+
+  # block with a default in it. A scope like that depends on no other
+  # param, so the iterator and its dependency check have nothing to add.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/default_validator.rb:38
+  def apply_defaults(params); end
 end
 
 # pkg:gem/grape#lib/grape/validations/validators/exactly_one_of_validator.rb:6
@@ -7439,7 +8947,37 @@ class Grape::Validations::Validators::ExceptValuesValidator < ::Grape::Validatio
   # pkg:gem/grape#lib/grape/validations/validators/except_values_validator.rb:9
   def initialize(attrs, options, required, scope, opts); end
 
-  # pkg:gem/grape#lib/grape/validations/validators/except_values_validator.rb:20
+  # pkg:gem/grape#lib/grape/validations/validators/except_values_validator.rb:25
+  def validate_param!(attr_name, params); end
+
+  private
+
+  # The values ruled out, asked of the Proc on every request when they
+  # come from one.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/except_values_validator.rb:41
+  def current_excepts; end
+end
+
+# Rejects an element that is not a Hash in an Array param given a block,
+# which ParamsScope registers this for: the block declares the keys of
+# each element, and an element with no keys cannot hold any of them.
+# Without it, an element like +"x"+ or a nested Array only failed where
+# the block required a key of it, so a block of optional params let
+# anything through.
+#
+# An Array whose elements are all blank is passed over, as the block's
+# own validators pass over an optional scope whose elements are all
+# blank. Otherwise a blank element is not a Hash either. Elements are
+# scrubbed first, since String#blank? raises on bytes their encoding
+# does not allow.
+#
+# pkg:gem/grape#lib/grape/validations/validators/hash_elements_validator.rb:18
+class Grape::Validations::Validators::HashElementsValidator < ::Grape::Validations::Validators::Base
+  # Registered not required, so it is only asked about params that are a
+  # Hash (see Base#validate!).
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/hash_elements_validator.rb:23
   def validate_param!(attr_name, params); end
 end
 
@@ -7448,13 +8986,22 @@ class Grape::Validations::Validators::LengthValidator < ::Grape::Validations::Va
   # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:7
   def initialize(attrs, options, required, scope, opts); end
 
-  # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:20
+  # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:18
   def validate_param!(attr_name, params); end
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:44
+  # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:40
+  def length_message; end
+
+  # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:52
   def validate_boundary!(name, val); end
+
+  # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:31
+  def validate_is!; end
+
+  # pkg:gem/grape#lib/grape/validations/validators/length_validator.rb:36
+  def within_bounds?(length); end
 end
 
 # pkg:gem/grape#lib/grape/validations/validators/multiple_params_base.rb:6
@@ -7464,13 +9011,10 @@ class Grape::Validations::Validators::MultipleParamsBase < ::Grape::Validations:
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/validators/multiple_params_base.rb:31
+  # pkg:gem/grape#lib/grape/validations/validators/multiple_params_base.rb:27
   def all_keys; end
 
   # pkg:gem/grape#lib/grape/validations/validators/multiple_params_base.rb:21
-  def iterator_class; end
-
-  # pkg:gem/grape#lib/grape/validations/validators/multiple_params_base.rb:25
   def keys_in_common(resource_params, known_keys = T.unsafe(nil)); end
 end
 
@@ -7530,16 +9074,21 @@ class Grape::Validations::Validators::ValuesValidator < ::Grape::Validations::Va
   # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:9
   def initialize(attrs, options, required, scope, opts); end
 
-  # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:25
+  # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:26
   def validate_param!(attr_name, params); end
 
   private
 
-  # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:39
+  # +false+ is a value: AS's +blank?+ says otherwise.
+  #
+  # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:41
+  def blank_and_allowed?(val); end
+
+  # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:45
   def check_values?(val, attr_name); end
 
-  # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:57
-  def required_for_root_scope?; end
+  # pkg:gem/grape#lib/grape/validations/validators/values_validator.rb:53
+  def predicate_holds?(param_array, attr_name); end
 end
 
 # pkg:gem/grape#lib/grape/xml.rb:14
