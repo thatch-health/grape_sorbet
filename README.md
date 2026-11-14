@@ -53,22 +53,41 @@ module Twitter
 end
 ```
 
-First, you'll need to make the following changes:
+First, derive from `Grape::API::Instance` rather than `Grape::API`.
 
-* derive from `Grape::API::Instance` rather than `Grape::API`
-* change the `helpers` call to replace the block parameter with a named module
+Sorbet still reports errors at this point, because it doesn't know that:
 
-You'll also need to use `T.bind(self, T.all(Grape::Endpoint, <HelpersModuleName>))` in helper methods that use methods provided by Grape (e.g. `env` in `current_user` or `error!` in `authenticate!`) or other methods from the same helper module (e.g. `current_user` in `authenticate!`).
+* the `get :home_timeline` block runs in a context where the helper methods are available;
+* the helper methods run in a context where Grape's endpoint methods (e.g. `env` or `error!`) are available.
 
-With the changes:
+The Tapioca compiler provided by this gem fixes that. Run `bundle exec tapioca dsl`. This should generate a `sorbet/rbi/dsl/twitter/api.rbi` file (assuming the source file is in `lib/twitter/api.rb`).
+
+After this, Sorbet should no longer report any errors.
+
+Helper methods defined in a `helpers` block are untyped by default. To type them, write signatures as usual. Add `extend T::Sig` to both the API class (for Sorbet) and the block (for the runtime, and for the compiler to see the signatures):
+
+```ruby
+class API < Grape::API::Instance
+  extend T::Sig
+
+  helpers do
+    extend T::Sig
+
+    sig { returns(User) }
+    def current_user
+      @current_user ||= User.authorize!(env)
+    end
+  end
+end
+```
+
+### Named helper modules
+
+You can also pass named modules to `helpers`. In that case, you'll need to use `T.bind(self, T.all(Grape::Endpoint, <HelpersModuleName>))` in helper methods that use methods provided by Grape (e.g. `env` in `current_user` or `error!` in `authenticate!`) or other methods from the same helper module (e.g. `current_user` in `authenticate!`):
 
 ```ruby
 module Twitter
   class API < Grape::API::Instance
-    version 'v1', using: :header, vendor: 'twitter'
-    format :json
-    prefix :api
-
     module Helpers
       def current_user
         T.bind(self, T.all(Grape::Endpoint, Helpers))
@@ -81,21 +100,9 @@ module Twitter
       end
     end
     helpers Helpers
-
-    resource :statuses do
-      desc 'Return a personal timeline.'
-      get :home_timeline do
-        authenticate!
-        current_user.statuses.limit(20)
-      end
-    end
   end
 end
 ```
-
-At this point Sorbet is still reporting errors in the `get :home_timeline` block, because it doesn't know that these blocks are executed in a context where the `Helpers` module methods will be available. The Tapioca compiler provided by this gem will fix that. Run `bundle exec tapioca dsl`. This should generate a `sorbet/rbi/dsl/twitter/api.rbi` file (assuming the source file is in `lib/twitter/api.rb`).
-
-After this, Sorbet should no longer report any errors.
 
 ## Limitations and known issues
 
@@ -105,17 +112,17 @@ Grape overrides `Grape::API.new` and uses the `inherited` hook so that subclasse
 
 This might be fixable in a future update of grape_sorbet, but is very low priority.
 
-### Not being able to call `helpers` with block arguments
-
-Possibly fixable in a future update.
-
-### Having to use `T.bind(self, T.any(Grape::Endpoint, <HelpersModuleName>))` in helper methods
+### Having to use `T.bind(self, T.any(Grape::Endpoint, <HelpersModuleName>))` in named helper modules
 
 Possibly fixable in a future update.
 
 ### Having to use `T.bind(self, T.any(Grape::Endpoint, <HelpersModuleName>))` in `before` and `after` callback blocks
 
 The compiler already generates proper signatures for callback methods so `T.bind` should not be needed (and is in fact unneeded for the other callback methods, `before_validation`, `after_validation` and `finally`). The reason it doesn't work for `before` and `after` is because of a [bug](https://github.com/sorbet/sorbet/issues/7950) in Sorbet itself.
+
+### `helpers` blocks inside `namespace` blocks
+
+The compiler only sees helpers declared at the top level of the API class. Helpers declared inside a `namespace` (or `resource`, `group`, etc.) block are not available in its endpoints.
 
 ## Development
 
