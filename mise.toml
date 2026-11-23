@@ -1,0 +1,6 @@
+# Shared environment for local development. The Ruby version stays pinned in
+# .ruby-version.
+
+[settings]
+idiomatic_version_file_enable_tools = ["ruby"]
+lockfile_platforms = ["macos-arm64", "linux-x64", "linux-arm64"]

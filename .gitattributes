@@ -14,6 +14,9 @@ Rakefile diff=ruby
 bin/* diff=ruby
 *.md diff=markdown
 
+# mise writes this lockfile. Hide it in diffs and language statistics.
+mise.lock linguist-generated=true
+
 # Linguist needs no rule for *.rbi files. It knows the extension.
 #
 # Tapioca writes a .gitattributes file in sorbet/rbi/annotations, sorbet/rbi/dsl
